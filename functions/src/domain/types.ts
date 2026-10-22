@@ -112,5 +112,9 @@ export interface PlatformConfig {
    * est refusée (section 6). null = critère désactivé (à décider).
    */
   retractionMaxConsumption: number | null;
+  /** Plafond de dépense mensuel par défaut à l'ouverture du compte. */
+  defaultMonthlyLimit: number;
+  /** Seuil de paiements rapprochés (condition 5) ; null = désactivé. */
+  rapidPayment: { windowMinutes: number; maxCount: number } | null;
   affiliation: AffiliationConfig;
 }
