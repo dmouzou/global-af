@@ -1,4 +1,6 @@
 import express from 'express';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
@@ -11,7 +13,42 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-app.use(express.json());
+app.set('trust proxy', 1); // derrière Cloud Run / un proxy : IP réelle du client
+
+// En-têtes de sécurité (section 26). La CSP est désactivée en développement
+// car Vite injecte des scripts ; elle sera définie avec le déploiement final.
+app.use(helmet({ contentSecurityPolicy: false }));
+
+// Corps de requête borné : évite l'envoi de gros historiques (coût Gemini).
+app.use(express.json({ limit: '16kb' }));
+
+// Limitation de débit des routes IA : les endpoints sont publics et
+// chaque appel consomme le quota Gemini.
+const aiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 15,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Trop de requêtes. Réessayez dans une minute.' },
+});
+app.use('/api/', aiLimiter);
+
+const MAX_MESSAGES = 10;
+const MAX_MESSAGE_LENGTH = 1000;
+
+// Valide et normalise un historique de conversation envoyé par le client :
+// nombre et taille bornés, rôles restreints à user/assistant.
+function sanitizeMessages(raw: unknown): { role: 'user' | 'assistant'; content: string }[] | null {
+  if (!Array.isArray(raw)) return null;
+  const out: { role: 'user' | 'assistant'; content: string }[] = [];
+  for (const m of raw.slice(-MAX_MESSAGES)) {
+    if (!m || typeof m.content !== 'string') return null;
+    const content = m.content.trim().slice(0, MAX_MESSAGE_LENGTH);
+    if (!content) return null;
+    out.push({ role: m.role === 'user' ? 'user' : 'assistant', content });
+  }
+  return out;
+}
 
 // Initialize Gemini API client on server-side as mandated by gemini-api skill
 const apiKey = process.env.GEMINI_API_KEY || '';
@@ -65,8 +102,13 @@ Rédige des réponses structurées, courtoises et concises en français. Sois pr
 // Unified Chat & Information API Endpoint
 app.post('/api/chat', async (req, res) => {
   try {
-    const { message, messages } = req.body;
-    const query = message || (Array.isArray(messages) && messages[messages.length - 1]?.content);
+    const { message, messages: rawMessages } = req.body ?? {};
+    const messages = rawMessages === undefined ? undefined : sanitizeMessages(rawMessages);
+    if (rawMessages !== undefined && messages === null) {
+      return res.status(400).json({ error: 'Historique de conversation invalide.' });
+    }
+    const single = typeof message === 'string' ? message.trim().slice(0, MAX_MESSAGE_LENGTH) : '';
+    const query = single || (messages && messages[messages.length - 1]?.content);
 
     if (!query || typeof query !== 'string') {
       return res.status(400).json({ error: 'Un message valide est requis.' });
@@ -81,7 +123,7 @@ app.post('/api/chat', async (req, res) => {
 
     // Build contents for multi-turn if available
     let contents: any = query;
-    if (Array.isArray(messages) && messages.length > 0) {
+    if (messages && messages.length > 0) {
       contents = messages.map(m => ({
         role: m.role === 'user' ? 'user' : 'model',
         parts: [{ text: m.content }]
@@ -110,8 +152,9 @@ app.post('/api/chat', async (req, res) => {
 // FAQ Endpoint for GLOBAL-AF (backward compatibility)
 app.post('/api/faq', async (req, res) => {
   try {
-    const { question } = req.body;
-    if (!question || typeof question !== 'string') {
+    const rawQuestion = req.body?.question;
+    const question = typeof rawQuestion === 'string' ? rawQuestion.trim().slice(0, MAX_MESSAGE_LENGTH) : '';
+    if (!question) {
       return res.status(400).json({ error: 'Une question valide est requise.' });
     }
 
