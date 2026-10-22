@@ -1,8 +1,8 @@
 rules_version = '2';
 
-// Craft rules based on data in your Firestore database
-// allow write: if firestore.get(
-//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
+// Tout est refusé pour l'instant. Les règles par chemin (preuves de
+// missions, ressources VCF protégées) seront ajoutées avec les modules
+// correspondants, en s'appuyant sur le custom claim `role`.
 service firebase.storage {
   match /b/{bucket}/o {
     match /{allPaths=**} {
