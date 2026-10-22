@@ -28,6 +28,9 @@ module.exports = {
   rules: {
     "quotes": ["error", "double"],
     "import/no-unresolved": 0,
-    "indent": ["error", 2],
+    "indent": ["error", 2, {"SwitchCase": 1}],
+    "valid-jsdoc": 0,
+    "require-jsdoc": 0,
+    "max-len": ["error", {"code": 100}],
   },
 };
