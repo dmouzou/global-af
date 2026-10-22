@@ -1,0 +1,17 @@
+{
+  "projects": {
+    "default": "global-af-dev"
+  },
+  "targets": {
+    "global-af-dev": {
+      "hosting": {
+        "global-af-dev": [
+          "global-af-dev"
+        ],
+        "global-af-dev-admin": [
+          "global-af-dev-admin"
+        ]
+      }
+    }
+  }
+}

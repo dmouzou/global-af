@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+@theme {
+  --font-mono: 'Anton SC', sans-serif;
+  --font-anton: 'Anton SC', sans-serif;
+  --font-notable: 'Anton SC', sans-serif;
+}
+
+@layer base {
+  body {
+    font-family: 'Tuffy', -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.005em;
+  }
+  p, span, li, button, input, textarea, select, label, td, th {
+    font-family: 'Tuffy', -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+  }
+  h1, h2, h3, h4, .font-display {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro", "Tuffy", "Inter", system-ui, sans-serif;
+    letter-spacing: -0.02em;
+  }
+  code, pre, .font-mono, [data-mono] {
+    font-family: 'Anton SC', sans-serif !important;
+    letter-spacing: 0.04em;
+  }
+  .font-notable, .font-anton, [data-notable], [data-anton] {
+    font-family: 'Anton SC', sans-serif;
+    letter-spacing: 0.04em;
+  }
+}
+
+/* Côte d'Ivoire Tricolore Visual Identity */
+.ci-gradient-brand {
+  background: linear-gradient(135deg, #FF7700 0%, #EA580C 50%, #009E49 100%);
+}
+
+.ci-flag-bar {
+  background: linear-gradient(90deg, #FF7700 0%, #FF7700 33.3%, #FFFFFF 33.3%, #FFFFFF 66.6%, #009E49 66.6%, #009E49 100%);
+}
+
+.ci-border-accent {
+  border-image: linear-gradient(90deg, #FF7700, #FFFFFF, #009E49) 1;
+}
+
