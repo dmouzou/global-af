@@ -14,6 +14,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { OperatorLogo } from '../common/OperatorLogo';
+import { BabiMascot } from '../common/BabiMascot';
 
 interface TransparencePageProps {
   onGoToDashboard: () => void;
@@ -102,6 +103,29 @@ export const TransparencePage: React.FC<TransparencePageProps> = ({ onGoToDashbo
           </div>
         </div>
 
+        {/* Ethical Architecture 3D Visual Banner */}
+        <div className="relative rounded-3xl overflow-hidden border border-slate-200 shadow-xl group">
+          <img
+            src="/images/ethical-economy-illustration.jpg"
+            alt="Économie Numérique Éthique Côte d'Ivoire"
+            className="w-full h-[280px] sm:h-[360px] object-cover group-hover:scale-105 transition-transform duration-700"
+          />
+          <div className="absolute inset-x-4 bottom-4 liquid-glass p-4 rounded-2xl border border-white/80 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="text-xs font-bold text-slate-900">Architecture Éthique & Déterministe certifiée</span>
+              </div>
+              <p className="text-[11px] text-slate-600 mt-0.5">
+                Chaque transaction est tracée dans un grand livre comptable. Zéro jeu de hasard, zéro promesse trompeuse.
+              </p>
+            </div>
+            <span className="text-[10px] font-mono font-bold uppercase bg-slate-900 text-white px-3 py-1 rounded-full shrink-0">
+              Certifié ARTCI & UEMOA
+            </span>
+          </div>
+        </div>
+
         {/* The 6 Fundamental Ethical Pillars */}
         <div className="space-y-6">
           <div className="text-center max-w-xl mx-auto">
@@ -116,8 +140,9 @@ export const TransparencePage: React.FC<TransparencePageProps> = ({ onGoToDashbo
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             
             <div className="p-6 bg-white rounded-2xl border border-slate-200 space-y-3 shadow-xs">
-              <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center font-bold">
-                1
+              <div className="flex items-center justify-between">
+                <BabiMascot variant="number" number="1" size="sm" />
+                <span className="text-[10px] font-bold uppercase text-orange-700 bg-orange-50 px-2 py-0.5 rounded-full">Anti-Pyramide</span>
               </div>
               <h3 className="font-bold text-slate-900 text-sm">Commissions sur Ventes Réelles Uniquement</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
@@ -126,18 +151,20 @@ export const TransparencePage: React.FC<TransparencePageProps> = ({ onGoToDashbo
             </div>
 
             <div className="p-6 bg-white rounded-2xl border border-slate-200 space-y-3 shadow-xs">
-              <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
-                2
+              <div className="flex items-center justify-between">
+                <BabiMascot variant="number" number="2" size="sm" />
+                <span className="text-[10px] font-bold uppercase text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Rétractation VIP</span>
               </div>
-              <h3 className="font-bold text-slate-900 text-sm">Palier Gratuit Garanti & Droit de Rétractation</h3>
+              <h3 className="font-bold text-slate-900 text-sm">Droit de Rétractation VIP & Délais d'Affiliation</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Tout utilisateur peut effectuer des micro-jobs et retirer 100% de ses gains sans jamais avoir à acheter de pack. En cas de souscription d'une option payante, le membre bénéficie d'un droit de rétractation de 7 jours avec remboursement intégral Mobile Money.
+                Le délai de rétractation de 7 jours avec remboursement intégral Mobile Money s'applique exclusivement à l'abonnement mensuel VIP Premium (9 900 FCFA/mois). Pour le Pass Membre Standard (3 000 FCFA), l'accès numérique aux formations et micro-jobs est immédiat et définitif. Les commissions d'affiliation (10%, soit 990 FCFA) ne sont versées au parrain qu'après l'expiration complète de ce délai de rétractation de 7 jours.
               </p>
             </div>
 
             <div className="p-6 bg-white rounded-2xl border border-slate-200 space-y-3 shadow-xs">
-              <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
-                3
+              <div className="flex items-center justify-between">
+                <BabiMascot variant="number" number="3" size="sm" />
+                <span className="text-[10px] font-bold uppercase text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">Vérité des Gains</span>
               </div>
               <h3 className="font-bold text-slate-900 text-sm">Statistiques Publiques & Vérifiables</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
@@ -146,8 +173,9 @@ export const TransparencePage: React.FC<TransparencePageProps> = ({ onGoToDashbo
             </div>
 
             <div className="p-6 bg-white rounded-2xl border border-slate-200 space-y-3 shadow-xs">
-              <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center font-bold">
-                4
+              <div className="flex items-center justify-between">
+                <BabiMascot variant="number" number="4" size="sm" />
+                <span className="text-[10px] font-bold uppercase text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full">Zéro Hasard</span>
               </div>
               <h3 className="font-bold text-slate-900 text-sm">Interdiction Absolue des Jeux de Hasard</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
@@ -156,8 +184,9 @@ export const TransparencePage: React.FC<TransparencePageProps> = ({ onGoToDashbo
             </div>
 
             <div className="p-6 bg-white rounded-2xl border border-slate-200 space-y-3 shadow-xs">
-              <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold">
-                5
+              <div className="flex items-center justify-between">
+                <BabiMascot variant="number" number="5" size="sm" />
+                <span className="text-[10px] font-bold uppercase text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full">Garde-fou</span>
               </div>
               <h3 className="font-bold text-slate-900 text-sm">Protection des Membres & Plafonds Éthiques</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
@@ -166,8 +195,9 @@ export const TransparencePage: React.FC<TransparencePageProps> = ({ onGoToDashbo
             </div>
 
             <div className="p-6 bg-white rounded-2xl border border-slate-200 space-y-3 shadow-xs">
-              <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
-                6
+              <div className="flex items-center justify-between">
+                <BabiMascot variant="number" number="6" size="sm" />
+                <span className="text-[10px] font-bold uppercase text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">Légalité</span>
               </div>
               <h3 className="font-bold text-slate-900 text-sm">Conformité ARTCI & Traçabilité Financière</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
@@ -175,6 +205,115 @@ export const TransparencePage: React.FC<TransparencePageProps> = ({ onGoToDashbo
               </p>
             </div>
 
+          </div>
+        </div>
+
+        {/* SECTION AFFILIATION ÉTHIQUE INTÉGRÉE (2 NIVEAUX MAXIMUM) */}
+        <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-xs space-y-8">
+          <div className="border-b border-slate-100 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <BabiMascot variant="badge" size="sm" />
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
+                  Règles de Rémunération des Parrains & Affiliation Éthique
+                </h2>
+              </div>
+              <p className="text-xs text-slate-500">
+                Encadrement strict conforme aux lois UEMOA : commissions exclusives sur ventes réelles, plafonnées à 2 niveaux.
+              </p>
+            </div>
+            <span className="text-xs font-mono font-bold text-orange-700 bg-orange-50 px-3 py-1 rounded-full border border-orange-200 self-start sm:self-auto">
+              Niveau 1 : 10% · Niveau 2 : 5%
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-5 rounded-2xl bg-orange-50/60 border border-orange-200/80 space-y-2">
+              <div className="text-xs font-bold text-orange-950 flex items-center gap-2">
+                <BabiMascot variant="wallet" size="xs" />
+                <span>Commissions Mensuelles Récurrentes</span>
+              </div>
+              <p className="text-xs text-slate-700 leading-relaxed">
+                Tant que votre filleul actif règle un abonnement mensuel (ex: VIP Premium), vous percevez votre pourcentage (10% Niveau 1, 5% Niveau 2) chaque mois de manière automatique.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200/80 space-y-2">
+              <div className="text-xs font-bold text-emerald-950 flex items-center gap-2">
+                <BabiMascot variant="security" size="xs" />
+                <span>0 FCFA pour le simple Recrutement</span>
+              </div>
+              <p className="text-xs text-slate-700 leading-relaxed">
+                La création d'un compte gratuit ou le simple ajout de filleuls ne génère strictement aucun revenu. Seuls les achats de biens utiles et identifiables ouvrent droit à rémunération.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+              <div className="text-xs font-bold text-slate-900 flex items-center gap-2">
+                <BabiMascot variant="academic" size="xs" />
+                <span>Condition de Fin de Parrainage</span>
+              </div>
+              <p className="text-xs text-slate-700 leading-relaxed">
+                Le lien de parrainage et le versement des commissions cessent automatiquement dès que le parrain ou le filleul désactive ou supprime son compte de la plateforme.
+              </p>
+            </div>
+          </div>
+
+          {/* Ethical Comparison Table: GLOBAL-AF vs Illegal Pyramidal Schemes */}
+          <div className="space-y-4 pt-4 border-t border-slate-100">
+            <h3 className="text-base font-bold text-slate-900">
+              Tableau comparatif : GLOBAL-AF vs Systèmes Pyramidaux Illégaux
+            </h3>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50 text-slate-700">
+                    <th className="py-3 px-4 font-bold">Critères d'évaluation</th>
+                    <th className="py-3 px-4 font-bold text-emerald-700">GLOBAL-AF (Modèle Vertueux)</th>
+                    <th className="py-3 px-4 font-bold text-rose-600">Schémas Pyramidaux Illégaux</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-slate-600">
+                  <tr>
+                    <td className="py-3 px-4 font-medium text-slate-900">Source des revenus</td>
+                    <td className="py-3 px-4 text-emerald-800 font-semibold bg-emerald-50/30">Ventes réelles de formations, outils IA et missions utiles</td>
+                    <td className="py-3 px-4 text-rose-700 bg-rose-50/30">Frais d'adhésion des nouveaux membres recrutés</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 px-4 font-medium text-slate-900">Profondeur des commissions</td>
+                    <td className="py-3 px-4 text-emerald-800 font-semibold bg-emerald-50/30">2 niveaux maximum stricts (10% N1, 5% N2)</td>
+                    <td className="py-3 px-4 text-rose-700 bg-rose-50/30">Niveaux infinis ou profonds (8, 10, 15 niveaux)</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 px-4 font-medium text-slate-900">Rétractation & Remboursement</td>
+                    <td className="py-3 px-4 text-emerald-800 font-semibold bg-emerald-50/30">Garantie 7 jours avec remboursement intégral Mobile Money</td>
+                    <td className="py-3 px-4 text-rose-700 bg-rose-50/30">Aucune rétractation, fonds bloqués sans recours</td>
+                  </tr>
+                  <tr>
+                    <td className="py-3 px-4 font-medium text-slate-900">Jeux de hasard / Loteries</td>
+                    <td className="py-3 px-4 text-emerald-800 font-semibold bg-emerald-50/30">Formellement interdits (Zéro hasard certifié)</td>
+                    <td className="py-3 px-4 text-rose-700 bg-rose-50/30">Roues tournantes, tombolas et promesses irréalistes</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* Le Serment de Transparence de Babi l'Éléphant */}
+        <div className="bg-gradient-to-r from-emerald-50 via-teal-50/50 to-white rounded-3xl p-6 sm:p-8 border border-emerald-200/80 shadow-xs flex flex-col sm:flex-row items-center gap-6">
+          <BabiMascot variant="security" size="xl" />
+          <div className="space-y-2 text-center sm:text-left flex-1">
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+              <span className="font-extrabold text-slate-900 text-base">Le Serment de Babi l'Éléphant 🇨🇮</span>
+              <span className="text-[10px] font-bold bg-emerald-700 text-white px-2 py-0.5 rounded-full">
+                Loyauté & Clarté
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
+              « En Côte d'Ivoire, l'éléphant est le noble symbole de notre pays au football et dans notre culture. Il incarne la mémoire, la force et l'intégrité. Sur GLOBAL-AF, je veille à ce qu'aucune fausse promesse ne soit faite : chaque membre est protégé par un droit de rétractation de 7 jours, zéro loterie, et un grand livre comptable vérifié. »
+            </p>
           </div>
         </div>
 

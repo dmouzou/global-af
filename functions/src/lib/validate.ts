@@ -40,3 +40,14 @@ export function reqRequestId(data: Obj): string {
   }
   return id;
 }
+
+/** Nombre obligatoire borné. */
+export function reqNumber(data: Obj, key: string, min = 0,
+  max = Infinity): number {
+  const v = data[key];
+  if (typeof v !== "number" || !Number.isFinite(v) || v < min || v > max) {
+    throw new DomainError("invalid_request", `Champ « ${key} » invalide.`);
+  }
+  return v;
+}
+

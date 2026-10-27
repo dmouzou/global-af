@@ -79,14 +79,14 @@ DONNÉES CLÉS ET RÈGLES DE LA PLATEFORME :
    - Opérations instantanées et auditées.
 
 3. RÈGLES DE RÉMUNÉRATION DES PARRAINS :
-   - Niveau 1 (Parrainage direct) : 15% de commission nette sur chaque vente réelle de packs ou formations.
+   - Niveau 1 (Parrainage direct) : 10% de commission nette sur chaque vente réelle de packs ou formations.
    - Niveau 2 (Parrainage indirect) : 5% de commission nette sur les achats réalisés par les filleuls de votre niveau 1.
    - Zéro commission sur la simple inscription : l'inscription est 100% gratuite et sans obligation d'achat.
    - Plafonnement strict à 2 niveaux maximum.
 
 4. DÉLAI DE RÉTRACTATION :
    - Délai légal et garanti de 7 jours (calendaires) pour toute souscription payante.
-   - Remboursement intégral garanti par Mobile Money sous 48h en un clic depuis l'espace membre.
+   - Remboursement intégral garanti par Mobile Money en un clic depuis l'espace membre.
 
 5. ÉTHIQUE & SÉCURITÉ :
    - Zéro jeu de hasard, zéro promesse de gains passifs ou irréalistes.
@@ -97,7 +97,7 @@ DONNÉES CLÉS ET RÈGLES DE LA PLATEFORME :
    - Formations pratiques certifiantes (WhatsApp Business, Prospection locale, Outils IA, E-commerce).
    - Outils de productivité (générateur de devis, export VCF qualifié).
 
-Rédige des réponses structurées, courtoises et concises en français. Sois précis sur les chiffres (retrait dès 2 000 FCFA, 15% N1, 5% N2, 7 jours de rétractation).`;
+Rédige des réponses structurées, courtoises et concises en français. Sois précis sur les chiffres (retrait dès 2 000 FCFA, 10% N1, 5% N2, 7 jours de rétractation).`;
 
 // Unified Chat & Information API Endpoint
 app.post('/api/chat', async (req, res) => {
@@ -116,7 +116,7 @@ app.post('/api/chat', async (req, res) => {
 
     if (!ai) {
       return res.json({
-        answer: "GLOBAL-AF est une plateforme d'opportunités numériques en Côte d'Ivoire. Vous pouvez y réaliser des micro-jobs rémunérés, accéder à des formations pratiques et profiter d'un programme de parrainage éthique (15% au Niveau 1 et 5% au Niveau 2 sur ventes réelles). Les retraits sont instantanés dès 2 000 FCFA via Wave (1%), Orange Money, MTN MoMo et Moov Africa, avec un droit de rétractation garanti de 7 jours.",
+        answer: "GLOBAL-AF est une plateforme d'opportunités numériques en Côte d'Ivoire. Vous pouvez y réaliser des micro-jobs rémunérés, accéder à des formations pratiques et profiter d'un programme de parrainage éthique (10% au Niveau 1 et 5% au Niveau 2 sur ventes réelles). Les retraits sont instantanés dès 2 000 FCFA via Wave (1,5%), Orange Money, MTN MoMo et Moov Africa, avec un droit de rétractation garanti de 7 jours.",
         source: 'local_fallback',
       });
     }
@@ -131,7 +131,7 @@ app.post('/api/chat', async (req, res) => {
     }
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
+      model: 'gemini-2.5-flash',
       contents,
       config: {
         systemInstruction: GLOBAL_AF_SYSTEM_INSTRUCTION,
@@ -144,8 +144,91 @@ app.post('/api/chat', async (req, res) => {
     console.error('Error generating chat response:', error);
     res.status(500).json({
       error: 'Erreur lors de la réponse du chatbot.',
-      fallback: "GLOBAL-AF vous permet de gagner de l'argent grâce à des micro-jobs vérifiés et au parrainage (15% niveau 1, 5% niveau 2 sur ventes réelles). Retraits dès 2 000 FCFA sur Wave, Orange, MTN et Moov. Droit de rétractation garanti de 7 jours.",
+      fallback: "GLOBAL-AF vous permet de gagner de l'argent grâce à des micro-jobs vérifiés et au parrainage (10% niveau 1, 5% niveau 2 sur ventes réelles). Retraits dès 2 000 FCFA sur Wave, Orange, MTN et Moov. Droit de rétractation garanti de 7 jours.",
     });
+  }
+});
+
+// Dedicated AI Copywriting Generator for WhatsApp & Social Media (Côte d'Ivoire & West Africa)
+app.post('/api/generate-copy', async (req, res) => {
+  try {
+    const { productName, price, city = 'Abidjan', tone = 'nouchi' } = req.body ?? {};
+    const product = typeof productName === 'string' && productName.trim() ? productName.trim().slice(0, 200) : 'votre produit ou service';
+    const cleanPrice = typeof price === 'string' ? price.trim().slice(0, 80) : '';
+    const cleanCity = typeof city === 'string' && city.trim() ? city.trim().slice(0, 80) : 'Abidjan';
+
+    if (!ai) {
+      let fallbackText = '';
+      if (tone === 'nouchi') {
+        fallbackText = `🔥 Y'A PAS DRAP ! C'EST LA VRAIE BONNE AFFAIRE DU MOMENT À ${cleanCity.toUpperCase()} ! 🔥\n\n` +
+          `Famille, si tu cherches la qualité pour « ${product} », assieds-toi bien ! C'est arrivé et c'est propre, zéro tracas.\n\n` +
+          `✅ Produit sélectionné et certifié : ${product}\n` +
+          (cleanPrice ? `💰 Prix chic et doux : ${cleanPrice}\n` : '') +
+          `📍 Expédition rapide partout à ${cleanCity} (Cocody, Yopougon, Marcory, Plateau, Angré, Koumassi...)\n` +
+          `💳 Tu vérifies ton colis avant de payer tranquille par Wave, Orange Money ou MTN MoMo.\n\n` +
+          `📲 Clique sur le lien WhatsApp tout de suite pour bloquer ta commande avant rupture de stock !`;
+      } else if (tone === 'promo') {
+        fallbackText = `🚨 OFFRE FLASH EXCLUSIVE : RÉDUCTION LIMITÉE AUX 20 PREMIERS ! 🚨\n\n` +
+          `Offrez-vous ce qui se fait de mieux : ${product.toUpperCase()} !\n\n` +
+          `⏳ Attention : Offre exclusive disponible uniquement cette semaine à ${cleanCity}.\n` +
+          (cleanPrice ? `🔥 Tarif promotionnel : ${cleanPrice} (Offre à durée limitée)\n` : '') +
+          `📦 Livraison express directement à votre porte ou bureau\n` +
+          `🛡️ Sécurité totale : paiement à la réception via Wave, Orange Money ou MTN MoMo.\n\n` +
+          `👉 Envoyez un message WhatsApp immédiatement en cliquant ci-dessous pour réserver votre commande !`;
+      } else if (tone === 'story') {
+        fallbackText = `✨ Et si vous faisiez enfin le choix de la tranquillité ? ✨\n\n` +
+          `Combien de fois avez-vous cherché un(e) bon(ne) « ${product} » sans trouver la qualité espérée ?\n\n` +
+          `Aujourd'hui, nous mettons fin aux déceptions avec une solution fiable, pensée pour les exigences de nos clients à ${cleanCity} et dans toute la région :\n\n` +
+          `✔️ Qualité sélectionnée avec soin et contrôle rigoureux\n` +
+          `✔️ Service client disponible et à votre écoute 7j/7\n` +
+          (cleanPrice ? `✔️ Investissement maîtrisé : ${cleanPrice}\n` : '') +
+          `✔️ Encaissement simple et sans tracas via Mobile Money (Wave, Orange, MTN, Moov).\n\n` +
+          `💬 Écrivez-nous en message privé ou sur WhatsApp pour recevoir votre catalogue complet !`;
+      } else {
+        fallbackText = `⚡ DÉCOUVREZ LA RÉFÉRENCE PROFESSIONNELLE : ${product.toUpperCase()} ! ⚡\n\n` +
+          `Vous méritez ce qu'il y a de plus fiable et élégant sur le marché ivoirien.\n\n` +
+          `🌟 Pourquoi nos clients nous recommandent :\n` +
+          `• Performance et finition supérieure\n` +
+          `• Rapport qualité-prix vérifié\n` +
+          `• Garantie satisfaction éprouvée\n\n` +
+          (cleanPrice ? `🏷️ Tarif : ${cleanPrice}\n\n` : '') +
+          `🚀 Expédition rapide sous 24h à ${cleanCity} et expédition dans toutes les villes de l'intérieur.\n` +
+          `💳 Règlement sécurisé par Mobile Money (Wave, Orange Money, MTN MoMo, Moov Money).\n\n` +
+          `📲 Commandez en 1 clic sur WhatsApp via notre lien direct !`;
+      }
+      return res.json({ text: fallbackText, source: 'smart_local' });
+    }
+
+    const systemPrompt = `Tu es un expert mondial en copywriting, persuasion publicitaire et marketing digital en Afrique de l'Ouest (spécialisé en Côte d'Ivoire, Abidjan et communes environnantes).
+Ta tâche est de rédiger un texte publicitaire ultra-percutant pour WhatsApp, Facebook et TikTok.
+RÈGLES D'OR :
+1. Adopter le ton demandé avec un naturel absolu (si Nouchi : utiliser du nouchi abidjanais moderne, chaleureux, vendeur et positif comme "y'a pas drap", "c'est le grotto", "on est ensemble", "tranquille").
+2. Inclure des détails concrets adaptés à ${cleanCity} (communes comme Cocody, Yopougon, Marcory, Plateau, Angré).
+3. Intégrer la réassurance Mobile Money (Wave, Orange Money, MTN MoMo, Moov) et paiement à la livraison sécurisé.
+4. Structurer avec emojis attrayants, liste de bénéfices concrets et appel à l'action WhatsApp clair et direct.
+5. Zéro promesse mensongère ou irréaliste.`;
+
+    const userPrompt = `Rédige une annonce de vente irrésistible pour ce produit/service :
+- Produit/Service : "${product}"
+- Prix : ${cleanPrice || 'À préciser lors de l\'échange'}
+- Marché / Ville : ${cleanCity}
+- Ton souhaité : ${tone} (nouchi = nouchi abidjanais authentique, promo = vente flash urgente, story = storytelling confiance, b2b = professionnel haut de gamme).
+
+Génère une annonce complète, immédiatement copiable et prête à poster sur WhatsApp ou Facebook.`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: userPrompt,
+      config: {
+        systemInstruction: systemPrompt,
+        temperature: 0.7,
+      },
+    });
+
+    res.json({ text: response.text, source: 'gemini_ai' });
+  } catch (error: any) {
+    console.error('Error generating AI copy:', error);
+    res.status(500).json({ error: 'Erreur lors de la génération par IA.' });
   }
 });
 
@@ -160,13 +243,13 @@ app.post('/api/faq', async (req, res) => {
 
     if (!ai) {
       return res.json({
-        answer: "GLOBAL-AF est la plateforme d'opportunités numériques en Côte d'Ivoire : micro-jobs rémunérés, formations professionnelles et affiliation éthique (15% N1, 5% N2). Retraits dès 2 000 FCFA via Wave, Orange Money, MTN MoMo et Moov Africa, avec droit de rétractation de 7 jours.",
+        answer: "GLOBAL-AF est la plateforme d'opportunités numériques en Côte d'Ivoire : micro-jobs rémunérés, formations professionnelles et affiliation éthique (10% N1, 5% N2). Retraits dès 2 000 FCFA via Wave, Orange Money, MTN MoMo et Moov Africa, avec droit de rétractation de 7 jours.",
         source: 'local_fallback',
       });
     }
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.8-flash',
+      model: 'gemini-2.5-flash',
       contents: question,
       config: {
         systemInstruction: GLOBAL_AF_SYSTEM_INSTRUCTION,

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Course, CourseModule, QuizQuestion } from '../../types';
+import { Course, CourseModule, QuizQuestion, CourseQuiz } from '../../types';
+import { BabiMascot } from '../common/BabiMascot';
 import { 
   BookOpen, 
   Award, 
@@ -21,7 +22,8 @@ import {
   ExternalLink,
   ShieldCheck,
   AlertCircle,
-  X
+  X,
+  Timer
 } from 'lucide-react';
 
 interface AcademyPageProps {
@@ -44,11 +46,11 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({ onGoToDashboard, onOpe
   const [activeModuleIndex, setActiveModuleIndex] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<'all' | 'free' | 'premium'>('all');
   
-  // Interactive progress state per course
+  // Interactive progress state per course (empty by default, requires login to save)
   const [progressState, setProgressState] = useState<Record<string, CourseUserProgress>>({
     'crs-001': {
-      completedModules: ['mod-101'],
-      passedQuizzes: ['cpq-101'],
+      completedModules: [],
+      passedQuizzes: [],
       isCertified: false
     },
     'crs-002': {
@@ -72,17 +74,41 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({ onGoToDashboard, onOpe
   const [checkpointAnswers, setCheckpointAnswers] = useState<Record<string, number>>({});
   const [checkpointSubmitted, setCheckpointSubmitted] = useState<Record<string, boolean>>({});
 
-  // State for Final Quiz
+  // State for Final Quiz (40 questions chronométrées en 45 minutes)
   const [isFinalQuizOpen, setIsFinalQuizOpen] = useState<boolean>(false);
   const [finalQuizAnswers, setFinalQuizAnswers] = useState<Record<string, number>>({});
   const [finalQuizSubmitted, setFinalQuizSubmitted] = useState<boolean>(false);
   const [finalQuizScore, setFinalQuizScore] = useState<number>(0);
+  const [examSecondsLeft, setExamSecondsLeft] = useState<number>(2700); // 45 minutes
+
+  // Countdown timer for certification exam
+  useEffect(() => {
+    if (!isFinalQuizOpen || finalQuizSubmitted) return;
+    const timer = setInterval(() => {
+      setExamSecondsLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          handleGradeFinalQuiz();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isFinalQuizOpen, finalQuizSubmitted]);
+
+  const formatExamTimer = (totalSeconds: number) => {
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   // State for Certificate Modal
   const [showCertificateModal, setShowCertificateModal] = useState<boolean>(false);
 
-  // Helper to calculate course progress percentage
+  // Helper to calculate course progress percentage (0% if unauthenticated)
   const getCourseProgress = (course: Course): number => {
+    if (!currentUser) return 0;
     const progress = progressState[course.id];
     if (!progress) return 0;
     if (progress.isCertified) return 100;
@@ -92,10 +118,16 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({ onGoToDashboard, onOpe
     return Math.min(100, Math.round((completedSteps / totalSteps) * 100));
   };
 
-  const isUserPremium = currentUser.role === 'member_premium' || currentUser.subscriptionPlan === 'premium' || currentUser.subscriptionPlan === 'business';
+  const isUserPremium = currentUser 
+    ? (currentUser.role === 'member_premium' || currentUser.subscriptionPlan === 'premium' || currentUser.subscriptionPlan === 'business') 
+    : false;
   const isCourseLocked = selectedCourse.isPremium && !isUserPremium;
 
-  const currentCourseProgress = progressState[selectedCourse.id] || {
+  const currentCourseProgress = currentUser ? (progressState[selectedCourse.id] || {
+    completedModules: [],
+    passedQuizzes: [],
+    isCertified: false
+  }) : {
     completedModules: [],
     passedQuizzes: [],
     isCertified: false
@@ -105,27 +137,37 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({ onGoToDashboard, onOpe
   const isCurrentModuleCompleted = currentCourseProgress.completedModules.includes(activeModule.id);
 
   // Handle module checkpoint quiz answer
-  const handleSelectCheckpointAnswer = (quizId: string, optionIndex: number) => {
-    setCheckpointAnswers(prev => ({ ...prev, [quizId]: optionIndex }));
+  const handleSelectCheckpointAnswer = (questionId: string, optionIndex: number) => {
+    if (!currentUser) {
+      onOpenAuth('signup');
+      return;
+    }
+    setCheckpointAnswers(prev => ({ ...prev, [questionId]: optionIndex }));
   };
 
-  // Validate palier quiz
-  const handleValidateCheckpointQuiz = (quizId: string, correctAnswerIndex: number, moduleId: string) => {
-    const selected = checkpointAnswers[quizId];
-    if (selected === undefined) return;
+  // Validate palier checkpoint quiz (requires all questions correct)
+  const handleValidateCheckpointQuiz = (quiz: CourseQuiz, moduleId: string) => {
+    if (!currentUser) {
+      onOpenAuth('signup');
+      return;
+    }
+    const allAnswered = quiz.questions.every(q => checkpointAnswers[q.id] !== undefined);
+    if (!allAnswered) return;
 
-    setCheckpointSubmitted(prev => ({ ...prev, [quizId]: true }));
+    setCheckpointSubmitted(prev => ({ ...prev, [quiz.id]: true }));
 
-    if (selected === correctAnswerIndex) {
+    const allCorrect = quiz.questions.every(q => checkpointAnswers[q.id] === q.correctAnswerIndex);
+
+    if (allCorrect) {
       // Mark palier as completed & quiz passed
       setProgressState(prev => {
         const current = prev[selectedCourse.id] || { completedModules: [], passedQuizzes: [], isCertified: false };
         const newCompleted = current.completedModules.includes(moduleId) 
           ? current.completedModules 
           : [...current.completedModules, moduleId];
-        const newPassed = current.passedQuizzes.includes(quizId)
+        const newPassed = current.passedQuizzes.includes(quiz.id)
           ? current.passedQuizzes
-          : [...current.passedQuizzes, quizId];
+          : [...current.passedQuizzes, quiz.id];
         
         return {
           ...prev,
@@ -205,24 +247,34 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({ onGoToDashboard, onOpe
     return true;
   });
 
-  const memberMatricule = currentUser.memberNumber || 'GA-CI-2024-8891';
+  const memberMatricule = currentUser?.memberNumber || 'GA-CI-2026-0001';
 
   return (
     <div className="min-h-screen bg-slate-50 py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
         
-        {/* Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-3">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-100 border border-orange-200 text-orange-800 text-xs font-bold shadow-2xs">
-            <GraduationCap className="w-4 h-4 text-orange-600" />
-            <span>Digital Academy Côte d'Ivoire · Certifications Reconnues</span>
+        {/* Header with 3D Mascot */}
+        <div className="bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-emerald-500/10 rounded-3xl p-6 sm:p-8 border border-orange-500/20 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="space-y-3 max-w-2xl text-left">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-100 border border-orange-200 text-orange-800 text-xs font-bold shadow-2xs">
+              <GraduationCap className="w-4 h-4 text-orange-600" />
+              <span>Digital Academy Côte d'Ivoire · Certifications Reconnues</span>
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+              Formations Pratiques & Évaluations Certifiantes
+            </h1>
+            <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
+              Montez en compétences avec des parcours conçus pour l'écosystème ivoirien. Validez chaque palier par un quiz de contrôle, réussissez l'examen final et recevez votre <span className="font-bold text-slate-800">Attestation Numérique Certifiée</span>.
+            </p>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-            Formations Pratiques & Évaluations Certifiantes
-          </h1>
-          <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-            Montez en compétences avec des parcours conçus pour l'écosystème ivoirien. Validez chaque palier par un quiz de contrôle, réussissez l'examen final et recevez votre <span className="font-bold text-slate-800">Attestation Numérique Certifiée</span>.
-          </p>
+
+          <div className="shrink-0 flex items-center gap-4 bg-white/95 backdrop-blur-md p-4 rounded-3xl border border-orange-200/80 shadow-md">
+            <BabiMascot 
+              variant="academic" 
+              size="lg" 
+              speechBubble="Chaque palier validé vous rapproche de votre certification officielle de 40 questions ! Bon courage !" 
+            />
+          </div>
         </div>
 
         {/* Featured Course Player / Interactive Study Station */}
@@ -261,21 +313,34 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({ onGoToDashboard, onOpe
                 )}
               </div>
 
-              {/* Course Progress Bar Display */}
-              <div className="flex items-center gap-3 bg-slate-800/80 backdrop-blur-sm px-4 py-2 rounded-xl border border-slate-700">
-                <div className="text-right">
-                  <div className="text-[10px] text-slate-400 uppercase font-semibold">Progression du cours</div>
-                  <div className="text-xs font-notable text-orange-400">
-                    {getCourseProgress(selectedCourse)}% {currentCourseProgress.isCertified ? '· VALIDÉ' : ''}
+              {/* Course Progress Bar Display (Guarded by authentication) */}
+              {currentUser ? (
+                <div className="flex items-center gap-3 bg-slate-800/80 backdrop-blur-sm px-4 py-2 rounded-xl border border-slate-700">
+                  <div className="text-right">
+                    <div className="text-[10px] text-slate-400 uppercase font-semibold">Progression du cours</div>
+                    <div className="text-xs font-notable text-orange-400">
+                      {getCourseProgress(selectedCourse)}% {currentCourseProgress.isCertified ? '· VALIDÉ' : ''}
+                    </div>
+                  </div>
+                  <div className="w-28 sm:w-36 bg-slate-700 rounded-full h-2.5 overflow-hidden">
+                    <div 
+                      className="bg-gradient-to-r from-orange-500 to-emerald-500 h-full rounded-full transition-all duration-500"
+                      style={{ width: `${getCourseProgress(selectedCourse)}%` }}
+                    ></div>
                   </div>
                 </div>
-                <div className="w-28 sm:w-36 bg-slate-700 rounded-full h-2.5 overflow-hidden">
-                  <div 
-                    className="bg-gradient-to-r from-orange-500 to-emerald-500 h-full rounded-full transition-all duration-500"
-                    style={{ width: `${getCourseProgress(selectedCourse)}%` }}
-                  ></div>
-                </div>
-              </div>
+              ) : (
+                <button
+                  onClick={() => onOpenAuth('signup')}
+                  className="flex items-center gap-2 bg-slate-800/90 hover:bg-slate-800 backdrop-blur-sm px-3.5 py-2 rounded-xl border border-orange-500/40 text-xs text-slate-300 hover:text-white transition-all shadow-xs"
+                >
+                  <Lock className="w-3.5 h-3.5 text-orange-400" />
+                  <div className="text-left">
+                    <div className="text-[9px] text-slate-400 uppercase font-semibold">Progression du cours : 0%</div>
+                    <div className="text-xs font-bold text-orange-400">Connectez-vous pour sauvegarder</div>
+                  </div>
+                </button>
+              )}
             </div>
 
             {/* Course Headline & Overview */}
@@ -354,13 +419,17 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({ onGoToDashboard, onOpe
                     ) : (
                       <button
                         onClick={() => {
+                          if (!currentUser) {
+                            onOpenAuth('signup');
+                            return;
+                          }
                           const el = document.getElementById('module-reader-section');
                           el?.scrollIntoView({ behavior: 'smooth' });
                         }}
                         className="w-full py-3 px-4 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold rounded-xl text-xs shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
                       >
                         <PlayCircle className="w-4 h-4" />
-                        <span>Continuer la formation</span>
+                        <span>{currentUser ? 'Continuer la formation' : 'Commencer la formation'}</span>
                       </button>
                     )}
                   </div>
@@ -368,7 +437,7 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({ onGoToDashboard, onOpe
               </div>
             </div>
 
-            {/* Paliers / Module Stepper Bar */}
+            {/* Paliers / Module Stepper Bar - UNIFORM NUMBERING 1, 2, 3, 4 */}
             <div className="pt-4 border-t border-slate-800 space-y-3">
               <div className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
                 <span>Parcours par Paliers ({selectedCourse.modules.length} paliers + Quiz Final)</span>
@@ -380,12 +449,17 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({ onGoToDashboard, onOpe
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {selectedCourse.modules.map((mod, idx) => {
                   const isDone = currentCourseProgress.completedModules.includes(mod.id);
-                  const isSelected = activeModuleIndex === idx;
+                  const isSelected = activeModuleIndex === idx && !isFinalQuizOpen;
+                  const stepNumber = idx + 1;
 
                   return (
                     <button
                       key={mod.id}
                       onClick={() => {
+                        if (!currentUser) {
+                          onOpenAuth('signup');
+                          return;
+                        }
                         setActiveModuleIndex(idx);
                         setIsFinalQuizOpen(false);
                       }}
@@ -397,34 +471,49 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({ onGoToDashboard, onOpe
                             : 'bg-slate-800/40 border-slate-700/60 text-slate-400 hover:bg-slate-800/80 hover:text-slate-200'
                       }`}
                     >
-                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold ${
+                      {/* Consistent Step Badge with uniform number and checkmark if done */}
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-xs font-extrabold ${
                         isDone 
                           ? 'bg-emerald-500 text-slate-950' 
                           : isSelected 
-                            ? 'bg-orange-500 text-white' 
+                            ? 'bg-orange-500 text-white shadow-xs' 
                             : 'bg-slate-700 text-slate-300'
                       }`}>
-                        {isDone ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : idx + 1}
+                        {isDone ? (
+                          <div className="flex items-center gap-0.5">
+                            <span>{stepNumber}</span>
+                            <Check className="w-2.5 h-2.5 stroke-[3]" />
+                          </div>
+                        ) : (
+                          <span>{stepNumber}</span>
+                        )}
                       </div>
 
                       <div className="min-w-0 flex-1">
                         <div className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
-                          Palier {idx + 1}
+                          Palier {stepNumber}
                         </div>
                         <div className="text-xs font-bold truncate text-slate-200">
                           {mod.title.replace(/^Palier \d+ : /, '')}
                         </div>
-                        <div className="text-[10px] text-slate-400 font-mono mt-0.5">
-                          {mod.durationMinutes} min {mod.checkpointQuiz ? '· Avec quiz' : ''}
+                        <div className="text-[10px] text-slate-400 font-mono mt-0.5 flex items-center gap-1.5">
+                          <span>{mod.durationMinutes} min</span>
+                          {mod.checkpointQuiz && <span className="text-amber-400">· Avec quiz</span>}
                         </div>
                       </div>
                     </button>
                   );
                 })}
 
-                {/* Final Certification Quiz Button in Stepper */}
+                {/* Final Certification Step in Stepper - Uniform Number 4 */}
                 <button
-                  onClick={() => setIsFinalQuizOpen(true)}
+                  onClick={() => {
+                    if (!currentUser) {
+                      onOpenAuth('signup');
+                      return;
+                    }
+                    setIsFinalQuizOpen(true);
+                  }}
                   className={`p-3.5 rounded-xl border text-left transition-all flex items-start gap-3 ${
                     isFinalQuizOpen 
                       ? 'bg-amber-500/20 border-amber-500 text-white ring-1 ring-amber-500' 
@@ -433,22 +522,32 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({ onGoToDashboard, onOpe
                         : 'bg-slate-800/40 border-slate-700/60 text-slate-400 hover:bg-slate-800/80 hover:text-slate-200'
                   }`}
                 >
-                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold ${
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-xs font-extrabold ${
                     currentCourseProgress.isCertified 
                       ? 'bg-emerald-500 text-slate-950' 
-                      : 'bg-amber-500/30 text-amber-300 border border-amber-500/50'
+                      : isFinalQuizOpen
+                        ? 'bg-amber-500 text-slate-950'
+                        : 'bg-amber-500/30 text-amber-300 border border-amber-500/50'
                   }`}>
-                    <Award className="w-3.5 h-3.5" />
+                    {currentCourseProgress.isCertified ? (
+                      <div className="flex items-center gap-0.5">
+                        <span>{selectedCourse.modules.length + 1}</span>
+                        <Check className="w-2.5 h-2.5 stroke-[3]" />
+                      </div>
+                    ) : (
+                      <span>{selectedCourse.modules.length + 1}</span>
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">
-                      Étape Finale
+                    <div className="text-[10px] text-amber-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                      <span>Palier {selectedCourse.modules.length + 1}</span>
+                      <span>· Étape Finale</span>
                     </div>
                     <div className="text-xs font-bold truncate text-white">
                       Quiz de Certification
                     </div>
                     <div className="text-[10px] text-slate-400 font-mono mt-0.5">
-                      {currentCourseProgress.isCertified ? '✓ Diplômé' : 'Validation diplôme'}
+                      {currentCourseProgress.isCertified ? '✓ Diplômé avec succès' : 'Validation diplôme'}
                     </div>
                   </div>
                 </button>
@@ -508,9 +607,30 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({ onGoToDashboard, onOpe
                 )}
               </div>
 
+              {/* Unauthenticated User Callout */}
+              {!currentUser && (
+                <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-slate-100 border border-orange-500/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-10 h-10 rounded-xl bg-orange-500/20 border border-orange-500/40 flex items-center justify-center text-orange-600 shrink-0 shadow-2xs">
+                      <Lock className="w-5 h-5" />
+                    </div>
+                    <div className="text-left">
+                      <div className="text-xs sm:text-sm font-bold text-slate-900">Accès Réservé aux Membres GLOBAL-AF</div>
+                      <div className="text-[11px] sm:text-xs text-slate-600">Vous consultez un extrait libre. Créez votre compte gratuit pour valider vos paliers et passer l'examen officiel.</div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => onOpenAuth('signup')}
+                    className="shrink-0 px-5 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-xs rounded-xl shadow-md transition-all active:scale-95"
+                  >
+                    Créer mon compte gratuit
+                  </button>
+                </div>
+              )}
+
               {/* PALIER CHECKPOINT QUIZ SECTION */}
               {activeModule.checkpointQuiz && (
-                <div className="mt-8 pt-6 border-t border-slate-200 space-y-5">
+                <div className="mt-8 pt-6 border-t border-slate-200 space-y-6">
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
                       <div className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
@@ -521,7 +641,7 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({ onGoToDashboard, onOpe
                         {activeModule.checkpointQuiz.title}
                       </h4>
                       <p className="text-xs text-slate-500">
-                        Validez cette question pour débloquer le palier suivant et créditer vos points.
+                        Répondez aux questions ci-dessous pour valider ce palier et débloquer la suite.
                       </p>
                     </div>
 
@@ -532,94 +652,123 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({ onGoToDashboard, onOpe
                     </div>
                   </div>
 
-                  {/* Question Container */}
-                  {activeModule.checkpointQuiz.questions.map((q) => {
-                    const selectedIdx = checkpointAnswers[activeModule.checkpointQuiz!.id];
-                    const isSubmitted = checkpointSubmitted[activeModule.checkpointQuiz!.id];
-                    const isCorrect = selectedIdx === q.correctAnswerIndex;
+                  {/* Multi-Question Container */}
+                  <div className="space-y-5">
+                    {activeModule.checkpointQuiz.questions.map((q, qIndex) => {
+                      const selectedIdx = checkpointAnswers[q.id];
+                      const isSubmitted = checkpointSubmitted[activeModule.checkpointQuiz!.id];
+                      const isCorrect = selectedIdx === q.correctAnswerIndex;
 
-                    return (
-                      <div key={q.id} className="p-5 bg-slate-50 rounded-2xl border border-slate-200/90 space-y-4">
-                        <div className="font-bold text-slate-900 text-sm sm:text-base">
-                          {q.question}
-                        </div>
+                      return (
+                        <div key={q.id} className="p-5 bg-slate-50 rounded-2xl border border-slate-200/90 space-y-3">
+                          <div className="font-bold text-slate-900 text-xs sm:text-sm flex items-start gap-2">
+                            <span className="w-5 h-5 rounded-md bg-orange-100 text-orange-800 text-[11px] font-bold flex items-center justify-center shrink-0">
+                              {qIndex + 1}
+                            </span>
+                            <span>{q.question}</span>
+                          </div>
 
-                        <div className="space-y-2.5">
-                          {q.options.map((opt, optIdx) => {
-                            const isThisSelected = selectedIdx === optIdx;
-                            let btnStyle = 'bg-white border-slate-200 hover:border-orange-300 text-slate-700';
+                          <div className="space-y-2 pl-7">
+                            {q.options.map((opt, optIdx) => {
+                              const isThisSelected = selectedIdx === optIdx;
+                              let btnStyle = 'bg-white border-slate-200 hover:border-orange-300 text-slate-700';
 
-                            if (isSubmitted) {
-                              if (optIdx === q.correctAnswerIndex) {
-                                btnStyle = 'bg-emerald-50 border-emerald-500 text-emerald-950 font-bold';
-                              } else if (isThisSelected && !isCorrect) {
-                                btnStyle = 'bg-rose-50 border-rose-500 text-rose-950 font-bold';
+                              if (isSubmitted) {
+                                if (optIdx === q.correctAnswerIndex) {
+                                  btnStyle = 'bg-emerald-50 border-emerald-500 text-emerald-950 font-bold';
+                                } else if (isThisSelected && !isCorrect) {
+                                  btnStyle = 'bg-rose-50 border-rose-500 text-rose-950 font-bold';
+                                }
+                              } else if (isThisSelected) {
+                                btnStyle = 'bg-orange-50 border-orange-500 text-orange-950 font-semibold ring-1 ring-orange-500';
                               }
-                            } else if (isThisSelected) {
-                              btnStyle = 'bg-orange-50 border-orange-500 text-orange-950 font-semibold ring-1 ring-orange-500';
-                            }
 
-                            return (
-                              <button
-                                key={optIdx}
-                                disabled={isSubmitted && isCorrect}
-                                onClick={() => handleSelectCheckpointAnswer(activeModule.checkpointQuiz!.id, optIdx)}
-                                className={`w-full p-3.5 rounded-xl border text-left text-xs sm:text-sm transition-all flex items-center justify-between ${btnStyle}`}
-                              >
-                                <div className="flex items-center gap-3">
-                                  <span className="w-5 h-5 rounded-full border flex items-center justify-center text-[10px] font-bold">
-                                    {String.fromCharCode(65 + optIdx)}
-                                  </span>
-                                  <span>{opt}</span>
-                                </div>
+                              return (
+                                <button
+                                  key={optIdx}
+                                  disabled={isSubmitted && isCorrect}
+                                  onClick={() => handleSelectCheckpointAnswer(q.id, optIdx)}
+                                  className={`w-full p-3 rounded-xl border text-left text-xs sm:text-sm transition-all flex items-center justify-between ${btnStyle}`}
+                                >
+                                  <div className="flex items-center gap-2.5">
+                                    <span className="w-5 h-5 rounded-full border flex items-center justify-center text-[10px] font-bold">
+                                      {String.fromCharCode(65 + optIdx)}
+                                    </span>
+                                    <span>{opt}</span>
+                                  </div>
 
-                                {isSubmitted && (
-                                  <span className="shrink-0 text-xs font-bold">
-                                    {optIdx === q.correctAnswerIndex ? '✓ Réponse exacte' : (isThisSelected ? '✗ Incorrect' : '')}
-                                  </span>
-                                )}
-                              </button>
-                            );
-                          })}
+                                  {isSubmitted && (
+                                    <span className="shrink-0 text-xs font-bold">
+                                      {optIdx === q.correctAnswerIndex ? '✓ Exact' : (isThisSelected ? '✗ Faux' : '')}
+                                    </span>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          {/* Individual feedback if submitted */}
+                          {isSubmitted && (
+                            <div className={`mt-2 pl-7 text-xs p-3 rounded-xl border ${
+                              isCorrect ? 'bg-emerald-50/80 text-emerald-900 border-emerald-200' : 'bg-rose-50/80 text-rose-900 border-rose-200'
+                            }`}>
+                              <span className="font-bold">{isCorrect ? '✓ Exact : ' : '✗ Explication : '}</span>
+                              {q.explanation}
+                            </div>
+                          )}
                         </div>
+                      );
+                    })}
+                  </div>
 
-                        {/* Submit / Verification Action */}
-                        {!isSubmitted ? (
-                          <div className="pt-2 flex justify-end">
-                            <button
-                              disabled={selectedIdx === undefined}
-                              onClick={() => handleValidateCheckpointQuiz(activeModule.checkpointQuiz!.id, q.correctAnswerIndex, activeModule.id)}
-                              className="px-5 py-2.5 bg-orange-600 hover:bg-orange-700 disabled:opacity-50 text-white font-bold rounded-xl text-xs transition-colors shadow-xs"
-                            >
-                              Valider ma réponse
-                            </button>
+                  {/* Submission and Palier Validation Controls */}
+                  <div className="pt-2">
+                    {!checkpointSubmitted[activeModule.checkpointQuiz.id] ? (
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <span className="text-xs text-slate-600">
+                          Questions répondues : <strong className="text-slate-900 font-mono">
+                            {activeModule.checkpointQuiz.questions.filter(q => checkpointAnswers[q.id] !== undefined).length} / {activeModule.checkpointQuiz.questions.length}
+                          </strong>
+                        </span>
+                        <button
+                          disabled={activeModule.checkpointQuiz.questions.some(q => checkpointAnswers[q.id] === undefined)}
+                          onClick={() => handleValidateCheckpointQuiz(activeModule.checkpointQuiz!, activeModule.id)}
+                          className="w-full sm:w-auto px-6 py-2.5 bg-orange-600 hover:bg-orange-700 disabled:opacity-40 text-white font-bold rounded-xl text-xs transition-colors shadow-xs"
+                        >
+                          Valider toutes les questions du Palier {activeModuleIndex + 1}
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {activeModule.checkpointQuiz.questions.every(q => checkpointAnswers[q.id] === q.correctAnswerIndex) ? (
+                          <div className="p-4 rounded-xl bg-emerald-50 text-emerald-900 border border-emerald-200 flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2 font-bold text-xs sm:text-sm">
+                              <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
+                              <span>🎉 Bravo ! Toutes les questions sont validées. Ce palier est validé avec succès.</span>
+                            </div>
+                            <span className="text-xs font-bold text-emerald-700 font-notable">
+                              +{activeModule.checkpointQuiz.rewardPoints} PTS
+                            </span>
                           </div>
                         ) : (
-                          <div className="space-y-3 pt-2">
-                            <div className={`p-4 rounded-xl text-xs leading-relaxed ${
-                              isCorrect ? 'bg-emerald-50 text-emerald-900 border border-emerald-200' : 'bg-rose-50 text-rose-900 border border-rose-200'
-                            }`}>
-                              <div className="font-bold mb-1">
-                                {isCorrect ? '🎉 Bravo ! Vous avez validé ce palier.' : '❌ Réponse erronée, relisez le cours.'}
-                              </div>
-                              <div>{q.explanation}</div>
+                          <div className="p-4 rounded-xl bg-rose-50 text-rose-900 border border-rose-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+                            <div className="text-xs">
+                              Certaines réponses sont inexactes. Relisez les explications ci-dessus et retentez votre chance.
                             </div>
-
-                            {!isCorrect && (
-                              <button
-                                onClick={() => {
-                                  setCheckpointSubmitted(prev => ({ ...prev, [activeModule.checkpointQuiz!.id]: false }));
-                                }}
-                                className="text-xs font-semibold text-orange-600 hover:underline"
-                              >
-                                Réessayer cette question
-                              </button>
-                            )}
+                            <button
+                              onClick={() => {
+                                setCheckpointSubmitted(prev => ({ ...prev, [activeModule.checkpointQuiz!.id]: false }));
+                              }}
+                              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg shadow-xs"
+                            >
+                              Réessayer ce quiz
+                            </button>
                           </div>
                         )}
                       </div>
-                    );
-                  })}
+                    )}
+                  </div>
+
                 </div>
               )}
 
@@ -647,18 +796,52 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({ onGoToDashboard, onOpe
 
             </div>
           ) : (
-            /* FINAL CERTIFICATION EXAM */
+            /* FINAL CERTIFICATION EXAM (40 QUESTIONS - 45 MIN) */
             <div className="space-y-6">
+              {/* Sticky Exam Progress Bar & Timer */}
+              <div className="sticky top-20 z-20 bg-slate-900/95 backdrop-blur-md p-4 rounded-2xl border border-slate-700 shadow-xl flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <BabiMascot variant="academic" size="xs" />
+                  <div>
+                    <div className="text-xs uppercase tracking-wider text-slate-400 font-bold">
+                      Examen Certifiant · {selectedCourse.quiz?.questions.length || 40} Questions
+                    </div>
+                    <div className="text-sm font-bold text-white flex items-center gap-2">
+                      <span>Progression :</span>
+                      <span className="text-orange-400 font-mono">
+                        {Object.keys(finalQuizAnswers).length} / {selectedCourse.quiz?.questions.length || 40} répondues
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Countdown Timer */}
+                <div className="flex items-center gap-4">
+                  <div className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl border font-mono font-bold text-sm ${
+                    examSecondsLeft < 300 
+                      ? 'bg-rose-950/60 border-rose-500/50 text-rose-300 animate-pulse' 
+                      : 'bg-slate-800 border-slate-700 text-amber-300'
+                  }`}>
+                    <Timer className="w-4 h-4 text-amber-400" />
+                    <span>Temps restant : {formatExamTimer(examSecondsLeft)}</span>
+                  </div>
+
+                  <div className="text-xs text-slate-300 hidden sm:block">
+                    Seuil de passage : <span className="font-bold text-emerald-400">80% requis (32/40)</span>
+                  </div>
+                </div>
+              </div>
+
               <div className="text-center max-w-2xl mx-auto space-y-2">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold">
                   <Award className="w-4 h-4 text-amber-700" />
-                  <span>Épreuve Finale Certifiante</span>
+                  <span>Grand Examen de Certification Officielle</span>
                 </div>
                 <h3 className="text-2xl font-bold text-slate-900">
-                  {selectedCourse.quiz?.title || 'Quiz Final de Certification'}
+                  {selectedCourse.quiz?.title || 'Grand Examen Certifiant (40 Questions Chronométrées)'}
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600">
-                  Répondez à l'ensemble des questions. Une note minimale de <span className="font-bold text-slate-900 font-notable">{selectedCourse.quiz?.passingScore || 75}%</span> est requise pour obtenir votre attestation certifiée et remporter <span className="font-bold text-emerald-600 font-notable">+{selectedCourse.quiz?.rewardPoints || 100} PTS</span>.
+                  Épreuve d'évaluation rigoureuse de 40 questions en temps limité (45 min). Une note minimale de <span className="font-bold text-slate-900 font-notable">80% (32/40)</span> est strictement exigée pour délivrer votre attestation certifiée conforme et remporter <span className="font-bold text-emerald-600 font-notable">+{selectedCourse.quiz?.rewardPoints || 200} PTS</span>.
                 </p>
               </div>
 
@@ -996,7 +1179,7 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({ onGoToDashboard, onOpe
               {/* Student Name */}
               <div className="space-y-1">
                 <div className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-                  {currentUser.firstName} {currentUser.lastName}
+                  {currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : 'Apprenant Certifié'}
                 </div>
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-slate-100 border border-slate-200 text-xs">
                   <span className="text-slate-500">Matricule Officiel :</span>
@@ -1039,8 +1222,8 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({ onGoToDashboard, onOpe
               </div>
 
               {/* Official Seal / Signature Stamp */}
-              <div className="flex items-center justify-between pt-4">
-                <div className="flex items-center gap-2 text-left">
+              <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                <div className="flex items-center gap-2.5 text-left">
                   <div className="w-10 h-10 rounded-full bg-emerald-50 border-2 border-emerald-500 flex items-center justify-center text-emerald-600 shadow-2xs">
                     <ShieldCheck className="w-6 h-6" />
                   </div>
@@ -1050,11 +1233,17 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({ onGoToDashboard, onOpe
                   </div>
                 </div>
 
-                {/* Tricolore Flag Ribbon */}
-                <div className="flex items-center h-4 w-12 rounded overflow-hidden border border-slate-300">
-                  <span className="w-1/3 h-full bg-[#FF7700]"></span>
-                  <span className="w-1/3 h-full bg-white"></span>
-                  <span className="w-1/3 h-full bg-[#009E49]"></span>
+                {/* Prestigious Mascot Seal */}
+                <div className="flex items-center gap-2 bg-gradient-to-r from-orange-50 to-amber-50 px-3 py-1.5 rounded-2xl border border-orange-300 shadow-xs">
+                  <img
+                    src="/images/mascot-academy.jpg"
+                    alt="Sceau Babi l'Éléphant Diplômé"
+                    className="w-9 h-9 rounded-full object-cover border-2 border-amber-500 shadow-xs"
+                  />
+                  <div className="text-right">
+                    <div className="text-[9px] uppercase font-bold text-orange-950">Sceau d'Honneur</div>
+                    <div className="text-[10px] font-extrabold text-orange-600">Babi Académie 🇨🇮</div>
+                  </div>
                 </div>
               </div>
 

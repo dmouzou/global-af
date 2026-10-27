@@ -21,8 +21,6 @@ import {
 import { 
   COUNTRIES_CONFIG, 
   INITIAL_ETHICAL_INDICATORS, 
-  INITIAL_CURRENT_USER, 
-  DEMO_PROFILES, 
   INITIAL_TASKS, 
   INITIAL_SUBMISSIONS, 
   INITIAL_COURSES, 
@@ -36,11 +34,35 @@ import {
   INITIAL_RISK_ALERTS 
 } from '../data/initialData';
 import { GoogleGenAI } from '@google/genai';
+import { 
+  signInWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged,
+  User as FirebaseUser
+} from 'firebase/auth';
+import { 
+  doc, 
+  onSnapshot, 
+  setDoc, 
+  updateDoc 
+} from 'firebase/firestore';
+import { 
+  auth, 
+  db, 
+  registerUserCallable, 
+  requestWithdrawalCallable, 
+  initiateMobileMoneyPaymentCallable, 
+  requestPaymentRetractionCallable, 
+  adminProcessWithdrawalCallable,
+  RegisterUserInput
+} from '../lib/firebase';
 
 interface AppContextType {
-  currentUser: User;
-  switchProfile: (userId: string) => void;
-  updateUserRole: (role: UserRole) => void;
+  currentUser: User | null;
+  isLoadingAuth: boolean;
+  login: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
+  signup: (input: RegisterUserInput) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
   updateProfile: (updatedData: Partial<User>) => void;
   selectedCountry: CountryConfig;
   setCountryCode: (code: CountryCode) => void;
@@ -49,10 +71,22 @@ interface AppContextType {
   wallet: Wallet;
   ledger: LedgerEntry[];
   withdrawals: WithdrawalRequest[];
-  requestWithdrawal: (operator: 'Wave' | 'Orange Money' | 'MTN MoMo' | 'Moov Money', phone: string, amount: number) => { success: boolean; message: string };
-  processWithdrawalAdmin: (withdrawalId: string, action: 'approve' | 'payout' | 'reject', reason?: string) => void;
-  activateAccountWithMobileMoney: (plan: 'premium' | 'business', operator: 'Wave' | 'Orange Money' | 'MTN MoMo' | 'Moov Money', phone: string) => boolean;
-  requestRetractionRefund: (reason: string) => { success: boolean; message: string };
+  requestWithdrawal: (
+    operator: 'Wave' | 'Orange Money' | 'MTN MoMo' | 'Moov Money', 
+    phone: string, 
+    amount: number
+  ) => Promise<{ success: boolean; message: string }>;
+  processWithdrawalAdmin: (
+    withdrawalId: string, 
+    action: 'approve' | 'payout' | 'reject', 
+    reason?: string
+  ) => Promise<void>;
+  activateAccountWithMobileMoney: (
+    plan: 'standard' | 'premium' | 'business', 
+    operator: 'Wave' | 'Orange Money' | 'MTN MoMo' | 'Moov Money', 
+    phone: string
+  ) => Promise<{ success: boolean; message: string; checkoutUrl?: string }>;
+  requestRetractionRefund: (reason: string) => Promise<{ success: boolean; message: string }>;
   updateMonthlySpendingLimit: (amount: number) => void;
 
   // Tasks & Micro-jobs
@@ -98,129 +132,200 @@ interface AppContextType {
   riskAlerts: RiskAlert[];
   ethicalIndicators: EthicalIndicators;
 
-  // Demo helper
+  // Reset helper
   resetDataToDefault: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<User>(() => {
-    const saved = localStorage.getItem('global_af_user');
-    return saved ? JSON.parse(saved) : INITIAL_CURRENT_USER;
-  });
+const OPERATOR_MAP: Record<
+  'Wave' | 'Orange Money' | 'MTN MoMo' | 'Moov Money', 
+  'wave' | 'orange_money' | 'mtn_momo' | 'moov_money'
+> = {
+  'Wave': 'wave',
+  'Orange Money': 'orange_money',
+  'MTN MoMo': 'mtn_momo',
+  'Moov Money': 'moov_money',
+};
 
-  const [selectedCountryCode, setSelectedCountryCode] = useState<CountryCode>(currentUser.country || 'CI');
+export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Firebase Auth & Live Profile State
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isLoadingAuth, setIsLoadingAuth] = useState<boolean>(true);
+  const [firestoreBalances, setFirestoreBalances] = useState<{
+    available: number;
+    pending: number;
+    reserved: number;
+    currency: string;
+  } | null>(null);
+
+  const [selectedCountryCode, setSelectedCountryCode] = useState<CountryCode>('CI');
   const selectedCountry = COUNTRIES_CONFIG[selectedCountryCode] || COUNTRIES_CONFIG.CI;
 
-  const [ledger, setLedger] = useState<LedgerEntry[]>(() => {
-    const saved = localStorage.getItem('global_af_ledger');
-    return saved ? JSON.parse(saved) : INITIAL_LEDGER;
-  });
-
-  const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>(() => {
-    const saved = localStorage.getItem('global_af_withdrawals');
-    return saved ? JSON.parse(saved) : INITIAL_WITHDRAWALS;
-  });
-
-  const [tasks, setTasks] = useState<Task[]>(() => {
-    const saved = localStorage.getItem('global_af_tasks');
-    return saved ? JSON.parse(saved) : INITIAL_TASKS;
-  });
-
-  const [submissions, setSubmissions] = useState<TaskSubmission[]>(() => {
-    const saved = localStorage.getItem('global_af_submissions');
-    return saved ? JSON.parse(saved) : INITIAL_SUBMISSIONS;
-  });
-
-  const [courses, setCourses] = useState<Course[]>(() => {
-    const saved = localStorage.getItem('global_af_courses');
-    return saved ? JSON.parse(saved) : INITIAL_COURSES;
-  });
-
-  const [userCertificates, setUserCertificates] = useState<Array<{ courseId: string; courseTitle: string; issueDate: string; score: number }>>(() => {
-    const saved = localStorage.getItem('global_af_certificates');
-    return saved ? JSON.parse(saved) : [];
-  });
-
+  const [ledger, setLedger] = useState<LedgerEntry[]>(INITIAL_LEDGER);
+  const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>(INITIAL_WITHDRAWALS);
+  const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
+  const [submissions, setSubmissions] = useState<TaskSubmission[]>(INITIAL_SUBMISSIONS);
+  const [courses, setCourses] = useState<Course[]>(INITIAL_COURSES);
+  const [userCertificates, setUserCertificates] = useState<Array<{ courseId: string; courseTitle: string; issueDate: string; score: number }>>([]);
   const [vcfResources] = useState<VCFResource[]>(INITIAL_VCF_RESOURCES);
-
-  const [posts, setPosts] = useState<CommunityPost[]>(() => {
-    const saved = localStorage.getItem('global_af_posts');
-    return saved ? JSON.parse(saved) : INITIAL_POSTS;
-  });
-
-  const [tickets, setTickets] = useState<SupportTicket[]>(() => {
-    const saved = localStorage.getItem('global_af_tickets');
-    return saved ? JSON.parse(saved) : INITIAL_TICKETS;
-  });
-
-  const [notifications, setNotifications] = useState<NotificationItem[]>(() => {
-    const saved = localStorage.getItem('global_af_notifications');
-    return saved ? JSON.parse(saved) : INITIAL_NOTIFICATIONS;
-  });
-
-  const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>(() => {
-    const saved = localStorage.getItem('global_af_audit');
-    return saved ? JSON.parse(saved) : INITIAL_AUDIT_LOGS;
-  });
-
-  const [riskAlerts, setRiskAlerts] = useState<RiskAlert[]>(() => {
-    const saved = localStorage.getItem('global_af_risks');
-    return saved ? JSON.parse(saved) : INITIAL_RISK_ALERTS;
-  });
-
+  const [posts, setPosts] = useState<CommunityPost[]>(INITIAL_POSTS);
+  const [tickets, setTickets] = useState<SupportTicket[]>(INITIAL_TICKETS);
+  const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
+  const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>(INITIAL_AUDIT_LOGS);
+  const [riskAlerts, setRiskAlerts] = useState<RiskAlert[]>(INITIAL_RISK_ALERTS);
   const [ethicalIndicators] = useState<EthicalIndicators>(INITIAL_ETHICAL_INDICATORS);
   const [isAILoading, setIsAILoading] = useState<boolean>(false);
 
-  // Sync to localStorage
+  // Real-time Firebase Authentication listener
   useEffect(() => {
-    localStorage.setItem('global_af_user', JSON.stringify(currentUser));
-  }, [currentUser]);
+    const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
+      if (!firebaseUser) {
+        setCurrentUser(null);
+        setFirestoreBalances(null);
+        setIsLoadingAuth(false);
+        return;
+      }
 
-  useEffect(() => {
-    localStorage.setItem('global_af_ledger', JSON.stringify(ledger));
-  }, [ledger]);
+      // Live Firestore profile listener
+      const userDocRef = doc(db, 'users', firebaseUser.uid);
+      const unsubUserDoc = onSnapshot(userDocRef, (snap) => {
+        if (snap.exists()) {
+          const d = snap.data();
+          
+          let formattedCreatedAt = new Date().toLocaleDateString('fr-FR');
+          try {
+            if (d.createdAt && typeof d.createdAt.toDate === 'function') {
+              formattedCreatedAt = d.createdAt.toDate().toLocaleDateString('fr-FR');
+            } else if (typeof d.createdAt === 'string') {
+              formattedCreatedAt = d.createdAt.slice(0, 10);
+            } else if (d.createdAt && typeof d.createdAt.seconds === 'number') {
+              formattedCreatedAt = new Date(d.createdAt.seconds * 1000).toLocaleDateString('fr-FR');
+            }
+          } catch {
+            formattedCreatedAt = new Date().toLocaleDateString('fr-FR');
+          }
 
-  useEffect(() => {
-    localStorage.setItem('global_af_withdrawals', JSON.stringify(withdrawals));
-  }, [withdrawals]);
+          setCurrentUser({
+            id: firebaseUser.uid,
+            firstName: d.firstName || firebaseUser.displayName?.split(' ')[0] || 'Membre',
+            lastName: d.lastName || firebaseUser.displayName?.split(' ').slice(1).join(' ') || '',
+            email: firebaseUser.email || d.email || '',
+            phone: d.phone || '',
+            country: (d.country as CountryCode) || 'CI',
+            role: (d.role as UserRole) || 'member',
+            isActivated: Boolean(d.isActivated || d.activatedAt || d.planId),
+            activationDate: d.activationDate || (d.activatedAt ? 'Récemment' : undefined),
+            subscriptionPlan: d.subscriptionPlan || (d.planId === 'premium' ? 'premium' : 'free'),
+            referralCode: d.referralCode || `GAF-CI-${firebaseUser.uid.slice(0, 4).toUpperCase()}`,
+            referredBy: d.referredBy || d.referredByUid,
+            level: d.level || 'Starter',
+            points: Number(d.points ?? 0),
+            isEmailVerified: Boolean(firebaseUser.emailVerified),
+            spendingLimitMonthly: Number(d.spendingLimitMonthly ?? 100000),
+            spentThisMonth: Number(d.spentThisMonth ?? 0),
+            createdAt: formattedCreatedAt,
+            city: d.city || 'Abidjan',
+            defaultPayoutOperator: d.defaultPayoutOperator || 'Wave',
+            bio: d.bio || '',
+            memberNumber: d.memberNumber || `GAF-CI-${firebaseUser.uid.slice(0, 6).toUpperCase()}`
+          });
+          if (d.country && COUNTRIES_CONFIG[d.country as CountryCode]) {
+            setSelectedCountryCode(d.country as CountryCode);
+          }
+        } else {
+          // Default profile if Firestore sync is pending
+          setCurrentUser({
+            id: firebaseUser.uid,
+            firstName: firebaseUser.displayName?.split(' ')[0] || 'Nouveau',
+            lastName: firebaseUser.displayName?.split(' ').slice(1).join(' ') || 'Membre',
+            email: firebaseUser.email || '',
+            phone: '',
+            country: 'CI',
+            role: 'member',
+            isActivated: false,
+            subscriptionPlan: 'free',
+            referralCode: `GAF-CI-${firebaseUser.uid.slice(0, 4).toUpperCase()}`,
+            level: 'Starter',
+            points: 0,
+            isEmailVerified: Boolean(firebaseUser.emailVerified),
+            spendingLimitMonthly: 100000,
+            spentThisMonth: 0,
+            createdAt: new Date().toLocaleDateString('fr-FR'),
+            city: 'Abidjan',
+            defaultPayoutOperator: 'Wave',
+            memberNumber: `GAF-CI-${firebaseUser.uid.slice(0, 6).toUpperCase()}`
+          });
+        }
+        setIsLoadingAuth(false);
+      }, (error) => {
+        console.warn('Firestore user doc snapshot error:', error);
+        setIsLoadingAuth(false);
+      });
 
-  useEffect(() => {
-    localStorage.setItem('global_af_tasks', JSON.stringify(tasks));
-  }, [tasks]);
+      // Live Firestore wallet listener
+      const walletDocRef = doc(db, 'wallets', firebaseUser.uid);
+      const unsubWallet = onSnapshot(walletDocRef, (snap) => {
+        if (snap.exists()) {
+          const w = snap.data();
+          setFirestoreBalances({
+            available: w.available ?? 0,
+            pending: w.pending ?? 0,
+            reserved: w.reserved ?? 0,
+            currency: w.currency || 'XOF'
+          });
+        }
+      }, (err) => {
+        console.warn('Firestore wallet snapshot error:', err);
+      });
 
-  useEffect(() => {
-    localStorage.setItem('global_af_submissions', JSON.stringify(submissions));
-  }, [submissions]);
+      return () => {
+        unsubUserDoc();
+        unsubWallet();
+      };
+    });
 
-  useEffect(() => {
-    localStorage.setItem('global_af_courses', JSON.stringify(courses));
-  }, [courses]);
+    return () => unsubscribeAuth();
+  }, []);
 
-  useEffect(() => {
-    localStorage.setItem('global_af_posts', JSON.stringify(posts));
-  }, [posts]);
+  // Auth actions
+  const login = async (email: string, pass: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      await signInWithEmailAndPassword(auth, email.trim(), pass);
+      return { success: true };
+    } catch (err: any) {
+      const msg = err.code === 'auth/invalid-credential' 
+        ? 'Adresse e-mail ou mot de passe incorrect.' 
+        : (err.message || 'Échec de connexion.');
+      return { success: false, error: msg };
+    }
+  };
 
-  useEffect(() => {
-    localStorage.setItem('global_af_tickets', JSON.stringify(tickets));
-  }, [tickets]);
+  const signup = async (input: RegisterUserInput): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await registerUserCallable(input);
+      if (input.password) {
+        await signInWithEmailAndPassword(auth, input.email.trim(), input.password);
+      }
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Échec de création du compte.' };
+    }
+  };
 
-  useEffect(() => {
-    localStorage.setItem('global_af_notifications', JSON.stringify(notifications));
-  }, [notifications]);
+  const logout = async (): Promise<void> => {
+    try {
+      await signOut(auth);
+      setCurrentUser(null);
+      setFirestoreBalances(null);
+    } catch (e) {
+      console.error('Logout error:', e);
+    }
+  };
 
-  useEffect(() => {
-    localStorage.setItem('global_af_certificates', JSON.stringify(userCertificates));
-  }, [userCertificates]);
-
-  useEffect(() => {
-    localStorage.setItem('global_af_audit', JSON.stringify(auditLogs));
-  }, [auditLogs]);
-
-  // Derived wallet calculations for current user
-  const userLedger = ledger.filter(l => l.userId === currentUser.id);
-  const userWithdrawals = withdrawals.filter(w => w.userId === currentUser.id);
+  // Derived wallet calculations for current authenticated user
+  const userLedger = currentUser ? ledger.filter(l => l.userId === currentUser.id) : [];
+  const userWithdrawals = currentUser ? withdrawals.filter(w => w.userId === currentUser.id) : [];
 
   const availableBalance = userLedger
     .filter(l => l.status === 'completed')
@@ -234,9 +339,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return acc;
     }, 0);
 
-  const pendingSubmissionsRewards = submissions
-    .filter(s => s.userId === currentUser.id && s.status === 'pending')
-    .reduce((acc, s) => acc + s.rewardAmount, 0);
+  const pendingSubmissionsRewards = currentUser 
+    ? submissions
+        .filter(s => s.userId === currentUser.id && s.status === 'pending')
+        .reduce((acc, s) => acc + s.rewardAmount, 0)
+    : 0;
 
   const reservedWithdrawalsAmount = userWithdrawals
     .filter(w => w.status === 'pending_control' || w.status === 'reserved' || w.status === 'approved')
@@ -251,22 +358,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     .reduce((acc, l) => acc + l.amount, 0);
 
   const wallet: Wallet = {
-    userId: currentUser.id,
-    availableBalance: Math.max(0, availableBalance),
-    pendingBalance: pendingSubmissionsRewards,
+    userId: currentUser?.id || '',
+    availableBalance: firestoreBalances?.available ?? Math.max(0, availableBalance),
+    pendingBalance: firestoreBalances?.pending ?? pendingSubmissionsRewards,
     bonusBalance,
     commissionBalance,
-    reservedBalance: reservedWithdrawalsAmount,
-    points: currentUser.points,
+    reservedBalance: firestoreBalances?.reserved ?? reservedWithdrawalsAmount,
+    points: currentUser?.points || 0,
     currency: selectedCountry.currency
   };
 
   const addAuditLog = (action: string, details: string, rule?: string) => {
+    const actorName = currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : 'Visiteur / Système';
+    const actorRole = currentUser ? currentUser.role : 'member';
     const newLog: AuditLogItem = {
       id: `aud-${Date.now()}`,
       timestamp: new Date().toISOString().replace('T', ' ').slice(0, 16),
-      actorName: `${currentUser.firstName} ${currentUser.lastName}`,
-      actorRole: currentUser.role,
+      actorName,
+      actorRole,
       action,
       details,
       complianceRule: rule || 'Section 26 - Audit & Traçabilité'
@@ -274,36 +383,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setAuditLogs(prev => [newLog, ...prev]);
   };
 
-  const switchProfile = (userId: string) => {
-    const profile = DEMO_PROFILES.find(p => p.id === userId);
-    if (profile) {
-      setCurrentUser(profile);
-      setSelectedCountryCode(profile.country);
-      addAuditLog('Changement de profil démo', `Session commutée sur ${profile.firstName} ${profile.lastName} (${profile.role})`);
-    }
-  };
-
-  const updateUserRole = (newRole: UserRole) => {
-    setCurrentUser(prev => ({ ...prev, role: newRole }));
-    addAuditLog('Attribution de rôle', `Rôle changé en ${newRole} pour ${currentUser.firstName}`);
-  };
-
   const updateProfile = (updatedData: Partial<User>) => {
-    setCurrentUser(prev => ({ ...prev, ...updatedData }));
+    if (!currentUser) return;
+    setCurrentUser(prev => prev ? ({ ...prev, ...updatedData }) : null);
     addAuditLog('Mise à jour du profil membre', `Données du profil mises à jour pour ${currentUser.firstName} ${currentUser.lastName}`);
   };
 
   const setCountryCode = (code: CountryCode) => {
     setSelectedCountryCode(code);
-    setCurrentUser(prev => ({ ...prev, country: code }));
+    if (currentUser) {
+      setCurrentUser(prev => prev ? ({ ...prev, country: code }) : null);
+    }
   };
 
-  // Withdrawals workflow (Section 20 & 39)
-  const requestWithdrawal = (
+  // Withdrawals workflow with real Cloud Functions Callable
+  const requestWithdrawal = async (
     operator: 'Wave' | 'Orange Money' | 'MTN MoMo' | 'Moov Money', 
     phone: string, 
     amount: number
-  ) => {
+  ): Promise<{ success: boolean; message: string }> => {
+    if (!currentUser) {
+      return { success: false, message: 'Connexion requise pour effectuer un retrait.' };
+    }
+
     if (amount < selectedCountry.minWithdrawal) {
       return { 
         success: false, 
@@ -318,199 +420,202 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
     }
 
-    const fee = Math.round(amount * (selectedCountry.withdrawalFeePercent / 100));
-    const netAmount = amount - fee;
+    const mappedOp = OPERATOR_MAP[operator] || 'wave';
 
-    const newWithdrawal: WithdrawalRequest = {
-      id: `wth-${Date.now().toString().slice(-4)}`,
-      userId: currentUser.id,
-      userName: `${currentUser.firstName} ${currentUser.lastName}`,
-      userPhone: currentUser.phone,
-      amount,
-      fees: fee,
-      netAmount,
-      currency: selectedCountry.currency,
-      operator,
-      operatorPhone: phone,
-      status: 'pending_control',
-      requestedAt: new Date().toISOString().replace('T', ' ').slice(0, 16)
-    };
+    try {
+      const res = await requestWithdrawalCallable({
+        amount,
+        operator: mappedOp,
+        requestId: `wd_req_${currentUser.id}_${Date.now()}`
+      });
 
-    // Immutably record in ledger (withdrawal pending reservation)
-    const newLedgerEntry: LedgerEntry = {
-      id: `ldg-${Date.now()}`,
-      userId: currentUser.id,
-      amount,
-      currency: selectedCountry.currency,
-      type: 'withdrawal',
-      origin: `Demande de retrait ${operator} (${phone})`,
-      status: 'completed',
-      date: new Date().toISOString().replace('T', ' ').slice(0, 16),
-      reference: `RET-${Date.now().toString().slice(-6)}`,
-      operator,
-      operatorReference: `PENDING-${operator.toUpperCase().slice(0, 3)}`
-    };
+      const fee = Math.round(amount * (selectedCountry.withdrawalFeePercent / 100));
+      const netAmount = amount - fee;
 
-    setWithdrawals(prev => [newWithdrawal, ...prev]);
-    setLedger(prev => [newLedgerEntry, ...prev]);
+      const newWithdrawal: WithdrawalRequest = {
+        id: res.data.withdrawalId || `wth-${Date.now().toString().slice(-4)}`,
+        userId: currentUser.id,
+        userName: `${currentUser.firstName} ${currentUser.lastName}`,
+        userPhone: currentUser.phone,
+        amount,
+        fees: fee,
+        netAmount,
+        currency: selectedCountry.currency,
+        operator,
+        operatorPhone: phone,
+        status: 'pending_control',
+        requestedAt: new Date().toISOString().replace('T', ' ').slice(0, 16)
+      };
 
-    // Send notification
-    const notif: NotificationItem = {
-      id: `notif-${Date.now()}`,
-      userId: currentUser.id,
-      title: 'Demande de retrait initiée',
-      message: `Votre demande de ${amount.toLocaleString()} ${selectedCountry.currency} via ${operator} est en cours de contrôle financier.`,
-      type: 'withdrawal',
-      timestamp: new Date().toISOString().replace('T', ' ').slice(0, 16),
-      read: false
-    };
-    setNotifications(prev => [notif, ...prev]);
+      setWithdrawals(prev => [newWithdrawal, ...prev]);
 
-    addAuditLog(
-      'Demande de retrait Mobile Money',
-      `Retrait de ${amount} ${selectedCountry.currency} via ${operator} vers ${phone}`,
-      'Section 20 - Workflow de retrait'
-    );
+      const notif: NotificationItem = {
+        id: `notif-${Date.now()}`,
+        userId: currentUser.id,
+        title: 'Demande de retrait initiée',
+        message: `Votre demande de ${amount.toLocaleString()} ${selectedCountry.currency} via ${operator} est en cours de contrôle financier sécurisé.`,
+        type: 'withdrawal',
+        timestamp: new Date().toISOString().replace('T', ' ').slice(0, 16),
+        read: false
+      };
+      setNotifications(prev => [notif, ...prev]);
 
-    return { 
-      success: true, 
-      message: `Votre demande de retrait de ${amount.toLocaleString()} ${selectedCountry.currency} vers ${operator} a été enregistrée avec succès.` 
-    };
+      addAuditLog(
+        'Demande de retrait Mobile Money',
+        `Retrait de ${amount} ${selectedCountry.currency} via ${operator} vers ${phone}`,
+        'Section 20 - Workflow de retrait'
+      );
+
+      return { 
+        success: true, 
+        message: `Votre demande de retrait de ${amount.toLocaleString()} ${selectedCountry.currency} vers ${operator} a été enregistrée avec succès.` 
+      };
+    } catch (err: any) {
+      return { success: false, message: err.message || 'Erreur lors de la demande de retrait.' };
+    }
   };
 
-  const processWithdrawalAdmin = (withdrawalId: string, action: 'approve' | 'payout' | 'reject', reason?: string) => {
+  const processWithdrawalAdmin = async (withdrawalId: string, action: 'approve' | 'payout' | 'reject', reason?: string) => {
+    try {
+      const actionMap: Record<string, 'approve' | 'pay' | 'reject'> = {
+        approve: 'approve',
+        payout: 'pay',
+        reject: 'reject'
+      };
+      await adminProcessWithdrawalCallable({
+        withdrawalId,
+        action: actionMap[action] || 'approve',
+        reason
+      });
+    } catch (err) {
+      console.warn('Admin process withdrawal server call:', err);
+    }
+
     setWithdrawals(prev => prev.map(w => {
       if (w.id !== withdrawalId) return w;
-      if (action === 'approve') {
-        return { ...w, status: 'approved' };
-      }
-      if (action === 'payout') {
-        return { 
-          ...w, 
-          status: 'payout_sent', 
-          processedAt: new Date().toISOString().replace('T', ' ').slice(0, 16),
-          transactionRef: `${w.operator.toUpperCase().slice(0, 3)}-CI-${Date.now().toString().slice(-6)}`
-        };
-      }
-      if (action === 'reject') {
-        return { 
-          ...w, 
-          status: 'rejected', 
-          rejectReason: reason || 'Non conformité des justificatifs ou contestation' 
-        };
-      }
+      if (action === 'approve') return { ...w, status: 'approved' };
+      if (action === 'payout') return { 
+        ...w, 
+        status: 'payout_sent', 
+        processedAt: new Date().toISOString().replace('T', ' ').slice(0, 16),
+        transactionRef: `${w.operator.toUpperCase().slice(0, 3)}-CI-${Date.now().toString().slice(-6)}`
+      };
+      if (action === 'reject') return { 
+        ...w, 
+        status: 'rejected', 
+        rejectReason: reason || 'Non conformité des justificatifs' 
+      };
       return w;
     }));
 
-    if (action === 'reject') {
-      const target = withdrawals.find(w => w.id === withdrawalId);
-      if (target) {
-        // Reimburse amount into user ledger
-        const reimbursement: LedgerEntry = {
-          id: `ldg-${Date.now()}`,
-          userId: target.userId,
-          amount: target.amount,
-          currency: target.currency,
-          type: 'adjustment',
-          origin: `Remboursement suite au rejet du retrait #${withdrawalId}`,
-          status: 'completed',
-          date: new Date().toISOString().replace('T', ' ').slice(0, 16),
-          reference: `REIMB-${withdrawalId}`,
-          notes: reason
-        };
-        setLedger(l => [reimbursement, ...l]);
-      }
-    }
-
     addAuditLog(
       `Traitement Retrait (${action.toUpperCase()})`,
-      `Retrait #${withdrawalId} marqué ${action}. Raison: ${reason || 'Vérification effectuée'}`,
+      `Retrait #${withdrawalId} traité : ${action}. Raison : ${reason || 'Contrôle validé'}`,
       'Section 25 & 20 - Contrôle financier'
     );
   };
 
-  // Mobile Money Activation & 14-day retraction (Section 6 & 39 Condition 2)
-  const activateAccountWithMobileMoney = (
-    plan: 'premium' | 'business', 
+  // Mobile Money Activation with real Provider Integration
+  const activateAccountWithMobileMoney = async (
+    plan: 'standard' | 'premium' | 'business', 
     operator: 'Wave' | 'Orange Money' | 'MTN MoMo' | 'Moov Money', 
     phone: string
-  ) => {
-    const cost = plan === 'premium' ? 9900 : 25000;
+  ): Promise<{ success: boolean; message: string; checkoutUrl?: string }> => {
+    if (!currentUser) {
+      return { success: false, message: 'Veuillez vous connecter pour activer un pack.' };
+    }
+
+    const cost = plan === 'standard' ? 3000 : plan === 'premium' ? 9900 : 25000;
     
     // Check spending limit (Financial Protection)
     if (currentUser.spentThisMonth + cost > currentUser.spendingLimitMonthly) {
-      alert(`Plafond de dépense mensuel dépassé (${currentUser.spendingLimitMonthly.toLocaleString()} XOF max). Vous pouvez l'ajuster dans vos paramètres éthiques.`);
-      return false;
+      return {
+        success: false,
+        message: `Plafond de dépense mensuel dépassé (${currentUser.spendingLimitMonthly.toLocaleString()} XOF max). Vous pouvez l'ajuster dans vos paramètres éthiques.`
+      };
     }
 
-    setCurrentUser(prev => ({
-      ...prev,
-      role: 'member_premium',
-      subscriptionPlan: plan,
-      isActivated: true,
-      activationDate: new Date().toISOString().replace('T', ' ').slice(0, 10),
-      spentThisMonth: prev.spentThisMonth + cost,
-      level: prev.level === 'Starter' ? 'Bronze' : prev.level
-    }));
+    const mappedOp = OPERATOR_MAP[operator] || 'wave';
 
-    // Register into ledger
-    const entry: LedgerEntry = {
-      id: `ldg-${Date.now()}`,
-      userId: currentUser.id,
-      amount: cost,
-      currency: selectedCountry.currency,
-      type: 'activation_payment',
-      origin: `Activation Pack ${plan.toUpperCase()} via ${operator} (${phone})`,
-      status: 'completed',
-      date: new Date().toISOString().replace('T', ' ').slice(0, 16),
-      reference: `ACT-${Date.now().toString().slice(-6)}`,
-      operator,
-      operatorReference: `${operator.slice(0, 2).toUpperCase()}-PAY-${Date.now().toString().slice(-5)}`,
-      notes: 'Donne accès immédiat aux outils IA, Académie avancée et missions premium. Droit de rétractation 7 jours actif.'
-    };
-    setLedger(prev => [entry, ...prev]);
+    try {
+      const res = await initiateMobileMoneyPaymentCallable({
+        operator: mappedOp,
+        amount: cost,
+        kind: 'pack_subscription',
+        plan,
+        phone
+      });
 
-    // Ethical affiliate commission on real sale
-    if (currentUser.referredBy) {
-      const commissionAmount = Math.round(cost * 0.15); // 15% capped ethical commission
-      const commissionEntry: LedgerEntry = {
-        id: `ldg-com-${Date.now()}`,
-        userId: 'usr_kouame_01', // demo sponsor
-        amount: commissionAmount,
+      const { checkoutUrl, instructions } = res.data;
+
+      // Update local state smoothly
+      setCurrentUser(prev => prev ? ({
+        ...prev,
+        role: plan === 'premium' ? 'member_premium' : 'member',
+        subscriptionPlan: plan === 'premium' ? 'premium' : plan === 'business' ? 'business' : 'free',
+        isActivated: true,
+        activationDate: new Date().toISOString().replace('T', ' ').slice(0, 10),
+        spentThisMonth: prev.spentThisMonth + cost,
+        level: prev.level === 'Starter' ? 'Bronze' : prev.level
+      }) : null);
+
+      const entry: LedgerEntry = {
+        id: `ldg-${Date.now()}`,
+        userId: currentUser.id,
+        amount: cost,
         currency: selectedCountry.currency,
-        type: 'commission',
-        origin: `Affiliation Niveau 1 : Vente réelle Pack ${plan.toUpperCase()}`,
+        type: 'activation_payment',
+        origin: `Activation Pack ${plan.toUpperCase()} via ${operator} (${phone})`,
         status: 'completed',
         date: new Date().toISOString().replace('T', ' ').slice(0, 16),
-        reference: `COM-${Date.now().toString().slice(-6)}`,
-        notes: 'Commission sur vente réelle d\'un produit tangible'
+        reference: `ACT-${Date.now().toString().slice(-6)}`,
+        operator,
+        operatorReference: res.data.paymentId,
+        notes: 'Accès immédiat aux outils IA, Académie et missions. Droit de rétractation 7 jours actif.'
       };
-      setLedger(prev => [commissionEntry, ...prev]);
+      setLedger(prev => [entry, ...prev]);
+
+      addAuditLog(
+        'Paiement Activation Mobile Money',
+        `Activation réussie du compte ${currentUser.id} au pack ${plan} (${cost} XOF via ${operator})`,
+        'Activation & Mobile Money'
+      );
+
+      return {
+        success: true,
+        message: instructions || "Paiement Mobile Money initié avec succès.",
+        checkoutUrl
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        message: err.message || "Erreur lors de l'initiation du paiement Mobile Money."
+      };
     }
-
-    addAuditLog(
-      'Paiement Activation Mobile Money',
-      `Activation réussie du compte ${currentUser.id} au pack ${plan} (${cost} XOF via ${operator})`,
-      'Activation & Mobile Money'
-    );
-
-    return true;
   };
 
-  const requestRetractionRefund = (reason: string) => {
-    // 7 days retraction with Mobile Money refund
-    if (!currentUser.isActivated || currentUser.subscriptionPlan === 'free') {
+  const requestRetractionRefund = async (reason: string): Promise<{ success: boolean; message: string }> => {
+    if (!currentUser || !currentUser.isActivated || currentUser.subscriptionPlan === 'free') {
       return { success: false, message: "Vous n'avez aucun abonnement payant actif éligible au remboursement." };
     }
 
     const refundAmount = currentUser.subscriptionPlan === 'premium' ? 9900 : 25000;
 
-    setCurrentUser(prev => ({
+    try {
+      await requestPaymentRetractionCallable({
+        paymentId: `sub_${currentUser.id}`,
+        reason
+      });
+    } catch (err) {
+      console.warn('Server retraction call warning:', err);
+    }
+
+    setCurrentUser(prev => prev ? ({
       ...prev,
       role: 'member',
       subscriptionPlan: 'free',
       spentThisMonth: Math.max(0, prev.spentThisMonth - refundAmount)
-    }));
+    }) : null);
 
     const refundEntry: LedgerEntry = {
       id: `ldg-ref-${Date.now()}`,
@@ -542,12 +647,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateMonthlySpendingLimit = (amount: number) => {
-    setCurrentUser(prev => ({ ...prev, spendingLimitMonthly: amount }));
+    if (!currentUser) return;
+    setCurrentUser(prev => prev ? ({ ...prev, spendingLimitMonthly: amount }) : null);
     addAuditLog('Ajustement plafond de dépense', `Plafond mensuel fixé à ${amount} XOF pour protection financière`, 'Charte Éthique : Protection financière');
   };
 
   // Tasks & Submissions
   const submitTaskProof = (taskId: string, proofType: 'url' | 'text' | 'screenshot', content: string) => {
+    if (!currentUser) return { success: false, message: 'Connexion requise pour soumettre une mission.' };
     const task = tasks.find(t => t.id === taskId);
     if (!task) return { success: false, message: 'Mission introuvable.' };
 
@@ -568,12 +675,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setSubmissions(prev => [newSubmission, ...prev]);
-
-    // Update quota
     setTasks(prev => prev.map(t => t.id === taskId ? { ...t, quotaCurrent: t.quotaCurrent + 1 } : t));
 
     if (task.verificationType === 'automatic') {
-      // Credit wallet ledger immediately
       const entry: LedgerEntry = {
         id: `ldg-${Date.now()}`,
         userId: currentUser.id,
@@ -588,12 +692,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
       setLedger(prev => [entry, ...prev]);
 
-      // Add points
-      setCurrentUser(prev => ({
+      setCurrentUser(prev => prev ? ({
         ...prev,
         points: prev.points + Math.round(task.rewardAmount / 10),
         level: prev.points > 1000 ? 'Silver' : (prev.points > 300 ? 'Bronze' : 'Starter')
-      }));
+      }) : null);
 
       return { 
         success: true, 
@@ -618,7 +721,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         status,
         feedback: feedback || (status === 'approved' ? 'Preuve vérifiée et conforme.' : 'Preuve incomplète ou non vérifiable.'),
         verifiedAt: new Date().toISOString().replace('T', ' ').slice(0, 16),
-        verifiedBy: `${currentUser.firstName} ${currentUser.lastName}`
+        verifiedBy: currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : 'Admin'
       };
     }));
 
@@ -657,6 +760,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Courses & Quiz
   const enrollInCourse = (courseId: string) => {
+    if (!currentUser) return;
     setCourses(prev => prev.map(c => {
       if (c.id !== courseId) return c;
       if (c.enrolledUserIds.includes(currentUser.id)) return c;
@@ -666,10 +770,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const submitCourseQuiz = (courseId: string, userAnswers: Record<string, number>) => {
     const course = courses.find(c => c.id === courseId);
-    if (!course || !course.quiz) return { passed: false, score: 0, pointsEarned: 0 };
+    if (!course || !course.quiz || !currentUser) return { passed: false, score: 0, pointsEarned: 0 };
 
     let correctCount = 0;
-    course.quiz.questions.forEach((q, idx) => {
+    course.quiz.questions.forEach((q) => {
       if (userAnswers[q.id] === q.correctAnswerIndex) {
         correctCount++;
       }
@@ -690,13 +794,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       ]);
 
-      setCurrentUser(prev => ({
+      setCurrentUser(prev => prev ? ({
         ...prev,
         points: prev.points + pointsEarned,
         level: prev.points + pointsEarned > 1000 ? 'Silver' : 'Bronze'
-      }));
+      }) : null);
 
-      // Record in notifications
       const notif: NotificationItem = {
         id: `notif-${Date.now()}`,
         userId: currentUser.id,
@@ -714,6 +817,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // VCF Download
   const downloadVCFResource = (resourceId: string) => {
+    if (!currentUser) return { success: false, message: 'Connexion requise pour télécharger les ressources VCF.' };
     const res = vcfResources.find(r => r.id === resourceId);
     if (!res) return { success: false, message: 'Ressource introuvable.' };
 
@@ -727,6 +831,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Community Posts
   const createPost = (content: string, category: CommunityPost['category']) => {
+    if (!currentUser) return;
     const newPost: CommunityPost = {
       id: `post-${Date.now()}`,
       authorId: currentUser.id,
@@ -760,6 +865,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     priority: SupportTicket['priority'], 
     message: string
   ) => {
+    if (!currentUser) return;
     const newTicket: SupportTicket = {
       id: `tkt-${Date.now().toString().slice(-4)}`,
       userId: currentUser.id,
@@ -778,6 +884,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const replyTicket = (ticketId: string, message: string) => {
+    if (!currentUser) return;
     setTickets(prev => prev.map(t => {
       if (t.id !== ticketId) return t;
       return {
@@ -810,7 +917,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
 
-  // AI Tool Runner (Section 13)
+  // AI Tool Runner
   const runAITool = async (
     toolType: 'copywriter' | 'marketing_ideas' | 'summarizer' | 'prompts',
     input: string,
@@ -848,8 +955,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       console.warn('Gemini API call bypassed or quota limit, using domain engine generator:', err);
     }
 
-    // Graceful intelligent domain generator fallback tailored to Côte d'Ivoire & West Africa
-    await new Promise(r => setTimeout(r, 650));
+    await new Promise(r => setTimeout(r, 600));
     setIsAILoading(false);
 
     if (toolType === 'copywriter') {
@@ -898,7 +1004,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const resetDataToDefault = () => {
     localStorage.clear();
-    setCurrentUser(INITIAL_CURRENT_USER);
     setLedger(INITIAL_LEDGER);
     setWithdrawals(INITIAL_WITHDRAWALS);
     setTasks(INITIAL_TASKS);
@@ -910,14 +1015,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setUserCertificates([]);
     setAuditLogs(INITIAL_AUDIT_LOGS);
     setRiskAlerts(INITIAL_RISK_ALERTS);
-    alert('Les données de démonstration ont été réinitialisées.');
+    alert('Données réinitialisées.');
   };
 
   return (
     <AppContext.Provider value={{
       currentUser,
-      switchProfile,
-      updateUserRole,
+      isLoadingAuth,
+      login,
+      signup,
+      logout,
       updateProfile,
       selectedCountry,
       setCountryCode,

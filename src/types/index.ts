@@ -20,7 +20,8 @@ export type AppView =
   | 'tools' 
   | 'outils'
   | 'dashboard' 
-  | 'admin';
+  | 'admin'
+  | 'partenaire';
 
 export type CountryCode = 'CI' | 'SN' | 'CM' | 'BF';
 
@@ -55,7 +56,6 @@ export interface User {
   createdAt: string;
   city?: string;
   defaultPayoutOperator?: 'Wave' | 'Orange Money' | 'MTN MoMo' | 'Moov Money';
-  idCardNumber?: string;
   bio?: string;
   memberNumber?: string;
 }
@@ -294,4 +294,21 @@ export interface EthicalIndicators {
   totalWithdrawnXOF: number;
   activeMembersCount: number;
   lastUpdated: string;
+}
+
+export interface PartnerApplication {
+  id: string;
+  companyName: string;
+  rccm: string;
+  sector: string;
+  contactName: string;
+  contactRole: string;
+  phone: string;
+  email: string;
+  city: string;
+  description: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+  submittedAt?: string;
+  reviewedAt?: string;
 }

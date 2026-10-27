@@ -16,9 +16,11 @@ import {
   Smartphone,
   Lock,
   LogOut,
-  Building2
+  Building2,
+  Clock
 } from 'lucide-react';
 import { TaskCategory, UserLevel } from '../../types';
+import { BabiMascot } from '../common/BabiMascot';
 
 interface AdminDashboardProps {
   advertiserInfo?: {
@@ -46,7 +48,60 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     selectedCountry
   } = useApp();
 
-  const [activeAdminTab, setActiveAdminTab] = useState<'finance' | 'missions' | 'ethics' | 'anti_fraud'>('finance');
+  const [activeAdminTab, setActiveAdminTab] = useState<'finance' | 'missions' | 'ethics' | 'anti_fraud' | 'partners'>('finance');
+
+  // Partner applications verification state (Demande 4)
+  const [partnerApplications, setPartnerApplications] = useState([
+    {
+      id: 'part-01',
+      companyName: 'Ivoire Distribution Express SAS',
+      rccm: 'CI-ABJ-2024-B-1192',
+      contactName: 'Koffi Marc',
+      email: 'contact@ivoiredistrib.ci',
+      phone: '+225 07 48 99 21 00',
+      sector: 'Commerce & Grande Distribution',
+      city: 'Abidjan (Treichville)',
+      appliedAt: '2026-10-25',
+      status: 'pending_verification' as 'pending_verification' | 'active' | 'rejected',
+      microJobsBudget: 250000
+    },
+    {
+      id: 'part-02',
+      companyName: 'Sika Agro-Business CI',
+      rccm: 'CI-BKE-2023-B-0842',
+      contactName: 'Ahou Kouamé',
+      email: 'direction@sika-agro.ci',
+      phone: '+225 05 12 34 56 78',
+      sector: 'Agro-alimentaire & Vivrier',
+      city: 'Bouaké',
+      appliedAt: '2026-10-26',
+      status: 'pending_verification' as 'pending_verification' | 'active' | 'rejected',
+      microJobsBudget: 180000
+    },
+    {
+      id: 'part-03',
+      companyName: 'Babi Tech Solutions',
+      rccm: 'CI-ABJ-2024-B-9914',
+      contactName: 'Touré Ibrahim',
+      email: 'ibrahim@babitech.ci',
+      phone: '+225 01 77 88 99 00',
+      sector: 'Applications & Numérique',
+      city: 'Abidjan (Plateau)',
+      appliedAt: '2026-10-27',
+      status: 'active' as 'pending_verification' | 'active' | 'rejected',
+      microJobsBudget: 500000
+    }
+  ]);
+
+  const handleApprovePartner = (id: string) => {
+    setPartnerApplications(prev => prev.map(p => p.id === id ? { ...p, status: 'active' } : p));
+    alert('Dossier Partenaire validé avec succès ! L\'entreprise dispose désormais d\'un compte Entreprise actif pour publier ses micro-jobs.');
+  };
+
+  const handleRejectPartner = (id: string) => {
+    setPartnerApplications(prev => prev.map(p => p.id === id ? { ...p, status: 'rejected' } : p));
+    alert('Dossier Partenaire mis en attente / rejeté pour non-conformité RCCM.');
+  };
 
   // New task form state
   const [isCreatingTask, setIsCreatingTask] = useState(false);
@@ -97,17 +152,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       
       {/* Top Banner */}
-      <div className="bg-slate-900 text-white rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-slate-800 shadow-xl">
+      <div className="liquid-glass-dark text-white rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl border border-white/10">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="px-2.5 py-0.5 text-[10px] font-bold bg-amber-500 text-slate-950 rounded-full uppercase tracking-wider">
+            <span className="px-2.5 py-0.5 text-[10px] font-bold bg-amber-500 text-slate-950 rounded-full uppercase tracking-wider shadow-sm">
               {advertiserInfo?.role === 'advertiser' ? 'Portail Annonceur Certifié' : 'Back-Office GLOBAL-AF'}
             </span>
-            <span className="text-xs text-slate-400 font-mono">
+            <span className="text-xs text-slate-300 font-mono">
               Site : <strong className="text-emerald-400">global-af-dev-admin</strong>
             </span>
             {advertiserInfo?.email && (
-              <span className="text-xs bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700 text-slate-300 font-mono">
+              <span className="text-xs bg-slate-800/80 px-2 py-0.5 rounded border border-white/10 text-slate-200 font-mono backdrop-blur-md">
                 {advertiserInfo.email}
               </span>
             )}
@@ -125,7 +180,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           {onLogout && (
             <button
               onClick={onLogout}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-red-950/60 hover:bg-red-900/80 border border-red-800/60 text-red-200 text-xs font-semibold transition-all hover:scale-105"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-red-950/60 hover:bg-red-900/80 border border-red-500/30 text-red-200 text-xs font-semibold transition-all hover:scale-105 backdrop-blur-md"
             >
               <LogOut className="w-3.5 h-3.5 text-red-400" />
               <span>Déconnexion</span>
@@ -138,35 +193,53 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         <div className="flex flex-wrap gap-2 text-xs">
           <button
             onClick={() => setActiveAdminTab('finance')}
-            className={`px-3.5 py-2 rounded-lg font-semibold transition-colors ${
-              activeAdminTab === 'finance' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+            className={`px-4 py-2.5 rounded-xl font-bold transition-all shadow-sm ${
+              activeAdminTab === 'finance'
+                ? 'liquid-glass-btn text-white shadow-emerald-500/20'
+                : 'liquid-glass-dark text-slate-300 hover:text-white hover:bg-white/10'
             }`}
           >
             Finances ({pendingWithdrawals.length})
           </button>
           <button
             onClick={() => setActiveAdminTab('missions')}
-            className={`px-3.5 py-2 rounded-lg font-semibold transition-colors ${
-              activeAdminTab === 'missions' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+            className={`px-4 py-2.5 rounded-xl font-bold transition-all shadow-sm ${
+              activeAdminTab === 'missions'
+                ? 'liquid-glass-btn text-white shadow-emerald-500/20'
+                : 'liquid-glass-dark text-slate-300 hover:text-white hover:bg-white/10'
             }`}
           >
             Missions & Preuves ({pendingSubmissions.length})
           </button>
           <button
             onClick={() => setActiveAdminTab('ethics')}
-            className={`px-3.5 py-2 rounded-lg font-semibold transition-colors ${
-              activeAdminTab === 'ethics' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+            className={`px-4 py-2.5 rounded-xl font-bold transition-all shadow-sm ${
+              activeAdminTab === 'ethics'
+                ? 'liquid-glass-btn text-white shadow-emerald-500/20'
+                : 'liquid-glass-dark text-slate-300 hover:text-white hover:bg-white/10'
             }`}
           >
             Contrôle Éthique & Zéro Hasard
           </button>
           <button
             onClick={() => setActiveAdminTab('anti_fraud')}
-            className={`px-3.5 py-2 rounded-lg font-semibold transition-colors ${
-              activeAdminTab === 'anti_fraud' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+            className={`px-4 py-2.5 rounded-xl font-bold transition-all shadow-sm ${
+              activeAdminTab === 'anti_fraud'
+                ? 'liquid-glass-btn text-white shadow-emerald-500/20'
+                : 'liquid-glass-dark text-slate-300 hover:text-white hover:bg-white/10'
             }`}
           >
             Anti-Fraude & Audit ({riskAlerts.length})
+          </button>
+          <button
+            onClick={() => setActiveAdminTab('partners')}
+            className={`px-4 py-2.5 rounded-xl font-bold transition-all shadow-sm ${
+              activeAdminTab === 'partners'
+                ? 'liquid-glass-btn text-white shadow-emerald-500/20'
+                : 'liquid-glass-dark text-slate-300 hover:text-white hover:bg-white/10'
+            }`}
+          >
+            Partenaires & Entreprises ({partnerApplications.filter(p => p.status === 'pending_verification').length})
           </button>
         </div>
 
@@ -569,6 +642,114 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
           </div>
 
+        </div>
+      )}
+
+      {/* PARTNERS TAB (Demande 4: Vérification des dossiers Partenaires & Entreprises) */}
+      {activeAdminTab === 'partners' && (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
+            <div className="flex items-center gap-3">
+              <BabiMascot variant="security" size="sm" />
+              <div>
+                <h2 className="text-xl font-black text-white tracking-tight">
+                  Vérification & Validation des Partenaires & Entreprises
+                </h2>
+                <p className="text-xs text-slate-300">
+                  Contrôle des numéros RCCM, contacts légaux et validation d'accès à l'Espace Partenaire.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-xl text-xs font-bold">
+                {partnerApplications.filter(p => p.status === 'pending_verification').length} en attente
+              </span>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 text-slate-500 border-b border-slate-200 font-semibold">
+                  <tr>
+                    <th className="p-3.5">Entreprise / Raison Sociale</th>
+                    <th className="p-3.5">RCCM & Localité</th>
+                    <th className="p-3.5">Contact Représentant</th>
+                    <th className="p-3.5">Budget Micro-jobs</th>
+                    <th className="p-3.5">Statut</th>
+                    <th className="p-3.5 text-right">Actions de Validation</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {partnerApplications.map(app => (
+                    <tr key={app.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="p-3.5">
+                        <div className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                          <Building2 className="w-4 h-4 text-orange-600 shrink-0" />
+                          <span>{app.companyName}</span>
+                        </div>
+                        <div className="text-[11px] text-slate-500">{app.sector}</div>
+                      </td>
+
+                      <td className="p-3.5 font-mono">
+                        <div className="font-bold text-slate-900">{app.rccm}</div>
+                        <div className="text-[11px] text-slate-500 font-sans">{app.city}</div>
+                      </td>
+
+                      <td className="p-3.5">
+                        <div className="font-semibold text-slate-800">{app.contactName}</div>
+                        <div className="text-[11px] text-slate-500 font-mono">{app.phone}</div>
+                        <div className="text-[10px] text-slate-400">{app.email}</div>
+                      </td>
+
+                      <td className="p-3.5 font-mono font-bold text-slate-900">
+                        {app.microJobsBudget.toLocaleString()} XOF
+                      </td>
+
+                      <td className="p-3.5">
+                        {app.status === 'active' && (
+                          <span className="px-2.5 py-1 text-[11px] font-bold text-emerald-800 bg-emerald-100 rounded-lg inline-flex items-center gap-1">
+                            <CheckCircle className="w-3 h-3" /> Compte Validé
+                          </span>
+                        )}
+                        {app.status === 'pending_verification' && (
+                          <span className="px-2.5 py-1 text-[11px] font-bold text-amber-800 bg-amber-100 rounded-lg inline-flex items-center gap-1">
+                            <Clock className="w-3 h-3" /> Examen RCCM
+                          </span>
+                        )}
+                        {app.status === 'rejected' && (
+                          <span className="px-2.5 py-1 text-[11px] font-bold text-rose-800 bg-rose-100 rounded-lg inline-flex items-center gap-1">
+                            <XCircle className="w-3 h-3" /> Rejeté
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="p-3.5 text-right space-x-1.5 whitespace-nowrap">
+                        {app.status === 'pending_verification' ? (
+                          <>
+                            <button
+                              onClick={() => handleApprovePartner(app.id)}
+                              className="px-3 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors shadow-2xs"
+                            >
+                              Valider le Partenaire
+                            </button>
+                            <button
+                              onClick={() => handleRejectPartner(app.id)}
+                              className="px-2.5 py-1.5 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors"
+                            >
+                              Rejeter
+                            </button>
+                          </>
+                        ) : (
+                          <span className="text-[11px] text-slate-400 italic">Dossier clôturé</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       )}
 

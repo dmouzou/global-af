@@ -18,7 +18,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateSection }) => {
     <footer className="bg-slate-900 text-slate-300 border-t border-slate-800 text-sm">
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           
           {/* Brand & Market context */}
           <div className="lg:col-span-2 space-y-4">
@@ -85,60 +85,12 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateSection }) => {
             </div>
           </div>
 
-          {/* Regulatory & Ethical Notices */}
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200 mb-3">
-              Cadre Éthique
-            </h4>
-            <ul className="space-y-2 text-xs text-slate-400">
-              <li>
-                <button onClick={() => handleNav('transparence')} className="hover:text-white transition-colors text-left">
-                  Charte Éthique & Zéro Hasard
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNav('transparence')} className="hover:text-white transition-colors text-left">
-                  Interdiction des jeux de hasard
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNav('transparence')} className="hover:text-white transition-colors text-left">
-                  Droit de rétractation 7 jours
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNav('transparence')} className="hover:text-white transition-colors text-left">
-                  Protection des données (ARTCI)
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNav('transparence')} className="hover:text-white transition-colors text-left">
-                  Indicateurs financiers réels
-                </button>
-              </li>
-            </ul>
-          </div>
-
         </div>
 
         {/* Bottom Disclaimer */}
         <div className="mt-10 pt-6 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <div className="flex flex-wrap items-center gap-4">
             <p>© 2026 GLOBAL-AF. Tous droits réservés.</p>
-            <a 
-              href="https://global-af-dev-admin.web.app" 
-              onClick={(e) => {
-                // If in dev or same origin, allow quick jump via search param
-                if (window.location.hostname === 'localhost' || window.location.hostname.includes('web.app')) {
-                  e.preventDefault();
-                  window.location.href = window.location.hostname === 'localhost' ? '/?mode=admin' : 'https://global-af-dev-admin.web.app';
-                }
-              }}
-              className="inline-flex items-center gap-1.5 text-slate-400 hover:text-amber-400 transition-colors py-1 px-2.5 rounded-md bg-slate-800/60 border border-slate-700/60 text-[11px]"
-            >
-              <Lock className="w-3 h-3 text-amber-400" />
-              <span>Portail Annonceurs & Partenaires</span>
-            </a>
           </div>
           <div className="flex items-center gap-2 text-[11px] text-slate-400">
             <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" />

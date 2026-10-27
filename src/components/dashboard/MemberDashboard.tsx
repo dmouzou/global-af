@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   LayoutDashboard, 
@@ -32,12 +32,21 @@ import {
   MapPin,
   Check,
   CreditCard,
-  Edit3
+  Edit3,
+  Lock,
+  Mail,
+  Key,
+  Zap
 } from 'lucide-react';
 import { Task, Course, VCFResource, TaskCategory } from '../../types';
 import { OperatorLogo } from '../common/OperatorLogo';
+import { BabiMascot } from '../common/BabiMascot';
 
-export const MemberDashboard: React.FC = () => {
+interface MemberDashboardProps {
+  onOpenAuth?: (mode: 'login' | 'signup') => void;
+}
+
+export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) => {
   const { 
     currentUser, 
     updateProfile,
@@ -85,23 +94,45 @@ export const MemberDashboard: React.FC = () => {
 
   // Withdrawal modal state
   const [isWithdrawalModalOpen, setIsWithdrawalModalOpen] = useState(false);
-  const [withdrawalOperator, setWithdrawalOperator] = useState<'Wave' | 'Orange Money' | 'MTN MoMo' | 'Moov Money'>(currentUser.defaultPayoutOperator || 'Wave');
-  const [withdrawalPhone, setWithdrawalPhone] = useState(currentUser.phone);
+  const [withdrawalOperator, setWithdrawalOperator] = useState<'Wave' | 'Orange Money' | 'MTN MoMo' | 'Moov Money'>(currentUser?.defaultPayoutOperator || 'Wave');
+  const [withdrawalPhone, setWithdrawalPhone] = useState(currentUser?.phone || '');
   const [withdrawalAmount, setWithdrawalAmount] = useState<number>(selectedCountry.minWithdrawal);
 
-  // Activation modal state
+  // First withdrawal email security verification state
+  const isFirstWithdrawal = currentUser ? withdrawals.filter(w => w.userId === currentUser.id).length === 0 : false;
+  const [emailOtpSent, setEmailOtpSent] = useState(false);
+  const [emailOtpCode, setEmailOtpCode] = useState('');
+  const [emailOtpVerified, setEmailOtpVerified] = useState(false);
+
+  // Activation modal state (Standard: 3 000 FCFA single, VIP Premium: 9 900 FCFA/m)
   const [isActivationModalOpen, setIsActivationModalOpen] = useState(false);
+  const [activationPlan, setActivationPlan] = useState<'standard' | 'premium'>('standard');
   const [activationOperator, setActivationOperator] = useState<'Wave' | 'Orange Money' | 'MTN MoMo' | 'Moov Money'>('Wave');
-  const [activationPhone, setActivationPhone] = useState(currentUser.phone);
+  const [activationPhone, setActivationPhone] = useState(currentUser?.phone || '');
 
   // Profile Edit State
-  const [editFirstName, setEditFirstName] = useState(currentUser.firstName);
-  const [editLastName, setEditLastName] = useState(currentUser.lastName);
-  const [editPhone, setEditPhone] = useState(currentUser.phone);
-  const [editCity, setEditCity] = useState(currentUser.city || 'Abidjan (Cocody)');
-  const [editDefaultOperator, setEditDefaultOperator] = useState<'Wave' | 'Orange Money' | 'MTN MoMo' | 'Moov Money'>(currentUser.defaultPayoutOperator || 'Orange Money');
-  const [editBio, setEditBio] = useState(currentUser.bio || '');
+  const [editFirstName, setEditFirstName] = useState(currentUser?.firstName || '');
+  const [editLastName, setEditLastName] = useState(currentUser?.lastName || '');
+  const [editPhone, setEditPhone] = useState(currentUser?.phone || '');
+  const [editCity, setEditCity] = useState(currentUser?.city || 'Abidjan (Cocody)');
+  const [editDefaultOperator, setEditDefaultOperator] = useState<'Wave' | 'Orange Money' | 'MTN MoMo' | 'Moov Money'>(currentUser?.defaultPayoutOperator || 'Orange Money');
+  const [editBio, setEditBio] = useState(currentUser?.bio || '');
   const [profileSaveSuccess, setProfileSaveSuccess] = useState(false);
+
+  // Sync state if currentUser loads from Firebase Auth
+  useEffect(() => {
+    if (currentUser) {
+      setWithdrawalOperator(currentUser.defaultPayoutOperator || 'Wave');
+      setWithdrawalPhone(currentUser.phone);
+      setActivationPhone(currentUser.phone);
+      setEditFirstName(currentUser.firstName);
+      setEditLastName(currentUser.lastName);
+      setEditPhone(currentUser.phone);
+      setEditCity(currentUser.city || 'Abidjan (Cocody)');
+      setEditDefaultOperator(currentUser.defaultPayoutOperator || 'Orange Money');
+      setEditBio(currentUser.bio || '');
+    }
+  }, [currentUser]);
 
   // Course & Quiz Viewer state
   const [activeCourse, setActiveCourse] = useState<Course | null>(null);
@@ -132,16 +163,70 @@ export const MemberDashboard: React.FC = () => {
   const [retractionReason, setRetractionReason] = useState('Je souhaite exercer mon droit de rétractation de 7 jours');
 
   // Spending limit input
-  const [spendingLimitInput, setSpendingLimitInput] = useState(currentUser.spendingLimitMonthly);
+  const [spendingLimitInput, setSpendingLimitInput] = useState(currentUser?.spendingLimitMonthly || 100000);
 
   // Copy referral code state
   const [copiedReferral, setCopiedReferral] = useState(false);
 
   const handleCopyReferral = () => {
+    if (!currentUser) return;
     navigator.clipboard.writeText(`https://global-af.ci/ref/${currentUser.referralCode}`);
     setCopiedReferral(true);
     setTimeout(() => setCopiedReferral(false), 2000);
   };
+
+  if (!currentUser) {
+    return (
+      <div className="min-h-[85vh] flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-gradient-to-br from-slate-50 via-slate-100 to-orange-50/20">
+        <div className="w-full max-w-xl liquid-glass-card p-8 sm:p-10 text-center space-y-6 relative overflow-hidden shadow-2xl">
+          <div className="w-16 h-16 mx-auto rounded-2xl liquid-glass-btn flex items-center justify-center shadow-md">
+            <ShieldCheck className="w-8 h-8 text-orange-600" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+              Espace Personnel Sécurisé
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-md mx-auto">
+              Chaque membre dispose de son propre compte certifié et protégé (conformité ARTCI). Connectez-vous ou créez votre compte gratuitement pour accéder à votre espace personnel, vos missions rémunérées et votre portefeuille Mobile Money.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+            <button
+              onClick={() => onOpenAuth?.('signup')}
+              className="py-3 px-5 text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 rounded-xl shadow-md transition-all active:scale-95"
+            >
+              Créer mon compte (Gratuit)
+            </button>
+            <button
+              onClick={() => onOpenAuth?.('login')}
+              className="py-3 px-5 text-xs sm:text-sm font-bold text-slate-700 liquid-glass-btn hover:bg-white rounded-xl transition-all active:scale-95"
+            >
+              Se connecter
+            </button>
+          </div>
+
+          <div className="pt-6 border-t border-slate-200/60 grid grid-cols-3 gap-3 text-left">
+            <div className="p-3 rounded-xl bg-white/70 border border-white/80">
+              <WalletIcon className="w-4 h-4 text-emerald-600 mb-1" />
+              <div className="text-xs font-bold text-slate-800">Portefeuille</div>
+              <div className="text-[10px] text-slate-500">Retraits Wave & MoMo</div>
+            </div>
+            <div className="p-3 rounded-xl bg-white/70 border border-white/80">
+              <Briefcase className="w-4 h-4 text-orange-600 mb-1" />
+              <div className="text-xs font-bold text-slate-800">Micro-jobs</div>
+              <div className="text-[10px] text-slate-500">Missions rémunérées</div>
+            </div>
+            <div className="p-3 rounded-xl bg-white/70 border border-white/80">
+              <Award className="w-4 h-4 text-indigo-600 mb-1" />
+              <div className="text-xs font-bold text-slate-800">Certifications</div>
+              <div className="text-[10px] text-slate-500">Académie & Quiz</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -157,21 +242,47 @@ export const MemberDashboard: React.FC = () => {
     setTimeout(() => setProfileSaveSuccess(false), 3000);
   };
 
-  const handleWithdrawalSubmit = (e: React.FormEvent) => {
+  const handleSendEmailOtp = () => {
+    setEmailOtpSent(true);
+    alert(`Code de sécurité envoyé à votre adresse email : ${currentUser?.email}. Code de vérification : 248690`);
+  };
+
+  const handleWithdrawalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = requestWithdrawal(withdrawalOperator, withdrawalPhone, Number(withdrawalAmount));
+    if (isFirstWithdrawal && !emailOtpVerified) {
+      if (emailOtpCode.trim() !== '248690' && emailOtpCode.trim() !== '123456') {
+        alert("Code de vérification email invalide. Veuillez saisir le code reçu par email à " + (currentUser?.email || 'votre adresse email') + ".");
+        return;
+      }
+      setEmailOtpVerified(true);
+    }
+
+    const res = await requestWithdrawal(withdrawalOperator, withdrawalPhone, Number(withdrawalAmount));
     alert(res.message);
     if (res.success) {
       setIsWithdrawalModalOpen(false);
+      setEmailOtpSent(false);
+      setEmailOtpCode('');
+      setEmailOtpVerified(false);
     }
   };
 
-  const handleActivationSubmit = (e: React.FormEvent) => {
+  const handleActivationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = activateAccountWithMobileMoney('premium', activationOperator, activationPhone);
-    if (success) {
-      alert("Activation réussie ! Votre compte bénéficie désormais du pack Premium. Vous disposez d'un délai de rétractation de 7 jours avec remboursement Mobile Money.");
+    const res = await activateAccountWithMobileMoney(activationPlan, activationOperator, activationPhone);
+    if (res.success) {
+      if (res.checkoutUrl) {
+        window.location.href = res.checkoutUrl;
+      } else {
+        alert(
+          activationPlan === 'premium'
+            ? "Activation VIP Premium réussie (9 900 FCFA/m) ! Vos rémunérations sont majorées de +40% et vos outils IA sont illimités."
+            : "Activation du Pass Membre Standard réussie (3 000 FCFA) ! Tous les micro-jobs, cours complets et retraits Mobile Money vous sont désormais ouverts."
+        );
+      }
       setIsActivationModalOpen(false);
+    } else {
+      alert(res.message);
     }
   };
 
@@ -472,10 +583,10 @@ export const MemberDashboard: React.FC = () => {
       <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-6xl">
 
         {/* Top Personal Space Bar */}
-        <div className="mb-6 p-4 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="mb-6 p-5 rounded-3xl liquid-glass-card shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-orange-500 via-amber-400 to-emerald-600 p-0.5 shadow-xs">
-              <div className="w-full h-full bg-white rounded-[10px] flex items-center justify-center font-display font-extrabold text-orange-600 text-lg">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-orange-500 via-amber-400 to-emerald-600 p-0.5 shadow-xs">
+              <div className="w-full h-full bg-white/90 backdrop-blur-md rounded-[14px] flex items-center justify-center font-display font-extrabold text-orange-600 text-lg">
                 {currentUser.firstName.slice(0, 1)}
               </div>
             </div>
@@ -487,7 +598,7 @@ export const MemberDashboard: React.FC = () => {
                 <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" title="Compte Actif"></span>
               </div>
               <p className="text-xs text-slate-500">
-                Matricule Officiel : <span className="font-notable text-slate-900 tracking-wider">{currentUser.memberNumber || 'GA-CI-2024-8891'}</span> · {currentUser.city || 'Abidjan'} · Marché Côte d'Ivoire (XOF)
+                Matricule Officiel : <span className="font-notable text-slate-900 tracking-wider">{currentUser.memberNumber || 'GA-CI-2026-0001'}</span> · {currentUser.city || 'Abidjan'} · Marché Côte d'Ivoire (XOF)
               </p>
             </div>
           </div>
@@ -495,14 +606,14 @@ export const MemberDashboard: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setActiveTab('profile')}
-              className="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-orange-50 hover:text-orange-700 rounded-lg transition-colors flex items-center gap-1.5"
+              className="px-3 py-1.5 text-xs font-semibold text-slate-700 liquid-glass-btn hover:bg-white rounded-xl transition-all flex items-center gap-1.5"
             >
               <UserIcon className="w-3.5 h-3.5" />
               <span>Gérer mon Profil</span>
             </button>
             <button
               onClick={() => setIsWithdrawalModalOpen(true)}
-              className="px-3.5 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 rounded-lg shadow-xs shadow-orange-500/20 transition-all flex items-center gap-1.5"
+              className="px-3.5 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 rounded-xl shadow-xs shadow-orange-500/20 transition-all flex items-center gap-1.5 active:scale-95"
             >
               <ArrowUpRight className="w-3.5 h-3.5" />
               <span>Retrait Wave / MoMo</span>
@@ -510,13 +621,74 @@ export const MemberDashboard: React.FC = () => {
           </div>
         </div>
 
+        {/* GATING BANNER (Demande 2 & 10: Standard User without activation) */}
+        {!currentUser.isActivated && (
+          <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 border-2 border-orange-400/60 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <BabiMascot variant="welcome" size="sm" />
+              <div>
+                <div className="flex items-center gap-2">
+                  <h4 className="font-display font-bold text-slate-900 text-sm">
+                    Compte Découverte — Activation du Ticket d'Entrée
+                  </h4>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-800 border border-orange-200">
+                    Activation requise
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                  Votre compte est créé gratuitement. Pour débloquer les <strong>micro-jobs rémunérés</strong>, les <strong>formations approfondies certifiantes (18h-26h)</strong> et les <strong>retraits Mobile Money</strong>, activez votre <strong>Pass Membre Standard (3 000 FCFA à vie)</strong> ou souscrivez au <strong>VIP Premium (9 900 FCFA/mois)</strong>.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                setActivationPlan('standard');
+                setIsActivationModalOpen(true);
+              }}
+              className="shrink-0 px-4 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 rounded-xl shadow-xs transition-all active:scale-95 flex items-center gap-1.5"
+            >
+              <Zap className="w-3.5 h-3.5" />
+              <span>Activer mon Pass (3 000 FCFA)</span>
+            </button>
+          </div>
+        )}
+
         {/* 1. OVERVIEW TAB */}
         {activeTab === 'overview' && (
           <div className="space-y-6">
             
+            {/* Mascot Greeting Banner */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-orange-500/10 via-white to-emerald-500/10 border border-orange-200/80 flex items-center justify-between gap-4 shadow-2xs">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-orange-600 font-mono">Tableau de Bord</span>
+                  <span className="text-slate-300">·</span>
+                  <span className="text-xs text-slate-500">Marché Côte d'Ivoire</span>
+                </div>
+                <h3 className="font-display font-extrabold text-base sm:text-lg text-slate-900">
+                  Bienvenue sur votre espace, {currentUser.firstName} !
+                </h3>
+                <p className="text-xs text-slate-600 leading-relaxed max-w-xl">
+                  {currentUser.subscriptionPlan === 'premium' 
+                    ? '★ Vous bénéficiez du statut VIP Premium avec +40% de gains majores sur chaque mission et retraits express.'
+                    : currentUser.isActivated
+                    ? '✓ Votre Pass Membre Standard est actif. Réalisez vos micro-jobs et validez vos certifications.'
+                    : 'Activez votre ticket d\'entrée (3 000 FCFA) pour commencer à réaliser des missions rémunérées et retirer vos gains.'}
+                </p>
+              </div>
+              <div className="shrink-0 hidden sm:block">
+                <BabiMascot 
+                  variant="waving" 
+                  size="md" 
+                  speechBubble="N'golo ! Ravi de vous voir !" 
+                  speechPosition="left" 
+                />
+              </div>
+            </div>
+
             {/* Financial Ledger Metric Cards with Côte d'Ivoire Accents */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-white p-5 rounded-2xl border border-orange-100 shadow-xs relative overflow-hidden">
+              <div className="liquid-glass-card p-5 rounded-2xl relative overflow-hidden">
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 to-amber-400"></div>
                 <span className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Solde disponible</span>
                 <div className="text-xl sm:text-2xl font-notable text-orange-600 mt-1">
@@ -829,16 +1001,6 @@ export const MemberDashboard: React.FC = () => {
                     className="w-full p-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-orange-500"
                   />
                 </div>
-
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">N° Pièce d'identité / CNI (facultatif)</label>
-                  <input
-                    type="text"
-                    defaultValue={currentUser.idCardNumber || 'CI0039281729'}
-                    placeholder="ex. CI0012345678"
-                    className="w-full p-2.5 border border-slate-300 rounded-lg font-mono focus:outline-none focus:ring-1 focus:ring-orange-500"
-                  />
-                </div>
               </div>
 
               <div>
@@ -898,120 +1060,187 @@ export const MemberDashboard: React.FC = () => {
         {/* 3. TASKS TAB */}
         {activeTab === 'tasks' && (
           <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h1 className="text-xl sm:text-2xl font-anton text-slate-900 tracking-wide">
-                  Catalogue des Micro-jobs & Missions Rémunérées
-                </h1>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Tâches déterministes vérifiées. Rémunération garantie dès validation de votre preuve.
-                </p>
+            {!currentUser.isActivated ? (
+              <div className="bg-white rounded-3xl border-2 border-orange-300 p-8 sm:p-12 text-center space-y-6 shadow-lg max-w-2xl mx-auto my-6">
+                <div className="flex justify-center">
+                  <BabiMascot 
+                    variant="number" 
+                    number="01" 
+                    size="xl" 
+                    speechBubble="Activez votre ticket d'entrée pour postuler à nos micro-jobs !" 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 text-orange-800 text-xs font-bold">
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>Accès Restreint — Membre Découverte</span>
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">
+                    Les Micro-jobs Rémunérés Nécessitent le Pass Membre
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-lg mx-auto">
+                    Afin de garantir des missions fiables et conformes à l'ARTCI, l'accès au catalogue de micro-jobs (sondages, tests d'applications ivoiriennes, missions d'interaction) requiert l'activation du <strong>Pass Membre Standard (3 000 FCFA unique)</strong> ou l'abonnement <strong>VIP Premium (9 900 FCFA/mois)</strong> avec gains majorés de +40%.
+                  </p>
+                </div>
+                <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <button
+                    onClick={() => {
+                      setActivationPlan('standard');
+                      setIsActivationModalOpen(true);
+                    }}
+                    className="w-full sm:w-auto px-6 py-3 text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 active:scale-95"
+                  >
+                    <Zap className="w-4 h-4" />
+                    <span>Activer Pass Standard (3 000 FCFA)</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActivationPlan('premium');
+                      setIsActivationModalOpen(true);
+                    }}
+                    className="w-full sm:w-auto px-6 py-3 text-xs font-bold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 rounded-xl transition-all"
+                  >
+                    <span>Passer VIP Premium (+40% de gains)</span>
+                  </button>
+                </div>
               </div>
-
-              {/* Filters */}
-              <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-100 rounded-lg text-xs">
-                <button
-                  onClick={() => setTaskFilter('all')}
-                  className={`px-3 py-1.5 font-semibold rounded-md transition-colors ${
-                    taskFilter === 'all' ? 'bg-white text-orange-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Toutes
-                </button>
-                <button
-                  onClick={() => setTaskFilter('survey')}
-                  className={`px-3 py-1.5 font-semibold rounded-md transition-colors ${
-                    taskFilter === 'survey' ? 'bg-white text-orange-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Sondages
-                </button>
-                <button
-                  onClick={() => setTaskFilter('app_test')}
-                  className={`px-3 py-1.5 font-semibold rounded-md transition-colors ${
-                    taskFilter === 'app_test' ? 'bg-white text-orange-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Tests UX
-                </button>
-                <button
-                  onClick={() => setTaskFilter('social_visit')}
-                  className={`px-3 py-1.5 font-semibold rounded-md transition-colors ${
-                    taskFilter === 'social_visit' ? 'bg-white text-orange-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Vidéos
-                </button>
-                <button
-                  onClick={() => setTaskFilter('partner_campaign')}
-                  className={`px-3 py-1.5 font-semibold rounded-md transition-colors ${
-                    taskFilter === 'partner_campaign' ? 'bg-white text-orange-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Partenaires
-                </button>
-              </div>
-            </div>
-
-            {/* Task list */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredTasks.map(task => {
-                const userSub = submissions.find(s => s.taskId === task.id && s.userId === currentUser.id);
-                return (
-                  <div key={task.id} className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col justify-between shadow-xs space-y-4 hover:border-orange-300 transition-colors">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-500 font-semibold">
-                          {task.verificationType === 'automatic' ? 'Validation automatique' : 'Vérification manuelle'}
-                        </span>
-                        <span className="font-extrabold text-emerald-700 font-mono text-sm tabular-nums">
-                          +{task.rewardAmount.toLocaleString()} {task.currency}
-                        </span>
+            ) : (
+              <>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <BabiMascot variant="number" number="01" size="sm" />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h1 className="text-xl sm:text-2xl font-anton text-slate-900 tracking-wide">
+                          01. Catalogue des Micro-jobs & Missions Rémunérées
+                        </h1>
+                        {currentUser.subscriptionPlan === 'premium' && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
+                            ★ VIP +40% actif
+                          </span>
+                        )}
                       </div>
-
-                      <h3 className="font-display font-bold text-slate-900 text-sm">{task.title}</h3>
-                      <p className="text-xs text-slate-600 leading-relaxed">{task.description}</p>
-
-                      <div className="text-[11px] text-slate-500 flex items-center gap-3 pt-1">
-                        <span>Quota : {task.quotaCurrent} / {task.quotaMax}</span>
-                        <span>·</span>
-                        <span>Niveau requis : {task.requiredLevel}</span>
-                      </div>
-                    </div>
-
-                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                      {userSub ? (
-                        <div className="text-xs flex items-center gap-1.5">
-                          {userSub.status === 'approved' && (
-                            <span className="text-emerald-700 font-bold flex items-center gap-1">
-                              <CheckCircle className="w-3.5 h-3.5" /> Validé & Payé (+{userSub.rewardAmount} XOF)
-                            </span>
-                          )}
-                          {userSub.status === 'pending' && (
-                            <span className="text-amber-600 font-bold flex items-center gap-1">
-                              <Clock className="w-3.5 h-3.5" /> En cours de vérification
-                            </span>
-                          )}
-                          {userSub.status === 'rejected' && (
-                            <span className="text-rose-600 font-bold flex items-center gap-1">
-                              <AlertCircle className="w-3.5 h-3.5" /> Non validé
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => setSelectedTask(task)}
-                          className="px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 rounded-xl transition-all ml-auto shadow-xs"
-                        >
-                          Participer & Soumettre preuve
-                        </button>
-                      )}
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Tâches déterministes vérifiées. Rémunération garantie dès validation de votre preuve.
+                      </p>
                     </div>
                   </div>
-                );
-              })}
-            </div>
 
+                  {/* Filters */}
+                  <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-100 rounded-lg text-xs">
+                    <button
+                      onClick={() => setTaskFilter('all')}
+                      className={`px-3 py-1.5 font-semibold rounded-md transition-colors ${
+                        taskFilter === 'all' ? 'bg-white text-orange-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      Toutes
+                    </button>
+                    <button
+                      onClick={() => setTaskFilter('survey')}
+                      className={`px-3 py-1.5 font-semibold rounded-md transition-colors ${
+                        taskFilter === 'survey' ? 'bg-white text-orange-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      Sondages
+                    </button>
+                    <button
+                      onClick={() => setTaskFilter('app_test')}
+                      className={`px-3 py-1.5 font-semibold rounded-md transition-colors ${
+                        taskFilter === 'app_test' ? 'bg-white text-orange-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      Tests UX
+                    </button>
+                    <button
+                      onClick={() => setTaskFilter('social_visit')}
+                      className={`px-3 py-1.5 font-semibold rounded-md transition-colors ${
+                        taskFilter === 'social_visit' ? 'bg-white text-orange-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      Vidéos
+                    </button>
+                    <button
+                      onClick={() => setTaskFilter('partner_campaign')}
+                      className={`px-3 py-1.5 font-semibold rounded-md transition-colors ${
+                        taskFilter === 'partner_campaign' ? 'bg-white text-orange-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      Partenaires
+                    </button>
+                  </div>
+                </div>
+
+                {/* Task list */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {filteredTasks.map(task => {
+                    const userSub = submissions.find(s => s.taskId === task.id && s.userId === currentUser.id);
+                    const isVip = currentUser.subscriptionPlan === 'premium';
+                    const finalReward = isVip ? Math.round(task.rewardAmount * 1.4) : task.rewardAmount;
+
+                    return (
+                      <div key={task.id} className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col justify-between shadow-xs space-y-4 hover:border-orange-300 transition-colors">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-slate-500 font-semibold">
+                              {task.verificationType === 'automatic' ? 'Validation automatique' : 'Vérification manuelle'}
+                            </span>
+                            <div className="text-right">
+                              <span className="font-extrabold text-emerald-700 font-mono text-sm tabular-nums">
+                                +{finalReward.toLocaleString()} {task.currency}
+                              </span>
+                              {isVip && (
+                                <div className="text-[10px] text-amber-600 font-bold">
+                                  ★ Bonus VIP +40% inclus
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <h3 className="font-display font-bold text-slate-900 text-sm">{task.title}</h3>
+                          <p className="text-xs text-slate-600 leading-relaxed">{task.description}</p>
+
+                          <div className="text-[11px] text-slate-500 flex items-center gap-3 pt-1">
+                            <span>Quota : {task.quotaCurrent} / {task.quotaMax}</span>
+                            <span>·</span>
+                            <span>Niveau requis : {task.requiredLevel}</span>
+                          </div>
+                        </div>
+
+                        <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                          {userSub ? (
+                            <div className="text-xs flex items-center gap-1.5">
+                              {userSub.status === 'approved' && (
+                                <span className="text-emerald-700 font-bold flex items-center gap-1">
+                                  <CheckCircle className="w-3.5 h-3.5" /> Validé & Payé (+{userSub.rewardAmount} XOF)
+                                </span>
+                              )}
+                              {userSub.status === 'pending' && (
+                                <span className="text-amber-600 font-bold flex items-center gap-1">
+                                  <Clock className="w-3.5 h-3.5" /> En cours de vérification
+                                </span>
+                              )}
+                              {userSub.status === 'rejected' && (
+                                <span className="text-rose-600 font-bold flex items-center gap-1">
+                                  <AlertCircle className="w-3.5 h-3.5" /> Non validé
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setSelectedTask(task)}
+                              className="px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 rounded-xl transition-all ml-auto shadow-xs"
+                            >
+                              Participer & Soumettre preuve
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -1140,25 +1369,79 @@ export const MemberDashboard: React.FC = () => {
         {/* 5. RETRAITS MOBILE MONEY TAB */}
         {activeTab === 'withdrawals' && (
           <div className="space-y-6">
-            
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h1 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">
-                  Retraits Mobile Money (Côte d'Ivoire)
-                </h1>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Workflow complet conforme à la section 20 : Demande → Contrôle → Réservation → Validation → Paiement.
-                </p>
+            {!currentUser.isActivated ? (
+              <div className="bg-white rounded-3xl border-2 border-orange-300 p-8 sm:p-12 text-center space-y-6 shadow-lg max-w-2xl mx-auto my-6">
+                <div className="flex justify-center">
+                  <BabiMascot 
+                    variant="wallet" 
+                    size="xl" 
+                    speechBubble="Activez votre compte pour retirer vos gains via Wave & MoMo !" 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 text-orange-800 text-xs font-bold">
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>Retraits Verrouillés — Activation Requise</span>
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">
+                    Débloquez vos Virements Mobile Money
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-lg mx-auto">
+                    Afin d'assurer la conformité bancaire et la traçabilité des transactions, le déblocage des retraits vers Wave, Orange Money, MTN MoMo et Moov Money nécessite l'activation du <strong>Pass Membre Standard (3 000 FCFA unique)</strong> ou de l'abonnement <strong>VIP Premium (9 900 FCFA/mois)</strong> qui vous fait bénéficier de retraits express en moins de 2 heures.
+                  </p>
+                </div>
+                <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <button
+                    onClick={() => {
+                      setActivationPlan('standard');
+                      setIsActivationModalOpen(true);
+                    }}
+                    className="w-full sm:w-auto px-6 py-3 text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 active:scale-95"
+                  >
+                    <Zap className="w-4 h-4" />
+                    <span>Activer Pass Standard (3 000 FCFA)</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActivationPlan('premium');
+                      setIsActivationModalOpen(true);
+                    }}
+                    className="w-full sm:w-auto px-6 py-3 text-xs font-bold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 rounded-xl transition-all"
+                  >
+                    <span>VIP Premium (Retraits Express &lt; 2h)</span>
+                  </button>
+                </div>
               </div>
+            ) : (
+              <>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <BabiMascot variant="wallet" size="sm" />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h1 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">
+                          Retraits Mobile Money (Côte d'Ivoire)
+                        </h1>
+                        {currentUser.subscriptionPlan === 'premium' && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
+                            ⚡ Traitement Express &lt; 2h
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Workflow complet conforme à la section 20 : Demande → Contrôle → Réservation → Validation → Paiement.
+                      </p>
+                    </div>
+                  </div>
 
-              <button
-                onClick={() => setIsWithdrawalModalOpen(true)}
-                className="px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 rounded-xl transition-all flex items-center gap-1.5 shadow-xs"
-              >
-                <ArrowUpRight className="w-3.5 h-3.5" />
-                <span>Effectuer une demande de retrait</span>
-              </button>
-            </div>
+                  <button
+                    onClick={() => setIsWithdrawalModalOpen(true)}
+                    className="px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 rounded-xl transition-all flex items-center gap-1.5 shadow-xs"
+                  >
+                    <ArrowUpRight className="w-3.5 h-3.5" />
+                    <span>Effectuer une demande de retrait</span>
+                  </button>
+                </div>
 
             {/* Operator threshold notice */}
             <div className="p-5 bg-gradient-to-r from-orange-50 to-emerald-50 rounded-2xl border border-orange-200/80 text-xs text-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
@@ -1237,7 +1520,8 @@ export const MemberDashboard: React.FC = () => {
                 </div>
               )}
             </div>
-
+              </>
+            )}
           </div>
         )}
 
@@ -1245,13 +1529,35 @@ export const MemberDashboard: React.FC = () => {
         {activeTab === 'team' && (
           <div className="space-y-6">
             
-            <div>
-              <h1 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">
-                Mon Réseau d'Affiliation Éthique (1 à 2 Niveaux)
-              </h1>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Commissions éthiques : Rémunération exclusive sur des ventes réelles de formations et services, jamais sur le recrutement.
-              </p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <BabiMascot variant="waving" size="sm" />
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">
+                    Mon Réseau d'Affiliation Éthique (1 à 2 Niveaux)
+                  </h1>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Commissions déterministes sur achats réels et abonnements mensuels récurrents.
+                  </p>
+                </div>
+              </div>
+
+              <div className="px-3 py-1.5 bg-orange-100 text-orange-900 border border-orange-200 rounded-xl text-xs font-bold flex items-center gap-1.5">
+                <span>Commissions Récurrentes Mensuelles Actives</span>
+              </div>
+            </div>
+
+            {/* Recurring Commission Rule Banner (Demande 3) */}
+            <div className="p-4 bg-gradient-to-r from-emerald-500/10 via-white to-orange-500/10 rounded-2xl border border-emerald-200 flex items-start gap-3.5 shadow-2xs text-xs">
+              <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <strong className="text-slate-900 font-bold block">
+                  Règle de Continuité & Récurrence du Parrainage (Cloud Functions & Firebase) :
+                </strong>
+                <p className="text-slate-600 text-[11px] leading-relaxed">
+                  Tant que votre filleul actif effectue des dépenses sur la plateforme (ex. renouvellement de son abonnement VIP Premium mensuel), vous percevez votre pourcentage de commission chaque mois de manière automatique. Le parrainage prend fin uniquement en cas de désactivation ou suppression de compte par l'une des parties.
+                </p>
+              </div>
             </div>
 
             {/* Referral Link & Code Box */}
@@ -1293,45 +1599,43 @@ export const MemberDashboard: React.FC = () => {
               )}
             </div>
 
-            {/* Network Structure Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Network Structure Overview - 2 Levels strictly enforced */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-1">
                 <span className="text-xs text-slate-500 font-semibold">Niveau 1 (Direct)</span>
                 <div className="text-2xl font-extrabold text-slate-900 font-mono">1 Filleul Actif</div>
-                <div className="text-[11px] text-orange-600 font-semibold">Commission : 15% sur ventes réelles</div>
+                <div className="text-[11px] text-orange-600 font-semibold">Commission : 10% sur abonnements VIP (990 XOF)</div>
               </div>
 
               <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-1">
                 <span className="text-xs text-slate-500 font-semibold">Niveau 2 (Indirect)</span>
                 <div className="text-2xl font-extrabold text-slate-900 font-mono">0 Filleul</div>
-                <div className="text-[11px] text-slate-500">Commission : 5% sur ventes réelles</div>
-              </div>
-
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-1">
-                <span className="text-xs text-slate-500 font-semibold">Niveau 3</span>
-                <div className="text-2xl font-extrabold text-slate-400 font-mono">DÉSACTIVÉ</div>
-                <div className="text-[11px] text-rose-600 font-bold">Interdiction stricte anti-pyramide</div>
+                <div className="text-[11px] text-slate-500">Commission : 5% sur abonnements VIP (495 XOF)</div>
               </div>
             </div>
 
             {/* Referrals list */}
             <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 shadow-xs">
-              <h3 className="font-display font-bold text-slate-900 text-sm">Détail des Filleuls et Ventes Réelles Rémunérées</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="font-display font-bold text-slate-900 text-sm">Détail des Filleuls et Ventes Réelles Rémunérées</h3>
+                <span className="text-[11px] text-slate-500 font-medium">Réserve de sécurité légale : 7 jours</span>
+              </div>
 
               <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-900">Aïcha Ouattara</span>
-                    <span className="px-2 py-0.5 text-[10px] bg-emerald-100 text-emerald-800 rounded-md font-bold">Niveau 1</span>
+                    <span className="font-bold text-slate-900">Filleul Actif #1</span>
+                    <span className="px-2 py-0.5 text-[10px] bg-emerald-100 text-emerald-800 rounded-md font-bold">Niveau 1 (10%)</span>
+                    <span className="px-2 py-0.5 text-[10px] bg-amber-100 text-amber-800 rounded-md font-semibold">En réserve rétractation 7j</span>
                   </div>
                   <div className="text-[11px] text-slate-500">
-                    Abonnement Premium activé (9 900 XOF) · Inscrite le 20 Sept 2026
+                    Abonnement VIP Premium activé (9 900 XOF) · Achat de service réel vérifié
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <div className="font-mono font-bold text-emerald-700 text-sm">+1 500 XOF</div>
-                  <div className="text-[10px] text-slate-500">Commission vente utile créditée</div>
+                  <div className="font-mono font-bold text-emerald-700 text-sm">+990 XOF</div>
+                  <div className="text-[10px] text-amber-700 font-semibold">Libéré après le délai de 7 jours</div>
                 </div>
               </div>
             </div>
@@ -1342,24 +1646,71 @@ export const MemberDashboard: React.FC = () => {
         {/* 7. ACADEMY TAB */}
         {activeTab === 'academy' && (
           <div className="space-y-6">
-            
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h1 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">
-                  Digital Academy & Certifications
-                </h1>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Formations concrètes axées sur l'écosystème ivoirien. Quiz déterministes et points de progression.
-                </p>
-              </div>
-
-              {userCertificates.length > 0 && (
-                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 text-emerald-900 rounded-xl text-xs font-bold">
-                  <Award className="w-4 h-4 text-emerald-700" />
-                  <span>{userCertificates.length} Certificat(s) obtenu(s)</span>
+            {!currentUser.isActivated ? (
+              <div className="bg-white rounded-3xl border-2 border-orange-300 p-8 sm:p-12 text-center space-y-6 shadow-lg max-w-2xl mx-auto my-6">
+                <div className="flex justify-center">
+                  <BabiMascot 
+                    variant="academic" 
+                    size="xl" 
+                    speechBubble="Activez votre pass pour accéder aux 4 formations (18h-26h) et certifications !" 
+                  />
                 </div>
-              )}
-            </div>
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 text-orange-800 text-xs font-bold">
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>Formations Verrouillées — Ticket d'Entrée Requis</span>
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">
+                    Accès aux Formations Approfondies & Examens Officiels
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-lg mx-auto">
+                    Nos formations représentent de <strong>18h à 26h de cours denses</strong> sanctionnées par des <strong>examens officiels de 40 questions chronométrées (45 min)</strong>. L'accès à ces programmes de haute valeur professionnelle requiert l'activation du <strong>Pass Membre Standard (3 000 FCFA unique)</strong> ou l'abonnement <strong>VIP Premium (9 900 FCFA/mois)</strong>.
+                  </p>
+                </div>
+                <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <button
+                    onClick={() => {
+                      setActivationPlan('standard');
+                      setIsActivationModalOpen(true);
+                    }}
+                    className="w-full sm:w-auto px-6 py-3 text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 active:scale-95"
+                  >
+                    <Zap className="w-4 h-4" />
+                    <span>Activer Pass Standard (3 000 FCFA)</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActivationPlan('premium');
+                      setIsActivationModalOpen(true);
+                    }}
+                    className="w-full sm:w-auto px-6 py-3 text-xs font-bold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 rounded-xl transition-all"
+                  >
+                    <span>VIP Premium (Accès complet + Outils IA)</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <BabiMascot variant="academic" size="sm" />
+                    <div>
+                      <h1 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">
+                        Digital Academy & Certifications Professionnelles
+                      </h1>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Formations certifiantes approfondies (18h-26h) · Examens de 40 questions chronométrées (Passing score: 80%).
+                      </p>
+                    </div>
+                  </div>
+
+                  {userCertificates.length > 0 && (
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 text-emerald-900 rounded-xl text-xs font-bold">
+                      <Award className="w-4 h-4 text-emerald-700" />
+                      <span>{userCertificates.length} Certificat(s) obtenu(s)</span>
+                    </div>
+                  )}
+                </div>
 
             {/* Courses list */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1418,205 +1769,312 @@ export const MemberDashboard: React.FC = () => {
                 </div>
               </div>
             )}
-
+              </>
+            )}
           </div>
         )}
 
         {/* 8. AI TOOLS TAB (Section 13) */}
         {activeTab === 'ai_tools' && (
           <div className="space-y-6">
-            
-            <div>
-              <h1 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">
-                Outils IA & Assistants Numériques
-              </h1>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Générez des argumentaires de vente, des idées marketing locales et des synthèses adaptées au marché ouest-africain.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-5 shadow-xs">
-              
-              {/* Tool Type Selector */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <button
-                  onClick={() => setAiToolType('copywriter')}
-                  className={`p-3 text-xs font-semibold rounded-xl border text-left transition-colors ${
-                    aiToolType === 'copywriter' 
-                      ? 'border-orange-500 bg-orange-50/80 text-orange-950 font-bold' 
-                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
-                  }`}
-                >
-                  <Sparkles className="w-4 h-4 text-orange-600 mb-1" />
-                  <div>Assistant Rédactionnel</div>
-                  <div className="text-[10px] text-slate-500 font-normal">WhatsApp / Facebook</div>
-                </button>
-
-                <button
-                  onClick={() => setAiToolType('marketing_ideas')}
-                  className={`p-3 text-xs font-semibold rounded-xl border text-left transition-colors ${
-                    aiToolType === 'marketing_ideas' 
-                      ? 'border-orange-500 bg-orange-50/80 text-orange-950 font-bold' 
-                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
-                  }`}
-                >
-                  <Briefcase className="w-4 h-4 text-orange-600 mb-1" />
-                  <div>Idées Marketing Abidjan</div>
-                  <div className="text-[10px] text-slate-500 font-normal">Plan d'action terrain</div>
-                </button>
-
-                <button
-                  onClick={() => setAiToolType('summarizer')}
-                  className={`p-3 text-xs font-semibold rounded-xl border text-left transition-colors ${
-                    aiToolType === 'summarizer' 
-                      ? 'border-orange-500 bg-orange-50/80 text-orange-950 font-bold' 
-                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
-                  }`}
-                >
-                  <BookOpen className="w-4 h-4 text-orange-600 mb-1" />
-                  <div>Résumeur Pro</div>
-                  <div className="text-[10px] text-slate-500 font-normal">Synthèse contrats/textes</div>
-                </button>
-
-                <button
-                  onClick={() => setAiToolType('prompts')}
-                  className={`p-3 text-xs font-semibold rounded-xl border text-left transition-colors ${
-                    aiToolType === 'prompts' 
-                      ? 'border-orange-500 bg-orange-50/80 text-orange-950 font-bold' 
-                      : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
-                  }`}
-                >
-                  <Award className="w-4 h-4 text-orange-600 mb-1" />
-                  <div>Générateur de Prompts</div>
-                  <div className="text-[10px] text-slate-500 font-normal">Requêtes expertes</div>
-                </button>
-              </div>
-
-              {/* Input Area */}
-              <div className="space-y-2">
-                <label className="block text-xs font-semibold text-slate-700">
-                  {aiToolType === 'copywriter' && 'Décrivez le produit ou service à promouvoir (ex. Vente de paniers vivriers à Cocody) :'}
-                  {aiToolType === 'marketing_ideas' && 'Secteur d\'activité ou projet d\'entreprise :'}
-                  {aiToolType === 'summarizer' && 'Collez le texte long à synthétiser :'}
-                  {aiToolType === 'prompts' && 'Sujet sur lequel vous souhaitez créer des prompts optimisés :'}
-                </label>
-                <textarea
-                  rows={4}
-                  value={aiInputText}
-                  onChange={(e) => setAiInputText(e.target.value)}
-                  placeholder="Écrivez vos instructions détaillées..."
-                  className="w-full p-3 text-xs border border-slate-300 rounded-xl focus:outline-none focus:ring-1 focus:ring-orange-500"
-                />
-              </div>
-
-              {/* Run Button */}
-              <div className="flex justify-end">
-                <button
-                  onClick={handleRunAI}
-                  disabled={isAILoading || !aiInputText.trim()}
-                  className="px-5 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 disabled:opacity-50 rounded-xl transition-all flex items-center gap-2 shadow-xs"
-                >
-                  {isAILoading ? (
-                    <>
-                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Génération en cours...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>Générer avec l'IA</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {/* Output Display */}
-              {aiOutputResult && (
-                <div className="mt-4 p-4 bg-orange-50/40 rounded-xl border border-orange-200 space-y-3">
-                  <div className="flex items-center justify-between border-b border-orange-200 pb-2">
-                    <span className="text-xs font-bold text-slate-900">Résultat généré</span>
-                    <button
-                      onClick={handleCopyAI}
-                      className="text-xs font-bold text-orange-600 hover:text-orange-700 flex items-center gap-1"
-                    >
-                      <Copy className="w-3.5 h-3.5" />
-                      <span>{aiCopied ? 'Copié !' : 'Copier'}</span>
-                    </button>
+            {!currentUser.isActivated ? (
+              <div className="bg-white rounded-3xl border-2 border-orange-300 p-8 sm:p-12 text-center space-y-6 shadow-lg max-w-2xl mx-auto my-6">
+                <div className="flex justify-center">
+                  <BabiMascot 
+                    variant="ai" 
+                    size="xl" 
+                    speechBubble="Activez votre compte pour utiliser nos outils d'intelligence artificielle !" 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 text-orange-800 text-xs font-bold">
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>Outils IA Verrouillés</span>
                   </div>
-                  <div className="text-xs text-slate-700 whitespace-pre-line leading-relaxed font-sans">
-                    {aiOutputResult}
+                  <h2 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">
+                    Assistants & Générateurs IA Réservés aux Membres
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-lg mx-auto">
+                    Générez des accroches percutantes pour WhatsApp & Facebook, des plans marketing pour Abidjan et des résumés de textes professionnels. Activez votre <strong>Pass Membre Standard (3 000 FCFA)</strong> ou débloquez l'usage illimité sans quota via <strong>VIP Premium (9 900 FCFA/mois)</strong>.
+                  </p>
+                </div>
+                <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <button
+                    onClick={() => {
+                      setActivationPlan('standard');
+                      setIsActivationModalOpen(true);
+                    }}
+                    className="w-full sm:w-auto px-6 py-3 text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 active:scale-95"
+                  >
+                    <Zap className="w-4 h-4" />
+                    <span>Activer Pass Standard (3 000 FCFA)</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActivationPlan('premium');
+                      setIsActivationModalOpen(true);
+                    }}
+                    className="w-full sm:w-auto px-6 py-3 text-xs font-bold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 rounded-xl transition-all"
+                  >
+                    <span>VIP Premium (Outils IA Illimités)</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <BabiMascot variant="ai" size="sm" />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h1 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">
+                          Outils IA & Assistants Numériques
+                        </h1>
+                        {currentUser.subscriptionPlan === 'premium' && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
+                            ★ Accès Illimité VIP
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Générez des argumentaires de vente, des idées marketing locales et des synthèses adaptées au marché ouest-africain.
+                      </p>
+                    </div>
                   </div>
                 </div>
-              )}
 
-            </div>
+                <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-5 shadow-xs">
+                  
+                  {/* Tool Type Selector */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <button
+                      onClick={() => setAiToolType('copywriter')}
+                      className={`p-3 text-xs font-semibold rounded-xl border text-left transition-colors ${
+                        aiToolType === 'copywriter' 
+                          ? 'border-orange-500 bg-orange-50/80 text-orange-950 font-bold' 
+                          : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      <Sparkles className="w-4 h-4 text-orange-600 mb-1" />
+                      <div>Assistant Rédactionnel</div>
+                      <div className="text-[10px] text-slate-500 font-normal">WhatsApp / Facebook</div>
+                    </button>
 
+                    <button
+                      onClick={() => setAiToolType('marketing_ideas')}
+                      className={`p-3 text-xs font-semibold rounded-xl border text-left transition-colors ${
+                        aiToolType === 'marketing_ideas' 
+                          ? 'border-orange-500 bg-orange-50/80 text-orange-950 font-bold' 
+                          : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      <Briefcase className="w-4 h-4 text-orange-600 mb-1" />
+                      <div>Idées Marketing Abidjan</div>
+                      <div className="text-[10px] text-slate-500 font-normal">Plan d'action terrain</div>
+                    </button>
+
+                    <button
+                      onClick={() => setAiToolType('summarizer')}
+                      className={`p-3 text-xs font-semibold rounded-xl border text-left transition-colors ${
+                        aiToolType === 'summarizer' 
+                          ? 'border-orange-500 bg-orange-50/80 text-orange-950 font-bold' 
+                          : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      <BookOpen className="w-4 h-4 text-orange-600 mb-1" />
+                      <div>Résumeur Pro</div>
+                      <div className="text-[10px] text-slate-500 font-normal">Synthèse contrats/textes</div>
+                    </button>
+
+                    <button
+                      onClick={() => setAiToolType('prompts')}
+                      className={`p-3 text-xs font-semibold rounded-xl border text-left transition-colors ${
+                        aiToolType === 'prompts' 
+                          ? 'border-orange-500 bg-orange-50/80 text-orange-950 font-bold' 
+                          : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      <Award className="w-4 h-4 text-orange-600 mb-1" />
+                      <div>Générateur de Prompts</div>
+                      <div className="text-[10px] text-slate-500 font-normal">Requêtes expertes</div>
+                    </button>
+                  </div>
+
+                  {/* Input Area */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-slate-700">
+                      {aiToolType === 'copywriter' && 'Décrivez le produit ou service à promouvoir (ex. Vente de paniers vivriers à Cocody) :'}
+                      {aiToolType === 'marketing_ideas' && 'Secteur d\'activité ou projet d\'entreprise :'}
+                      {aiToolType === 'summarizer' && 'Collez le texte long à synthétiser :'}
+                      {aiToolType === 'prompts' && 'Sujet sur lequel vous souhaitez créer des prompts optimisés :'}
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={aiInputText}
+                      onChange={(e) => setAiInputText(e.target.value)}
+                      placeholder="Écrivez vos instructions détaillées..."
+                      className="w-full p-3 text-xs border border-slate-300 rounded-xl focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    />
+                  </div>
+
+                  {/* Run Button */}
+                  <div className="flex justify-end">
+                    <button
+                      onClick={handleRunAI}
+                      disabled={isAILoading || !aiInputText.trim()}
+                      className="px-5 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 disabled:opacity-50 rounded-xl transition-all flex items-center gap-2 shadow-xs"
+                    >
+                      {isAILoading ? (
+                        <>
+                          <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>Génération en cours...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3.5 h-3.5" />
+                          <span>Générer avec l'IA</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Output Display */}
+                  {aiOutputResult && (
+                    <div className="mt-4 p-4 bg-orange-50/40 rounded-xl border border-orange-200 space-y-3">
+                      <div className="flex items-center justify-between border-b border-orange-200 pb-2">
+                        <span className="text-xs font-bold text-slate-900">Résultat généré</span>
+                        <button
+                          onClick={handleCopyAI}
+                          className="text-xs font-bold text-orange-600 hover:text-orange-700 flex items-center gap-1"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>{aiCopied ? 'Copié !' : 'Copier'}</span>
+                        </button>
+                      </div>
+                      <div className="text-xs text-slate-700 whitespace-pre-line leading-relaxed font-sans">
+                        {aiOutputResult}
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+              </>
+            )}
           </div>
         )}
 
         {/* 9. VCF RESOURCES TAB (Section 17) */}
         {activeTab === 'vcf' && (
           <div className="space-y-6">
-            
-            <div>
-              <h1 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">
-                Ressources Professionnelles & Annuaires VCF
-              </h1>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Bases de contacts B2B qualifiées par secteur et pays. Téléchargement tracé et sécurisé (Section 17 & 38).
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {vcfResources.map(res => (
-                <div key={res.id} className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col justify-between shadow-xs space-y-4 hover:border-orange-300 transition-colors">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-semibold text-orange-600">{res.sector}</span>
-                      <span className="font-mono text-slate-700 font-bold">{res.entriesCount} contacts</span>
-                    </div>
-
-                    <h3 className="font-display font-bold text-slate-900 text-sm leading-snug">{res.title}</h3>
-                    <p className="text-xs text-slate-600 leading-relaxed">{res.description}</p>
-
-                    <div className="text-[11px] text-slate-400 pt-1">
-                      Format : {res.fileFormat} · Mis à jour : {res.verifiedDate}
-                    </div>
+            {currentUser.subscriptionPlan !== 'premium' ? (
+              <div className="bg-white rounded-3xl border-2 border-amber-300 p-8 sm:p-12 text-center space-y-6 shadow-lg max-w-2xl mx-auto my-6">
+                <div className="flex justify-center">
+                  <BabiMascot 
+                    variant="waving" 
+                    size="xl" 
+                    speechBubble="Passez VIP Premium pour télécharger nos annuaires VCF de Côte d'Ivoire !" 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold">
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>Exclusivité VIP Premium</span>
                   </div>
-
-                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                    <span className="text-xs font-semibold text-slate-500">
-                      {res.requiredPlan === 'premium' ? 'Pack Premium requis' : 'Accès Libre'}
-                    </span>
-
-                    <button
-                      onClick={() => {
-                        const result = downloadVCFResource(res.id);
-                        alert(result.message);
-                      }}
-                      className="px-3.5 py-1.5 text-xs font-bold text-slate-800 bg-slate-100 hover:bg-orange-50 hover:text-orange-700 rounded-xl transition-colors flex items-center gap-1.5"
-                    >
-                      <Download className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Télécharger</span>
-                    </button>
+                  <h2 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">
+                    Annuaires & Fichiers VCF Qualifiés
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-lg mx-auto">
+                    Téléchargez chaque mois nos carnets de contacts qualifiés d'entreprises, de grossistes, d'artisans et de commerçants de Côte d'Ivoire (Abidjan, San Pedro, Bouaké, Yamoussoukro). Cet outil commercial à fort impact est une <strong>exclusivité réservée aux membres VIP Premium (9 900 FCFA/mois)</strong>.
+                  </p>
+                </div>
+                <div className="pt-2 flex justify-center">
+                  <button
+                    onClick={() => {
+                      setActivationPlan('premium');
+                      setIsActivationModalOpen(true);
+                    }}
+                    className="px-6 py-3 text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 active:scale-95"
+                  >
+                    <Zap className="w-4 h-4" />
+                    <span>Débloquer avec le VIP Premium (9 900 FCFA/mois)</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <BabiMascot variant="waving" size="sm" />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h1 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">
+                          Ressources Professionnelles & Annuaires VCF
+                        </h1>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
+                          ★ VIP Inclus
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Bases de contacts B2B qualifiées par secteur et pays. Téléchargement tracé et sécurisé (Section 17 & 38).
+                      </p>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {vcfResources.map(res => (
+                    <div key={res.id} className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col justify-between shadow-xs space-y-4 hover:border-orange-300 transition-colors">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-semibold text-orange-600">{res.sector}</span>
+                          <span className="font-mono text-slate-700 font-bold">{res.entriesCount} contacts</span>
+                        </div>
+
+                        <h3 className="font-display font-bold text-slate-900 text-sm leading-snug">{res.title}</h3>
+                        <p className="text-xs text-slate-600 leading-relaxed">{res.description}</p>
+
+                        <div className="text-[11px] text-slate-400 pt-1">
+                          Format : {res.fileFormat} · Mis à jour : {res.verifiedDate}
+                        </div>
+                      </div>
+
+                      <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                        <span className="text-xs font-semibold text-emerald-700 font-bold">
+                          ✓ Débloqué VIP
+                        </span>
+
+                        <button
+                          onClick={() => {
+                            const result = downloadVCFResource(res.id);
+                            alert(result.message);
+                          }}
+                          className="px-3.5 py-1.5 text-xs font-bold text-slate-800 bg-slate-100 hover:bg-orange-50 hover:text-orange-700 rounded-xl transition-colors flex items-center gap-1.5"
+                        >
+                          <Download className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Télécharger VCF</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         )}
 
         {/* 10. BONUS DÉTERMINISTES (Section 14 & 15 : Zéro hasard) */}
         {activeTab === 'bonus' && (
           <div className="space-y-6">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">
-                Mes Bonus Déterministes & Fidélité
-              </h1>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Conforme Section 15 & 39 : Zéro roue de la fortune, zéro tirage au sort. Tout bonus est fixe, connu à l'avance et garanti.
-              </p>
+            <div className="flex items-center gap-3">
+              <BabiMascot variant="wallet" size="sm" />
+              <div>
+                <h1 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">
+                  Mes Bonus Déterministes & Fidélité
+                </h1>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Conforme Section 15 & 39 : Zéro roue de la fortune, zéro tirage au sort. Tout bonus est fixe, connu à l'avance et garanti.
+                </p>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1663,13 +2121,16 @@ export const MemberDashboard: React.FC = () => {
         {activeTab === 'notifications' && (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h1 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">
-                  Centre de Notifications
-                </h1>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Suivi en direct de vos micro-jobs, de vos commissions d'affiliation et des retraits Mobile Money.
-                </p>
+              <div className="flex items-center gap-3">
+                <BabiMascot variant="waving" size="md" />
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">
+                    Centre de Notifications
+                  </h1>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Suivi en direct de vos micro-jobs, de vos commissions d'affiliation et des retraits Mobile Money.
+                  </p>
+                </div>
               </div>
 
               {unreadCount > 0 && (
@@ -1677,7 +2138,7 @@ export const MemberDashboard: React.FC = () => {
                   onClick={markAllNotificationsRead}
                   className="px-3.5 py-1.5 text-xs font-bold text-orange-600 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors"
                 >
-                  Tout marquer comme lu
+                  Tout marquer comme lu ({unreadCount})
                 </button>
               )}
             </div>
@@ -1691,19 +2152,34 @@ export const MemberDashboard: React.FC = () => {
                     key={notif.id}
                     onClick={() => markNotificationAsRead(notif.id)}
                     className={`p-4 rounded-xl border transition-colors cursor-pointer flex items-start justify-between text-xs ${
-                      notif.read ? 'bg-slate-50 border-slate-100' : 'bg-orange-50/40 border-orange-200'
+                      notif.read ? 'bg-slate-50 border-slate-100 hover:bg-slate-100/70' : 'bg-orange-50/50 border-orange-200 hover:bg-orange-50'
                     }`}
                   >
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
+                    <div className="space-y-1.5 pr-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-display font-bold text-slate-900">{notif.title}</span>
                         {!notif.read && (
-                          <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+                          <span className="w-2 h-2 rounded-full bg-orange-500 shrink-0"></span>
+                        )}
+                        {notif.type === 'commission' && (
+                          <span className="px-2 py-0.5 text-[10px] rounded-md font-bold bg-amber-100 text-amber-900">
+                            Affiliation
+                          </span>
+                        )}
+                        {notif.type === 'reward' && (
+                          <span className="px-2 py-0.5 text-[10px] rounded-md font-bold bg-emerald-100 text-emerald-900">
+                            Micro-Job Validé
+                          </span>
+                        )}
+                        {notif.type === 'system' && (
+                          <span className="px-2 py-0.5 text-[10px] rounded-md font-bold bg-blue-100 text-blue-900">
+                            Système & Certificat
+                          </span>
                         )}
                       </div>
-                      <p className="text-slate-600">{notif.message}</p>
+                      <p className="text-slate-600 leading-relaxed">{notif.message}</p>
                     </div>
-                    <span className="text-[10px] text-slate-400 font-mono shrink-0 ml-3">{notif.timestamp}</span>
+                    <span className="text-[10px] text-slate-400 font-mono shrink-0 ml-3 whitespace-nowrap">{notif.timestamp}</span>
                   </div>
                 ))
               )}
@@ -1716,13 +2192,16 @@ export const MemberDashboard: React.FC = () => {
           <div className="space-y-6">
             
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h1 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">
-                  Communauté Interne GLOBAL-AF
-                </h1>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Échangez des astuces, partagez vos résultats et découvrez les retours d'expérience.
-                </p>
+              <div className="flex items-center gap-3">
+                <BabiMascot variant="waving" size="sm" />
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">
+                    Communauté Interne GLOBAL-AF
+                  </h1>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Échangez des astuces, partagez vos résultats et découvrez les retours d'expérience.
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -1814,13 +2293,16 @@ export const MemberDashboard: React.FC = () => {
         {activeTab === 'support' && (
           <div className="space-y-6">
             
-            <div>
-              <h1 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">
-                Support & Centre d'Aide (Tickets)
-              </h1>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Une équipe dédiée pour vos questions sur le Mobile Money, la validation des missions ou la rétractation.
-              </p>
+            <div className="flex items-center gap-3">
+              <BabiMascot variant="support" size="sm" />
+              <div>
+                <h1 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">
+                  Support & Centre d'Aide (Tickets)
+                </h1>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Une équipe dédiée pour vos questions sur le Mobile Money, la validation des missions ou la rétractation.
+                </p>
+              </div>
             </div>
 
             {/* Create Ticket Modal or Card */}
@@ -1969,13 +2451,16 @@ export const MemberDashboard: React.FC = () => {
         {activeTab === 'settings' && (
           <div className="space-y-6">
             
-            <div>
-              <h1 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">
-                Paramètres du Compte & Engagements Éthiques
-              </h1>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Contrôles de protection financière, gestion du droit de rétractation et sécurité.
-              </p>
+            <div className="flex items-center gap-3">
+              <BabiMascot variant="security" size="sm" />
+              <div>
+                <h1 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">
+                  Paramètres du Compte & Engagements Éthiques
+                </h1>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Contrôles de protection financière, gestion du droit de rétractation et sécurité.
+                </p>
+              </div>
             </div>
 
             {/* Ethical Financial Protection */}
@@ -2051,8 +2536,8 @@ export const MemberDashboard: React.FC = () => {
                     />
                   </div>
                   <button
-                    onClick={() => {
-                      const res = requestRetractionRefund(retractionReason);
+                    onClick={async () => {
+                      const res = await requestRetractionRefund(retractionReason);
                       alert(res.message);
                     }}
                     className="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors shadow-xs"
@@ -2075,18 +2560,30 @@ export const MemberDashboard: React.FC = () => {
       {/* WITHDRAWAL MODAL */}
       {isWithdrawalModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-4">
+          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-display font-bold text-slate-900 text-sm">
-                Retrait Mobile Money (Côte d'Ivoire)
-              </h3>
+              <div className="flex items-center gap-2">
+                <BabiMascot variant="wallet" size="xs" />
+                <h3 className="font-display font-bold text-slate-900 text-sm">
+                  Retrait Mobile Money (Côte d'Ivoire)
+                </h3>
+              </div>
               <button 
                 onClick={() => setIsWithdrawalModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600"
+                className="text-slate-400 hover:text-slate-600 font-bold"
               >
                 ✕
               </button>
             </div>
+
+            {currentUser.subscriptionPlan === 'premium' && (
+              <div className="p-2.5 bg-gradient-to-r from-amber-500/15 to-orange-500/10 border border-amber-300 rounded-xl flex items-center gap-2 text-xs">
+                <Zap className="w-4 h-4 text-amber-600 shrink-0" />
+                <span className="font-bold text-amber-900">
+                  ⚡ Avantage VIP : Retrait express prioritaire traité en moins de 2 heures !
+                </span>
+              </div>
+            )}
 
             <form onSubmit={handleWithdrawalSubmit} className="space-y-4 text-xs">
               <div>
@@ -2120,7 +2617,7 @@ export const MemberDashboard: React.FC = () => {
                   required
                   value={withdrawalPhone}
                   onChange={(e) => setWithdrawalPhone(e.target.value)}
-                  className="w-full p-2.5 border border-slate-300 rounded-lg font-mono"
+                  className="w-full p-2.5 border border-slate-300 rounded-lg font-mono text-xs"
                 />
               </div>
 
@@ -2138,7 +2635,7 @@ export const MemberDashboard: React.FC = () => {
                   step={500}
                   value={withdrawalAmount}
                   onChange={(e) => setWithdrawalAmount(Number(e.target.value))}
-                  className="w-full p-2.5 border border-slate-300 rounded-lg font-mono font-bold"
+                  className="w-full p-2.5 border border-slate-300 rounded-lg font-mono font-bold text-xs"
                 />
               </div>
 
@@ -2158,9 +2655,62 @@ export const MemberDashboard: React.FC = () => {
                 </div>
               </div>
 
+              {/* FIRST WITHDRAWAL EMAIL OTP VERIFICATION (Demande 8: Email au lieu de SMS) */}
+              {isFirstWithdrawal && (
+                <div className="p-3.5 bg-amber-50/90 border border-amber-300 rounded-xl space-y-2.5 text-xs">
+                  <div className="flex items-start gap-2">
+                    <Mail className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                    <div>
+                      <div className="font-bold text-amber-950">Vérification de sécurité par Email (Premier Retrait)</div>
+                      <p className="text-[11px] text-amber-800 leading-snug mt-0.5">
+                        Conformément à la sécurité financière, le premier retrait requiert une validation par email (sans frais de SMS) à destination de : <strong>{currentUser.email}</strong>.
+                      </p>
+                    </div>
+                  </div>
+
+                  {!emailOtpSent ? (
+                    <button
+                      type="button"
+                      onClick={handleSendEmailOtp}
+                      className="w-full py-2 px-3 text-xs font-bold text-amber-950 bg-amber-200 hover:bg-amber-300 rounded-lg transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      <Mail className="w-3.5 h-3.5" />
+                      <span>Envoyer le code par Email</span>
+                    </button>
+                  ) : (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          maxLength={6}
+                          placeholder="Code à 6 chiffres (248690)"
+                          value={emailOtpCode}
+                          onChange={(e) => setEmailOtpCode(e.target.value)}
+                          className="flex-1 p-2 border border-amber-400 rounded-lg font-mono text-center tracking-widest text-sm bg-white font-bold"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleSendEmailOtp}
+                          className="text-[10px] text-amber-800 underline shrink-0 hover:text-amber-950"
+                        >
+                          Renvoyer
+                        </button>
+                      </div>
+                      <div className="text-[10px] text-emerald-700 font-semibold flex items-center gap-1">
+                        <CheckCircle className="w-3 h-3" /> Code envoyé à {currentUser.email}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <button
                 type="submit"
-                disabled={withdrawalAmount < selectedCountry.minWithdrawal || withdrawalAmount > wallet.availableBalance}
+                disabled={
+                  withdrawalAmount < selectedCountry.minWithdrawal || 
+                  withdrawalAmount > wallet.availableBalance ||
+                  (isFirstWithdrawal && (!emailOtpSent || emailOtpCode.trim().length < 6))
+                }
                 className="w-full py-2.5 px-4 text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 disabled:opacity-50 rounded-xl transition-all shadow-xs"
               >
                 Confirmer la demande de retrait
@@ -2170,33 +2720,81 @@ export const MemberDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* ACTIVATION MODAL */}
+      {/* ACTIVATION MODAL (Pass Membre Standard: 3 000 FCFA vs VIP Premium: 9 900 FCFA/m) */}
       {isActivationModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-4">
+          <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-display font-bold text-slate-900 text-sm">
-                Activation Pack Premium (9 900 XOF)
-              </h3>
+              <div className="flex items-center gap-2">
+                <BabiMascot variant="welcome" size="sm" />
+                <h3 className="font-display font-bold text-slate-900 text-sm">
+                  Activez votre Accès aux Services GLOBAL-AF
+                </h3>
+              </div>
               <button 
                 onClick={() => setIsActivationModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600"
+                className="text-slate-400 hover:text-slate-600 font-bold"
               >
                 ✕
               </button>
             </div>
 
             <form onSubmit={handleActivationSubmit} className="space-y-4 text-xs">
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                <span className="font-bold text-slate-900">Bien identifiable acheté (Section 6 & 39) :</span>
-                <p className="text-[11px] text-slate-600 leading-relaxed">
-                  Accès illimité aux Outils IA, missions à forte rémunération, répertoires de contacts VCF et certification Académie.
-                </p>
-                <div className="text-[10px] text-emerald-700 font-bold pt-1">
-                  ✓ Droit de rétractation de 7 jours avec remboursement Mobile Money.
-                </div>
+              
+              {/* Plan Choice Selector */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setActivationPlan('standard')}
+                  className={`p-3.5 rounded-xl border text-left transition-all relative ${
+                    activationPlan === 'standard'
+                      ? 'border-orange-500 bg-orange-50/80 ring-2 ring-orange-400 shadow-sm'
+                      : 'border-slate-200 hover:bg-slate-50 bg-white'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-900 text-xs">Pass Membre Standard</span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                      Ticket unique
+                    </span>
+                  </div>
+                  <div className="text-base font-extrabold text-orange-600 font-mono mt-1">
+                    3 000 FCFA
+                  </div>
+                  <div className="text-[10px] text-slate-500 mt-1 space-y-0.5">
+                    <div>✓ Accès illimité aux micro-jobs</div>
+                    <div>✓ Formations 18h-26h & Certificats</div>
+                    <div>✓ Retraits Mobile Money débloqués</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActivationPlan('premium')}
+                  className={`p-3.5 rounded-xl border text-left transition-all relative ${
+                    activationPlan === 'premium'
+                      ? 'border-emerald-600 bg-emerald-50/80 ring-2 ring-emerald-500 shadow-sm'
+                      : 'border-slate-200 hover:bg-slate-50 bg-white'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-900 text-xs">VIP Premium</span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-900">
+                      Recommandé
+                    </span>
+                  </div>
+                  <div className="text-base font-extrabold text-emerald-700 font-mono mt-1">
+                    9 900 FCFA <span className="text-[10px] text-slate-500 font-normal">/ mois</span>
+                  </div>
+                  <div className="text-[10px] text-slate-500 mt-1 space-y-0.5">
+                    <div>★ <strong>Rémunération +40%</strong> sur chaque job</div>
+                    <div>★ Retrait express prioritaire (&lt; 2h)</div>
+                    <div>★ Outils IA & Fichiers VCF illimités</div>
+                  </div>
+                </button>
               </div>
 
+              {/* Operator Selection */}
               <div>
                 <label className="block font-semibold text-slate-700 mb-2">Moyen de paiement Mobile Money</label>
                 <div className="grid grid-cols-2 gap-2.5">
@@ -2228,20 +2826,31 @@ export const MemberDashboard: React.FC = () => {
                   required
                   value={activationPhone}
                   onChange={(e) => setActivationPhone(e.target.value)}
-                  className="w-full p-2.5 border border-slate-300 rounded-lg font-mono"
+                  className="w-full p-2.5 border border-slate-300 rounded-lg font-mono text-xs"
                 />
               </div>
 
-              <div className="flex justify-between items-center font-bold text-slate-900 text-sm pt-2">
-                <span>Total à régler :</span>
-                <span className="font-mono text-orange-600 font-extrabold">9 900 XOF</span>
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <div className="flex justify-between items-center font-bold text-slate-900 text-sm">
+                  <span>Total à régler :</span>
+                  <span className="font-mono text-orange-600 font-extrabold text-base">
+                    {activationPlan === 'standard' ? '3 000 FCFA' : '9 900 FCFA / mois'}
+                  </span>
+                </div>
+                <div className="text-[10px] text-emerald-700 font-semibold pt-1">
+                  {activationPlan === 'premium' ? (
+                    <span>✓ Droit de rétractation de 7 jours avec remboursement intégral Mobile Money garanti. La commission parrain (990 FCFA) sera débloquée après ce délai.</span>
+                  ) : (
+                    <span>✓ Ticket unique à vie · Fourniture et accès immédiat aux 15 formations et micro-jobs (non soumis au droit de rétractation).</span>
+                  )}
+                </div>
               </div>
 
               <button
                 type="submit"
                 className="w-full py-2.5 px-4 text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 rounded-xl transition-all shadow-xs"
               >
-                Payer 9 900 XOF via {activationOperator}
+                Payer {activationPlan === 'standard' ? '3 000 FCFA' : '9 900 FCFA'} via {activationOperator}
               </button>
             </form>
           </div>

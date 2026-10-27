@@ -23,11 +23,11 @@ const KNOWLEDGE_BASE: { keywords: string[]; title: string; answer: string; sugge
 
 • **Seuil minimal de retrait :** dès **2 000 FCFA** de solde disponible.
 • **Opérateurs supportés :** 
-  - **Wave Côte d'Ivoire** (frais ultra-réduits de 1% seulement)
-  - **Orange Money CI** (validation instantanée)
+  - **Wave Côte d'Ivoire** (frais de transfert de 1,5%)
+  - **Orange Money CI** (validation sécurisée par USSD ou app)
   - **MTN MoMo CI** (transfert direct sur votre numéro)
   - **Moov Africa Money**
-• **Délai d'exécution :** les retraits sont validés par notre journal d'audit immuable et transférés en quelques minutes à quelques heures ouvrées.
+• **Délai d'exécution :** les retraits sont contrôlés par notre grand livre comptable et exécutés selon les délais interopérateurs habituels.
 • **Aucun frais masqué :** le solde affiché correspond exactement à ce qui vous est versé.`,
     suggestions: [
       "Quels opérateurs Mobile Money sont acceptés ?",
@@ -43,8 +43,8 @@ const KNOWLEDGE_BASE: { keywords: string[]; title: string; answer: string; sugge
     title: 'Règles de Rémunération des Parrains',
     answer: `Le programme d'affiliation de GLOBAL-AF est 100% transparent et éthique :
 
-• **Niveau 1 (Parrainage Direct) :** vous touchez **15% de commission nette** sur chaque vente réelle de packs ou formations effectuée par vos filleuls directs.
-  *Exemple : Un filleul souscrit un Pack Premium à 9 900 FCFA → Vous recevez immédiatement 1 485 FCFA.*
+• **Niveau 1 (Parrainage Direct) :** vous touchez **10% de commission nette** sur chaque vente réelle de packs ou formations effectuée par vos filleuls directs.
+  *Exemple : Un filleul souscrit un Pack Premium à 9 900 FCFA → Vous recevez 990 FCFA crédités après validation de la période légale de rétractation (7 jours).*
 • **Niveau 2 (Parrainage Indirect) :** vous touchez **5% de commission nette** sur les achats réalisés par les filleuls de votre niveau 1.
 • **Zéro commission sur l'inscription :** aucune commission n'est versée sur le simple recrutement d'un utilisateur. L'inscription est gratuite.
 • **Plafonnement strict à 2 niveaux maximum :** aucun niveau 3 pour interdire tout montage pyramidal.
@@ -87,7 +87,7 @@ const KNOWLEDGE_BASE: { keywords: string[]; title: string; answer: string; sugge
 
 • **Durée :** vous disposez de **7 jours calendaires** à compter de la souscription d'une option payante (Pack Premium ou Pack Business).
 • **Modalité :** la demande s'effectue en **1 clic** depuis vos paramètres dans l'Espace Personnel, sans formulaire complexe.
-• **Remboursement Mobile Money :** le montant intégral souscrit (9 900 FCFA ou 25 000 FCFA) est reversé sous 48h directement sur votre compte Mobile Money d'origine (Wave, Orange Money, MTN MoMo ou Moov).
+• **Remboursement Mobile Money :** le montant intégral souscrit (9 900 FCFA ou 25 000 FCFA) est reversé directement sur votre compte Mobile Money d'origine (Wave, Orange Money, MTN MoMo ou Moov) selon les délais bancaires et opérateurs (1 à 3 jours ouvrés).
 • **Zéro pénalité ni frais cachés.**`,
     suggestions: [
       "Quels sont les tarifs des packs ?",
@@ -132,8 +132,8 @@ const KNOWLEDGE_BASE: { keywords: string[]; title: string; answer: string; sugge
     title: 'Opérateurs Mobile Money Partenaires',
     answer: `GLOBAL-AF est nativement interconnecté avec les 4 grands réseaux de paiement en Côte d'Ivoire :
 
-1. **Wave Côte d'Ivoire :** frais de transfert de 1% seulement, retraits ultra-rapides.
-2. **Orange Money CI :** validation instantanée par code USSD ou notification d'application Orange.
+1. **Wave Côte d'Ivoire :** frais de transfert de 1,5% conformes aux barèmes, retraits sécurisés.
+2. **Orange Money CI :** validation sécurisée par code USSD ou notification d'application Orange.
 3. **MTN MoMo CI :** intégration directe pour dépôt et retrait sécurisé sur tout numéro MTN.
 4. **Moov Africa Money :** couverture nationale Moov Money.
 
@@ -307,7 +307,7 @@ export const InformationalChatbot: React.FC<InformationalChatbotProps> = ({
         links = matched.links;
         if (matched.suggestions) suggestions = matched.suggestions;
       } else {
-        replyText = `GLOBAL-AF est la plateforme d'opportunités numériques éthique en Côte d'Ivoire.\n\n• **Micro-jobs réels :** missions rémunérées (sondages, tests d'applis, revues) avec paiement fixe déterministe.\n• **Retraits immédiats :** dès 2 000 FCFA sur Wave (1% de frais), Orange Money, MTN MoMo et Moov Africa.\n• **Règles des parrains :** 15% au niveau 1 et 5% au niveau 2 sur ventes réelles, zéro commission sur simple inscription.\n• **Garantie :** droit légal de rétractation de 7 jours avec remboursement intégral Mobile Money.`;
+        replyText = `GLOBAL-AF est la plateforme d'opportunités numériques éthique en Côte d'Ivoire.\n\n• **Micro-jobs réels :** missions rémunérées (sondages, tests d'applis, revues) avec paiement fixe déterministe.\n• **Retraits sécurisés :** dès 2 000 FCFA sur Wave, Orange Money, MTN MoMo et Moov Africa (frais de 1,5%).\n• **Règles des parrains :** 10% au niveau 1 et 5% au niveau 2 sur ventes réelles, zéro commission sur simple inscription.\n• **Garantie :** droit légal de rétractation de 7 jours avec remboursement intégral Mobile Money.`;
       }
 
       const botMsg: ChatMessage = {

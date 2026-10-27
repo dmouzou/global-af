@@ -13,55 +13,53 @@ import { AcademyPage } from './components/public/AcademyPage';
 import { AffiliationPage } from './components/public/AffiliationPage';
 import { ToolsPage } from './components/public/ToolsPage';
 import { TransparencePage } from './components/public/TransparencePage';
+import { PartnerPage } from './components/public/PartnerPage';
 import { MemberDashboard } from './components/dashboard/MemberDashboard';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { AdvertiserAdminLogin } from './components/admin/AdvertiserAdminLogin';
 import { AuthModal } from './components/auth/AuthModal';
-import { DemoSwitcher } from './components/common/DemoSwitcher';
 import { FloatingChatbotWidget } from './components/common/InformationalChatbot';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { Task, AppView } from './types';
 
 export const isExplicitAdminPortal = (): boolean => {
   if (typeof window === 'undefined') return false;
+  // Strictly isolated: only when built as admin or on the dedicated admin domain
   const host = window.location.hostname.toLowerCase();
-  const path = window.location.pathname.toLowerCase();
-  const search = window.location.search.toLowerCase();
   return (
-    host.includes('admin') ||
-    path.startsWith('/admin') ||
-    search.includes('mode=admin') ||
+    host.includes('global-af-dev-admin') ||
     (import.meta as any).env?.VITE_APP_MODE === 'admin'
   );
 };
 
 function AppContent() {
-  const [isAdminPortal, setIsAdminPortal] = useState<boolean>(isExplicitAdminPortal);
+  const { currentUser, logout } = useApp();
+  const [isAdminPortal] = useState<boolean>(isExplicitAdminPortal);
   const [currentView, setCurrentView] = useState<AppView>('landing');
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup' | 'onboarding'>('signup');
 
-  // Advertiser / Admin Authentication State
+  const isAdminUser = Boolean(
+    currentUser && (currentUser.role === 'admin' || currentUser.role === 'super_admin' || currentUser.role === 'financial_manager')
+  );
+
   const [advertiserAuth, setAdvertiserAuth] = useState<{
     email: string;
     companyName: string;
     role: 'admin' | 'advertiser';
-  } | null>(() => {
-    try {
-      const raw = localStorage.getItem('gaf_admin_auth');
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  });
+  } | null>(null);
 
-  // Listen for browser navigation changes
   useEffect(() => {
-    const handleLocationChange = () => {
-      setIsAdminPortal(isExplicitAdminPortal());
-    };
-    window.addEventListener('popstate', handleLocationChange);
-    return () => window.removeEventListener('popstate', handleLocationChange);
-  }, []);
+    if (isAdminUser && currentUser) {
+      setAdvertiserAuth({
+        email: currentUser.email,
+        companyName: 'GLOBAL-AF Direction Générale',
+        role: 'admin'
+      });
+    } else if (!isAdminUser) {
+      setAdvertiserAuth(null);
+    }
+  }, [isAdminUser, currentUser]);
 
   const handleOpenAuth = (mode: 'login' | 'signup') => {
     setAuthMode(mode);
@@ -73,38 +71,34 @@ function AppContent() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSelectTaskFromLanding = (task: Task) => {
-    setCurrentView('dashboard');
+  const handleSelectTaskFromLanding = (_task: Task) => {
+    if (currentUser) {
+      setCurrentView('dashboard');
+    } else {
+      handleOpenAuth('signup');
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const navigateToView = (view: AppView) => {
-    if (view === 'admin') {
-      setIsAdminPortal(true);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    setCurrentView(view);
+    // Completely severed: frontend navigation NEVER switches to admin portal
+    if (view === 'admin') return;
+
+    let targetView = view;
+    if (targetView === 'academy') targetView = 'academie';
+    if (targetView === 'tools') targetView = 'outils';
+
+    setCurrentView(targetView);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleAdminLogout = () => {
-    try {
-      localStorage.removeItem('gaf_admin_auth');
-    } catch (e) {
-      console.error(e);
-    }
+  const handleAdminLogout = async () => {
+    await logout();
     setAdvertiserAuth(null);
   };
 
   const handleReturnToPublic = () => {
-    if (window.location.hostname === 'localhost') {
-      window.history.pushState({}, '', '/');
-      setIsAdminPortal(false);
-      setCurrentView('landing');
-    } else {
-      window.location.href = 'https://global-af-dev.web.app';
-    }
+    window.location.href = 'https://global-af-dev.web.app';
   };
 
   // 1. ISOLATED ADMIN & ADVERTISER PORTAL (global-af-dev-admin)
@@ -166,7 +160,13 @@ function AppContent() {
       <main className="flex-1">
         {currentView === 'landing' && (
           <LandingPage 
-            onGoToDashboard={() => navigateToView('dashboard')}
+            onGoToDashboard={() => {
+              if (currentUser) {
+                navigateToView('dashboard');
+              } else {
+                handleOpenAuth('login');
+              }
+            }}
             onOpenAuth={handleOpenAuth}
             onSelectTask={handleSelectTaskFromLanding}
             onNavigatePage={(page) => navigateToView(page as AppView)}
@@ -175,7 +175,13 @@ function AppContent() {
 
         {currentView === 'missions' && (
           <MissionsPage 
-            onGoToDashboard={() => navigateToView('dashboard')}
+            onGoToDashboard={() => {
+              if (currentUser) {
+                navigateToView('dashboard');
+              } else {
+                handleOpenAuth('login');
+              }
+            }}
             onOpenAuth={handleOpenAuth}
             onSelectTask={handleSelectTaskFromLanding}
           />
@@ -183,34 +189,89 @@ function AppContent() {
 
         {(currentView === 'academy' || currentView === 'academie') && (
           <AcademyPage 
-            onGoToDashboard={() => navigateToView('dashboard')}
+            onGoToDashboard={() => {
+              if (currentUser) {
+                navigateToView('dashboard');
+              } else {
+                handleOpenAuth('login');
+              }
+            }}
             onOpenAuth={handleOpenAuth}
           />
         )}
 
         {currentView === 'affiliation' && (
-          <AffiliationPage 
-            onGoToDashboard={() => navigateToView('dashboard')}
+          <TransparencePage 
+            onGoToDashboard={() => {
+              if (currentUser) {
+                navigateToView('dashboard');
+              } else {
+                handleOpenAuth('login');
+              }
+            }}
+            onOpenAuth={handleOpenAuth}
+          />
+        )}
+
+        {currentView === 'partenaire' && (
+          <PartnerPage 
+            onGoToDashboard={() => {
+              if (currentUser) {
+                navigateToView('dashboard');
+              } else {
+                handleOpenAuth('login');
+              }
+            }}
             onOpenAuth={handleOpenAuth}
           />
         )}
 
         {(currentView === 'tools' || currentView === 'outils') && (
           <ToolsPage 
-            onGoToDashboard={() => navigateToView('dashboard')}
+            onGoToDashboard={() => {
+              if (currentUser) {
+                navigateToView('dashboard');
+              } else {
+                handleOpenAuth('login');
+              }
+            }}
             onOpenAuth={handleOpenAuth}
           />
         )}
 
         {currentView === 'transparence' && (
           <TransparencePage 
-            onGoToDashboard={() => navigateToView('dashboard')}
+            onGoToDashboard={() => {
+              if (currentUser) {
+                navigateToView('dashboard');
+              } else {
+                handleOpenAuth('login');
+              }
+            }}
             onOpenAuth={handleOpenAuth}
           />
         )}
 
         {currentView === 'dashboard' && (
-          <MemberDashboard />
+          <ErrorBoundary>
+            <MemberDashboard onOpenAuth={handleOpenAuth} />
+          </ErrorBoundary>
+        )}
+
+        {/* Fallback to prevent blank white screens for any unmapped route */}
+        {!['landing', 'missions', 'academy', 'academie', 'affiliation', 'partenaire', 'tools', 'outils', 'transparence', 'dashboard'].includes(currentView) && (
+          <LandingPage 
+            onGoToDashboard={() => {
+              if (currentUser) {
+                navigateToView('dashboard');
+              } else {
+                handleOpenAuth('login');
+              }
+            }}
+            onOpenAuth={handleOpenAuth}
+            onSelectTask={handleSelectTaskFromLanding}
+            onNavigatePage={(page) => navigateToView(page as AppView)}
+          />
         )}
       </main>
 
@@ -235,12 +296,6 @@ function AppContent() {
         onClose={() => setAuthModalOpen(false)}
         initialMode={authMode}
         onComplete={handleAuthComplete}
-      />
-
-      {/* Interactive Member Profile Switcher (Public Only) */}
-      <DemoSwitcher 
-        currentView={currentView}
-        setCurrentView={navigateToView}
       />
 
       {/* Floating High-Performance Informational Chatbot */}

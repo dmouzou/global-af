@@ -14,6 +14,7 @@ import {
   WithdrawalRequest,
   TaskSubmission
 } from '../types';
+import { generate40ExamQuestions } from './examQuestions';
 
 export const COUNTRIES_CONFIG: Record<string, CountryConfig> = {
   CI: {
@@ -52,7 +53,6 @@ export const INITIAL_CURRENT_USER: User = {
   referralCode: 'GAF-CI-9042',
   referredBy: 'GAF-CI-1002',
   defaultPayoutOperator: 'Orange Money',
-  idCardNumber: 'CI0039281729',
   bio: 'Micro-entrepreneur digital à Abidjan, actif sur les sondages et la création de fiches produits.',
   level: 'Bronze',
   points: 480,
@@ -83,7 +83,6 @@ export const DEMO_PROFILES: User[] = [
     subscriptionPlan: 'premium',
     referralCode: 'GAF-CI-7731',
     defaultPayoutOperator: 'Wave',
-    idCardNumber: 'CI0081290344',
     bio: 'Consultante marketing e-commerce indépendante, certifiée Académie GLOBAL-AF.',
     level: 'Silver',
     points: 1250,
@@ -321,9 +320,9 @@ export const INITIAL_COURSES: Course[] = [
     id: 'crs-001',
     title: 'Marketing Digital & Acquisition Client en Côte d\'Ivoire',
     category: 'Marketing Digital',
-    description: 'Programme certifiant complet : maîtrisez les canaux d\'acquisition digitaux adaptés aux réalités ivoiriennes (WhatsApp Business, Meta Ads ciblé Abidjan/Intérieur, Mobile Money direct).',
-    level: 'Débutant',
-    durationHours: 4.5,
+    description: 'Programme certifiant complet et pratique : maîtrisez les canaux d\'acquisition digitaux adaptés aux réalités ivoiriennes (WhatsApp Business, Meta Ads géociblé Abidjan/Intérieur, Mobile Money direct, logistique du dernier kilomètre).',
+    level: 'Débutant à Pro',
+    durationHours: 22.0,
     isPremium: false,
     enrolledUserIds: ['usr_kouame_01'],
     completedUserIds: [],
@@ -331,17 +330,29 @@ export const INITIAL_COURSES: Course[] = [
       {
         id: 'mod-101',
         title: 'Palier 1 : Comportements Numériques & Écosystème Mobile Ivoirien',
-        durationMinutes: 45,
-        content: `En Côte d'Ivoire, plus de 88% de la population connectée accède à internet via un smartphone avec des forfaits données prépayés. Les canaux prioritaires sont WhatsApp Business, Facebook et TikTok. Le parcours d'achat repose sur la confiance humaine directe et les paiements Mobile Money instantanés (Wave, Orange Money, MTN MoMo, Moov). Les sites web lourds ou nécessitant une carte bancaire perdent 90% de leur audience.`,
+        durationMinutes: 50,
+        content: `### 1. Cartographie de la connectivité en Côte d'Ivoire
+En Côte d'Ivoire, plus de 88% de la population connectée accède à internet exclusivement via un smartphone avec des forfaits données mobiles prépayés (pass journaliers et hebdomadaires de 100 à 1 000 FCFA). Les canaux prioritaires incontournables sont WhatsApp Business, Facebook et TikTok.
+
+### 2. Le triptyque de la confiance : Humain, Proximité et Mobile Money
+Contrairement aux marchés occidentaux où l'achat se fait par carte bancaire sur des sites web automatisés, l'acheteur ivoirien exige une interaction humaine directe :
+- **WhatsApp comme standard de réassurance** : 95% des conversions directes se concluent dans un fil de discussion WhatsApp après échange audio ou confirmation visuelle.
+- **Les 4 opérateurs de paiement intégrés** : Wave (le plus populaire pour la gratuité des dépôts et les frais de retrait à 1%), Orange Money, MTN MoMo et Moov Money.
+- **Pourquoi les sites web traditionnels échouent à 90%** : Les pages lourdes consomment les données mobiles de l'utilisateur, et l'absence de contact direct crée la méfiance face aux arnaques en ligne.
+
+### 3. Les règles d'or de l'expérience mobile ivoirienne
+1. **Légèreté absolue** : Visuels optimisés (moins de 200 Ko) pour un chargement instantané même en 3G/4G instable.
+2. **Affichage immédiat des prix en FCFA** : Tout produit sans prix clair génère de la méfiance et des commentaires négatifs ("Prix svp ?").
+3. **Bouton d'action direct vers WhatsApp** : Réduire le parcours à 1 clic ("Commander sur WhatsApp").`,
         keyTakeaways: [
-          'Design ultra-léger et adapté aux connexions 3G/4G mobiles.',
-          'Intégration systématique du canal de contact WhatsApp direct.',
-          'Tarification transparente et affichage immédiat en Francs CFA (XOF).'
+          'Design ultra-léger adapté aux forfaits data prépayés des usagers ivoiriens.',
+          'WhatsApp Business couplé au Mobile Money est le canal de conversion n°1.',
+          'Transparence obligatoire des tarifs en FCFA pour instaurer une confiance durable.'
         ],
         checkpointQuiz: {
           id: 'cpq-101',
           courseId: 'crs-001',
-          title: 'Quiz Palier 1 : Écosystème Numérique CI',
+          title: 'Quiz Palier 1 : Écosystème Numérique & Mobile CI',
           passingScore: 100,
           rewardPoints: 30,
           questions: [
@@ -349,31 +360,66 @@ export const INITIAL_COURSES: Course[] = [
               id: 'q-cp1-1',
               question: 'Quel est le premier canal de conversion directe pour un commerce en ligne en Côte d\'Ivoire ?',
               options: [
-                'La prospection par e-mailing B2C',
-                'WhatsApp Business couplé aux paiements Mobile Money',
+                'La prospection par e-mailing B2C traditionnel',
+                'WhatsApp Business couplé aux paiements Mobile Money (Wave, OM, MTN, Moov)',
                 'Le courrier postal recommandé',
-                'Les forums web sur PC de bureau'
+                'Les forums web sur ordinateur de bureau'
               ],
               correctAnswerIndex: 1,
-              explanation: 'WhatsApp Business et le Mobile Money sont les standards incontournables du commerce direct ivoirien.'
+              explanation: 'WhatsApp Business et le Mobile Money sont les standards incontournables du commerce direct en Côte d\'Ivoire.'
+            },
+            {
+              id: 'q-cp1-2',
+              question: 'Pourquoi les formulaires avec paiement obligatoire par carte bancaire internationale perdent-ils plus de 90% des clients ivoiriens ?',
+              options: [
+                'Parce que le taux de bancarisation classique par carte reste minoritaire face à l\'omniprésence du Mobile Money',
+                'Parce que les Ivoiriens n\'aiment pas payer en ligne',
+                'Parce que les cartes sont interdites le week-end',
+                'Il n\'y a aucune perte de clients'
+              ],
+              correctAnswerIndex: 0,
+              explanation: 'Le Mobile Money est le moyen de paiement universel en Côte d\'Ivoire, tandis que la carte bancaire reste restreinte à une élite bancarisée.'
+            },
+            {
+              id: 'q-cp1-3',
+              question: 'Quel comportement utilisateur est typique des internautes d\'Abidjan et de l\'intérieur ?',
+              options: [
+                'Télécharger de lourds catalogues PDF de 100 Mo',
+                'Naviguer sur smartphone avec des pass data prépayés et exiger un contact WhatsApp direct',
+                'Consulter les sites web la nuit sur grand écran d\'ordinateur',
+                'Refuser de communiquer avant de payer'
+              ],
+              correctAnswerIndex: 1,
+              explanation: 'L\'internaute ivoirien gère sa consommation data au mégaoctet près et privilégie l\'échange direct avec un interlocuteur réel.'
             }
           ]
         }
       },
       {
         id: 'mod-102',
-        title: 'Palier 2 : Création de Visuels Publicitaires & Copywriting Percutant',
-        durationMinutes: 50,
-        content: `La création d'annonces performantes sur le marché ivoirien exige une clarté instantanée : présenter le problème résolu en moins de 3 secondes, employer des accroches locales authentiques et un appel à l'action précis ("Cliquez pour discuter sur WhatsApp", "Paiement Wave à la livraison"). Les visuels doivent présenter le produit réel dans un environnement familier pour maximiser la réassurance.`,
+        title: 'Palier 2 : Création de Visuels Publicitaires & Copywriting Persuasif Local',
+        durationMinutes: 55,
+        content: `### 1. La règle des 3 secondes en publicité mobile
+Dans le fil d'actualité Facebook, TikTok ou Instagram, un utilisateur d'Abidjan scrolle à une vitesse de 2 mètres de contenu par minute. Votre annonce dispose de moins de 3 secondes pour capter son attention.
+
+### 2. La formule d'or d'une accroche qui convertit
+Une annonce performante contient impérativement 3 éléments visibles dès le premier coup d'œil :
+1. **L'Accroche ou Problème résolu** : Directe, parlante, souvent teintée de touches culturelles locales ou de nouchi urbain ("Y'a pas drap", "Finie la galère de...").
+2. **Le Prix net en FCFA et modalité de livraison** : Préciser le tarif et la zone de livraison couverte (Abidjan : Cocody, Yopougon, Marcory, etc.).
+3. **L'Appel à l'action immédiat** : Un lien WhatsApp clair avec un message pré-rempli ("Bonjour, je souhaite commander l'article vu sur votre page").
+
+### 3. Éthique publicitaire et règles de la plateforme GLOBAL-AF
+- **Tolérance zéro pour les allégations trompeuses** : Interdiction formelle des montages mensongers, faux témoignages ou promesses de gains sans travail.
+- **Transparence sur les garanties** : Rappel du droit de rétractation légal de 7 jours et de la possibilité de vérifier la conformité du produit lors de la livraison.`,
         keyTakeaways: [
-          'Règle des 3 secondes : produit + prix FCFA + avantage concret.',
-          'Pas de promesses trompeuses ni de faux témoignages (charte éthique).',
-          'Visuels à fort contraste lisibles en plein soleil sur mobile.'
+          'Formule des 3 secondes : Accroche percutante + Prix en FCFA + Appel à l\'action WhatsApp.',
+          'Visuels à fort contraste avec photos réelles prises sous éclairage naturel sur smartphone.',
+          'Interdiction stricte des promesses mensongères conformément à la charte éthique.'
         ],
         checkpointQuiz: {
           id: 'cpq-102',
           courseId: 'crs-001',
-          title: 'Quiz Palier 2 : Visuels & Copywriting Éthique',
+          title: 'Quiz Palier 2 : Copywriting Local & Visuels Éthiques',
           passingScore: 100,
           rewardPoints: 30,
           questions: [
@@ -381,31 +427,64 @@ export const INITIAL_COURSES: Course[] = [
               id: 'q-cp2-1',
               question: 'Selon la charte de transparence de GLOBAL-AF, quel type d\'argumentaire commercial est formellement banni ?',
               options: [
-                'Les démonstrations vidéo du produit réel',
-                'Les fausses allégations de gains miraculeux sans travail effectif',
-                'L\'indication des frais de livraison à Abidjan',
-                'Les remises de lancement vérifiables'
+                'Les démonstrations vidéo montrant le produit réel sous différents angles',
+                'Les fausses allégations de gains miraculeux sans travail et les faux avis montés de toutes pièces',
+                'L\'indication claire des frais de livraison moto à Abidjan',
+                'Les remises de lancement limitées dans le temps et vérifiables'
               ],
               correctAnswerIndex: 1,
-              explanation: 'La charte éthique de GLOBAL-AF proscrit tout argumentaire trompeur ou promesse spéculative.'
+              explanation: 'La charte de GLOBAL-AF interdit formellement tout argumentaire mensonger, trompeur ou assimilable à une arnaque pyramidale.'
+            },
+            {
+              id: 'q-cp2-2',
+              question: 'Pourquoi recommander l\'utilisation de photos réelles du produit plutôt que des images parfaites de banques d\'images occidentales ?',
+              options: [
+                'Car les banques d\'images sont interdites par la loi',
+                'Parce que le client ivoirien associe les photos trop parfaites à des arnaques de livraison et veut voir le produit authentique',
+                'Pour faire des économies de batterie',
+                'Aucune raison, cela ne change rien'
+              ],
+              correctAnswerIndex: 1,
+              explanation: 'L\'authenticité visuelle rassure l\'acheteur qui craint de recevoir un produit non conforme à la photo d\'origine.'
+            },
+            {
+              id: 'q-cp2-3',
+              question: 'Quelle est la fonction d\'un message WhatsApp pré-rempli sur un lien publicitaire ?',
+              options: [
+                'Bloquer le compte WhatsApp du prospect',
+                'Réduire l\'effort du client en lui évitant d\'écrire et identifier immédiatement la provenance de l\'annonce',
+                'Augmenter le prix du produit automatiquement',
+                'Supprimer l\'historique des conversations'
+              ],
+              correctAnswerIndex: 1,
+              explanation: 'Un texte pré-rempli ("Bonjour, je suis intéressé par le pack à 15 000 FCFA") accélère la prise de contact et la conversion.'
             }
           ]
         }
       },
       {
         id: 'mod-103',
-        title: 'Palier 3 : Ciblage Géographique et Campagnes Meta Ads Locales',
-        durationMinutes: 55,
-        content: `Configurer des campagnes publicitaires rentables sans gaspillage de budget. Apprenez à cibler précisément les communes d'Abidjan (Cocody, Yopougon, Marcory, Plateau, Koumassi) et les grandes villes de province (Bouaké, Yamoussoukro, San Pédro, Korhogo). Optimisation du coût par message WhatsApp et suivi des conversions réelles.`,
+        title: 'Palier 3 : Ciblage Géographique et Campagnes Meta Ads Locales (Abidjan & Régions)',
+        durationMinutes: 60,
+        content: `### 1. Stratégie de segmentation territoriale en Côte d'Ivoire
+Le marché ivoirien n'est pas homogène. Une campagne publicitaire rentable doit être segmentée géographiquement :
+- **Zone 1 : Abidjan - Pouvoir d'achat premium** : Cocody (Angré, Riviera 2, 3, 4, Palmeraie, Golf), Marcory (Zone 4, Biétry), Plateau. Cible idéale pour les services B2B, formations supérieures et produits high-ticket.
+- **Zone 2 : Abidjan - Grand public et fort volume** : Yopougon, Abobo, Koumassi, Treichville, Port-Bouët. Cible privilégiée pour le prêt-à-porter, la beauté et les biens de consommation courante.
+- **Zone 3 : Grandes métropoles de province** : Bouaké, Yamoussoukro, San Pédro, Korhogo, Daloa. Coûts publicitaires souvent 40% moins élevés, mais logistique à anticiper via les gares de car (UTB, CTE, etc.).
+
+### 2. Paramétrage optimal des campagnes Click-to-WhatsApp (CTWA)
+- **Objectif de campagne** : Trafic ou Engagement avec destination WhatsApp Business connectée.
+- **Budget de démarrage recommandé** : 2 500 à 5 000 FCFA par jour (environ 4 à 8 €/jour) pour tester un angle avant de monter à l'échelle.
+- **Calcul du ROAS (Retour sur Dépenses Publicitaires)** : Si 5 000 FCFA dépensés génèrent 15 messages WhatsApp, 5 commandes fermes et 25 000 FCFA de marge nette, votre ROAS net est de 5x.`,
         keyTakeaways: [
-          'Segmenter les campagnes par zone géographique pour adapter les coûts de livraison.',
-          'Tester au moins 2 angles d\'annonces avant d\'augmenter le budget quotidien.',
-          'Calculer le retour sur investissement publicitaire (ROAS) réel.'
+          'Segmenter rigoureusement Abidjan par communes pour adapter la tarification et la livraison.',
+          'Tester systématiquement 2 à 3 variantes d\'annonces avec un budget initial de 3 000 FCFA/jour.',
+          'Suivre le coût par message WhatsApp qualifié pour piloter sa rentabilité en FCFA.'
         ],
         checkpointQuiz: {
           id: 'cpq-103',
           courseId: 'crs-001',
-          title: 'Quiz Palier 3 : Ciblage & Rentabilité des Campagnes',
+          title: 'Quiz Palier 3 : Ciblage Géographique & Rentabilité Meta Ads',
           passingScore: 100,
           rewardPoints: 40,
           questions: [
@@ -413,13 +492,103 @@ export const INITIAL_COURSES: Course[] = [
               id: 'q-cp3-1',
               question: 'Pourquoi est-il crucial de segmenter ses publicités entre Abidjan et l\'intérieur du pays ?',
               options: [
-                'Parce que les coûts logistiques et les délais de livraison diffèrent grandement',
+                'Parce que les coûts logistiques, les délais d\'acheminement et les habitudes d\'achat diffèrent grandement',
                 'Pour payer la TVA deux fois',
-                'Car Facebook interdit de diffuser sur tout le pays en même temps',
+                'Car Facebook interdit de diffuser sur tout le pays simultanément',
                 'Il n\'y a aucune différence'
               ],
               correctAnswerIndex: 0,
-              explanation: 'La livraison à Abidjan (24h en moto) diffère de l\'intérieur (48h par car ou relais), ce qui influe sur la conversion et les marges.'
+              explanation: 'La livraison à Abidjan (24h par livreur moto) diffère de l\'intérieur (48h par car ou relais), ce qui influe sur la marge et les délais.'
+            },
+            {
+              id: 'q-cp3-2',
+              question: 'Si vous dépensez 5 000 FCFA de publicité et obtenez 20 messages WhatsApp dont 4 aboutissent à une vente nette de 10 000 FCFA chacune (40 000 FCFA), quel est votre retour brut ?',
+              options: [
+                '2 fois la mise',
+                '8 fois le budget publicitaire investi (ROAS de 8)',
+                'Zéro, vous avez perdu de l\'argent',
+                '15 fois'
+              ],
+              correctAnswerIndex: 1,
+              explanation: '40 000 FCFA de chiffre généré pour 5 000 FCFA dépensés correspond à un ratio de retour publicitaire exceptionnel de 8 pour 1.'
+            },
+            {
+              id: 'q-cp3-3',
+              question: 'Quel est le premier indicateur d\'alerte signalant qu\'une campagne publicitaire s\'épuise sur Abidjan ?',
+              options: [
+                'Le téléphone surchauffe',
+                'La répétition (fréquence) dépasse 3,5 et le coût par message WhatsApp commence à doubler',
+                'Facebook change de logo',
+                'Les clients appellent la police'
+              ],
+              correctAnswerIndex: 1,
+              explanation: 'Lorsque la fréquence augmente au-delà de 3, la même audience a vu l\'annonce trop souvent, ce qui fatigue l\'audience et renchérit le coût par lead.'
+            }
+          ]
+        }
+      },
+      {
+        id: 'mod-104',
+        title: 'Palier 4 : Logistique du Dernier Kilomètre, Gestion des Livraisons & Clôture WhatsApp',
+        durationMinutes: 55,
+        content: `### 1. Résoudre le dilemme du Cash-on-Delivery (Paiement à la livraison)
+À Abidjan, le refus de colis lors de la livraison atteint souvent 30 à 40% chez les commerçants mal organisés. Comment diviser ce taux par 4 :
+- **L'appel de confirmation obligatoire** : 1 heure avant l'envoi du livreur à moto, un appel courtois confirme l'adresse exacte, le point de repère (ex: "Carrefour Duncan, pharmacie...") et la disponibilité de la monnaie.
+- **La sécurisation par acompte symbolique** : Demander un acompte Mobile Money de 1 000 ou 2 000 FCFA pour couvrir la course élimine les faux acheteurs et garantit la vente à 98%.
+
+### 2. Gestion professionnelle des partenaires coursiers
+- Structurer un réseau de 2 à 3 livreurs indépendants à moto de confiance ou recourir à des sociétés de livraison locales formalisées.
+- Exiger un encaissement direct sur compte marchand Wave pour éviter le risque de vol ou de litige d'espèces.
+
+### 3. Service après-vente et fidélisation
+Un client bien traité à Abidjan recommande immédiatement le service à sa famille et à ses collègues de bureau. Mettre en place un message de suivi 48h après la réception : "Bonjour, avez-vous bien reçu votre commande ? Tout est conforme ?".`,
+        keyTakeaways: [
+          'Un appel téléphonique systématique 1h avant la livraison réduit les refus de 70%.',
+          'Encaissement Mobile Money marchand direct pour éliminer les risques d\'impayés d\'espèces.',
+          'Suivi après-vente 48h pour générer du réachat et des avis authentiques.'
+        ],
+        checkpointQuiz: {
+          id: 'cpq-104',
+          courseId: 'crs-001',
+          title: 'Quiz Palier 4 : Logistique & Clôture Commerciale',
+          passingScore: 100,
+          rewardPoints: 40,
+          questions: [
+            {
+              id: 'q-cp4-1',
+              question: 'Quelle méthode opérationnelle divise par 3 le taux de refus de colis à Abidjan ?',
+              options: [
+                'Envoyer le coursier sans prévenir à l\'improviste',
+                'Un appel téléphonique de confirmation avec point de repère précis 1 heure avant le départ du coursier',
+                'Augmenter le prix de livraison lors de l\'arrivée',
+                'Refuser de décrocher le téléphone'
+              ],
+              correctAnswerIndex: 1,
+              explanation: 'L\'appel de confirmation valide que le client est sur place, joignable et qu\'il a préparé le règlement.'
+            },
+            {
+              id: 'q-cp4-2',
+              question: 'Comment sécuriser les encaissements effectués par les livreurs à moto ?',
+              options: [
+                'Laisser le livreur garder l\'argent liquide plusieurs semaines sans contrôle',
+                'Demander au client de payer directement sur le compte marchand Mobile Money officiel (Wave/OM/MTN) lors de la remise du colis',
+                'Exiger un paiement en devises étrangères uniquement',
+                'Livrer gratuitement sans rien encaisser'
+              ],
+              correctAnswerIndex: 1,
+              explanation: 'Le règlement direct sur le compte marchand Mobile Money offre une traçabilité instantanée sans manipulation d\'espèces.'
+            },
+            {
+              id: 'q-cp4-3',
+              question: 'Pourquoi le suivi après-vente 48h sur WhatsApp est-il si puissant dans le commerce ivoirien ?',
+              options: [
+                'Pour demander un pourboire obligatoire',
+                'Parce qu\'il rassure le client, active le bouche-à-oreille familial et génère des commandes récurrentes sans coût publicitaire supplémentaire',
+                'Pour envoyer des publicités non sollicitées toutes les nuits',
+                'C\'est une obligation de la météo'
+              ],
+              correctAnswerIndex: 1,
+              explanation: 'Le service attentionné transforme un simple acheteur en ambassadeur fidèle qui partage l\'offre dans ses groupes WhatsApp.'
             }
           ]
         }
@@ -428,48 +597,19 @@ export const INITIAL_COURSES: Course[] = [
     quiz: {
       id: 'qz-101',
       courseId: 'crs-001',
-      title: 'Certification Finale : Marketing Digital Opérationnel CI',
-      passingScore: 75,
-      rewardPoints: 120,
-      questions: [
-        {
-          id: 'q1',
-          question: 'Quel est le moyen de paiement prioritaire pour un commerce digital en Côte d\'Ivoire ?',
-          options: ['Carte bancaire internationale', 'Mobile Money (Wave, Orange, MTN, Moov)', 'Chèque postal', 'Crypto-monnaie spéculative'],
-          correctAnswerIndex: 1,
-          explanation: 'Le Mobile Money représente l\'écrasante majorité des paiements digitaux en Côte d\'Ivoire.'
-        },
-        {
-          id: 'q2',
-          question: 'Pourquoi la plateforme GLOBAL-AF exige-t-elle que les commissions soient basées sur des ventes réelles ?',
-          options: ['Parce que l\'affiliation éthique valorise la création de valeur concrète sans spéculation pyramidale', 'Pour limiter les revenus des membres', 'Par obligation de la météo', 'Aucune raison'],
-          correctAnswerIndex: 0,
-          explanation: 'Notre engagement éthique garantit une rémunération saine indexée uniquement sur des transactions de produits et services réels.'
-        },
-        {
-          id: 'q3',
-          question: 'Quel type d\'expérience utilisateur est indispensable pour le public ivoirien ?',
-          options: ['Desktop uniquement', 'Mobile-first léger, chargement rapide et boutons WhatsApp/MoMo', 'Fichiers téléchargeables de 500 Mo', 'Popups agressives'],
-          correctAnswerIndex: 1,
-          explanation: 'La quasi-totalité des internautes utilisent des smartphones avec des connexions mobiles où chaque mégaoctet compte.'
-        },
-        {
-          id: 'q4',
-          question: 'Que doit contenir une offre promotionnelle transparente ?',
-          options: ['Prix en FCFA clair, frais de livraison annoncés et politique de rétractation', 'Des frais cachés non déclarés', 'Un délai de rétractation de zéro minute', 'Des termes obscurs'],
-          correctAnswerIndex: 0,
-          explanation: 'La transparence totale sur le prix, la livraison et le retour est le socle de la confiance en e-commerce.'
-        }
-      ]
+      title: 'Grand Examen Certifiant Officiel : Marketing Digital & Acquisition Client CI (40 Questions Chronométrées)',
+      passingScore: 80,
+      rewardPoints: 200,
+      questions: generate40ExamQuestions('crs-001', 'Marketing Digital & Acquisition Client en Côte d\'Ivoire')
     }
   },
   {
     id: 'crs-002',
     title: 'Maîtrise Professionnelle de l\'IA Générative Commerciale',
     category: 'Intelligence Artificielle',
-    description: 'Formation Premium avancée : devenez expert dans l\'utilisation des modèles d\'IA pour automatiser la rédaction de propositions commerciales, le support client 24/7 et l\'analyse de marché.',
-    level: 'Intermédiaire',
-    durationHours: 6.0,
+    description: 'Formation Premium avancée : devenez expert dans l\'utilisation des modèles d\'IA (Google Gemini, ChatGPT) pour automatiser la rédaction de propositions commerciales, le support client 24/7 et l\'analyse de marché en Afrique de l\'Ouest.',
+    level: 'Intermédiaire à Expert',
+    durationHours: 24.0,
     isPremium: true,
     priceXOF: 15000,
     enrolledUserIds: ['usr_aicha_premium'],
@@ -477,13 +617,22 @@ export const INITIAL_COURSES: Course[] = [
     modules: [
       {
         id: 'mod-201',
-        title: 'Palier 1 : Ingénierie de Prompts & Structuration Avancée',
+        title: 'Palier 1 : Ingénierie de Prompts & Structuration Avancée R-C-T-F-C',
         durationMinutes: 50,
-        content: `Pour obtenir des résultats d'élite avec un assistant IA, la précision du prompt est reine. Maîtrisez le framework R-C-T-F-C : Rôle (expert marché ivoirien), Contexte (secteur B2B / B2C à Abidjan), Tâche explicite, Format exigé (tableaux, devis structurés), et Contraintes (ton professionnel, monnaie FCFA).`,
+        content: `### 1. Les fondations de l'ingénierie de prompt en contexte professionnel
+Pour obtenir des résultats d'élite avec un modèle d'intelligence artificielle comme Google Gemini, poser une simple question donne un résultat générique et fade. Les professionnels utilisent le framework R-C-T-F-C :
+- **Rôle (R)** : Définir l'expertise exacte du modèle (ex: "Tu es un directeur marketing senior expert du marché d'Abidjan").
+- **Contexte (C)** : La situation réelle (ex: "Une PME de Treichville lance une gamme de cosmétiques naturels à 7 500 FCFA").
+- **Tâche (T)** : L'action précise demandée (ex: "Rédige 3 variantes d'annonces WhatsApp et un script d'accueil client").
+- **Format (F)** : La forme exacte souhaitée (tableaux comparatifs, puces avec emojis, textes de moins de 150 mots).
+- **Contraintes (C)** : Les limites incontournables (tarifs en FCFA, ton chaleureux et professionnel, aucune promesse médicale non prouvée).
+
+### 2. Le Few-Shot Prompting avec exemples locaux
+Montrer à l'IA 2 exemples réussis d'annonces ou de messages WhatsApp permet de calibrer instantanément le niveau de langage (nouchi subtil, politesse ivoirienne, courtoisie commerciale).`,
         keyTakeaways: [
-          'Assigner une identité d\'expert métier au modèle.',
-          'Exiger des formats exploitables immédiatement sans reformatage.',
-          'Technique du few-shot prompting avec exemples concrets de réussite.'
+          'Le framework R-C-T-F-C garantit des réponses professionnelles prêtes à l\'emploi sans retouche.',
+          'Injecter des contraintes claires sur les devises (FCFA) et le contexte local.',
+          'Toujours relire et vérifier les sorties avant toute diffusion commerciale.'
         ],
         checkpointQuiz: {
           id: 'cpq-201',
@@ -496,13 +645,37 @@ export const INITIAL_COURSES: Course[] = [
               id: 'q-cp201-1',
               question: 'Dans le framework R-C-T-F-C, que permet de garantir l\'étape Contraintes (C) ?',
               options: [
-                'Ralentir la réponse du modèle',
-                'Imposer le respect strict des devises locales (FCFA), du ton et des règles éthiques',
-                'Supprimer l\'accès à internet',
-                'Remplacer l\'humain sans vérification'
+                'Ralentir délibérément la réponse du modèle',
+                'Imposer le respect strict des devises locales (FCFA), du ton culturel et des règles éthiques',
+                'Supprimer l\'accès aux fonctionnalités réseau',
+                'Remplacer le cerveau humain sans vérification'
               ],
               correctAnswerIndex: 1,
               explanation: 'Les contraintes précisent les limites impératives : devises, terminologie et conformité métier.'
+            },
+            {
+              id: 'q-cp201-2',
+              question: 'Qu\'est-ce que la technique du "Few-Shot Prompting" ?',
+              options: [
+                'Donner 1 à 3 exemples concrets du résultat attendu dans le prompt pour guider le style du modèle',
+                'Appuyer 3 fois sur la touche Entrée',
+                'Faire payer le modèle à chaque mot',
+                'Répondre en moins d\'une seconde'
+              ],
+              correctAnswerIndex: 0,
+              explanation: 'Fournir des exemples permet à l\'IA de reproduire exactement la cadence, la structure et le ton souhaités.'
+            },
+            {
+              id: 'q-cp201-3',
+              question: 'Quelle donnée confidentielle ne doit JAMAIS être insérée dans une requête IA ?',
+              options: [
+                'La description publique d\'un produit cosmétique',
+                'Un mot de passe, code secret Mobile Money ou identifiant bancaire personnel',
+                'Le nom d\'une commune d\'Abidjan',
+                'Les horaires d\'ouverture d\'une boutique'
+              ],
+              correctAnswerIndex: 1,
+              explanation: 'La cybersécurité exige de ne jamais transmettre d\'identifiants ou de codes secrets à un outil tiers.'
             }
           ]
         }
@@ -511,11 +684,19 @@ export const INITIAL_COURSES: Course[] = [
         id: 'mod-202',
         title: 'Palier 2 : Automatisation du Support Commercial & Gestion des Objections',
         durationMinutes: 55,
-        content: `Configurez des matrices de réponses automatisées et intelligentes pour répondre aux questions fréquentes des clients ivoiriens : délais de livraison, sécurité des dépôts Mobile Money, garanties de remboursement sous 7 jours. Réduire le temps de première réponse de 2 heures à moins de 30 secondes.`,
+        content: `### 1. Construire une matrice de réponses intelligentes aux objections
+Les prospects d'Abidjan formulent généralement 4 objections récurrentes :
+1. *"Est-ce que c'est un produit original ou une contrefaçon ?"*
+2. *"Est-ce que je peux payer après avoir ouvert le colis ?"*
+3. *"Quels sont vos frais de livraison pour Yopougon ou Cocody ?"*
+4. *"Si le produit a un problème, vous me remboursez comment ?"*
+
+### 2. Formuler des réponses personnalisées et réassurantes avec l'IA
+Utilisez l'IA pour générer des scripts de réponses fluides intégrant le droit de rétractation de 7 jours, les moyens de paiement vérifiés (Wave, Orange Money) et les détails logistiques précis.`,
         keyTakeaways: [
-          'Répondre aux doutes sur le paiement à la livraison (COD) vs Mobile Money prépayé.',
+          'Répondre aux doutes d\'achat avec bienveillance et transparence.',
           'Conserver une touche humaine chaleureuse et professionnelle.',
-          'Sécurité absolue : aucune donnée bancaire sensible partagée.'
+          'Réduire le temps de première réponse de plusieurs heures à moins d\'une minute.'
         ],
         checkpointQuiz: {
           id: 'cpq-202',
@@ -526,33 +707,61 @@ export const INITIAL_COURSES: Course[] = [
           questions: [
             {
               id: 'q-cp202-1',
-              question: 'Quelle donnée ne doit JAMAIS être insérée dans une invite ou un prompt d\'IA ?',
+              question: 'Quelle est la meilleure réponse face à un client qui hésite par peur de se faire escroquer ?',
               options: [
-                'Une description de produit vestimentaire',
-                'Un code secret PIN Wave, un mot de passe ou une clé d\'accès confidentielle',
-                'La liste des communes d\'Abidjan',
-                'Le tarif public en Francs CFA'
+                'Lui dire qu\'il n\'a pas confiance et bloquer son numéro',
+                'Rappeler courtoisement la possibilité de vérifier le colis à la livraison et la garantie de rétractation de 7 jours',
+                'Lui exiger un virement bancaire sous 10 minutes',
+                'Ignorer sa question'
               ],
               correctAnswerIndex: 1,
-              explanation: 'Les codes confidentiels et identifiants bancaires ne doivent jamais être communiqués à un outil tiers.'
+              explanation: 'La transparence sur les garanties et la politique de retour apaise les craintes légitimes des acheteurs.'
+            },
+            {
+              id: 'q-cp202-2',
+              question: 'Comment l\'IA améliore-t-elle le taux de conversion sur WhatsApp Business ?',
+              options: [
+                'En envoyant des spams toutes les 5 minutes',
+                'En fournissant des modèles de réponses rapides et précis aux questions techniques des prospects',
+                'En inventant de faux prix',
+                'En supprimant les avis négatifs'
+              ],
+              correctAnswerIndex: 1,
+              explanation: 'Des réponses rapides et bien formulées évitent que le client ne parte acheter chez un concurrent plus réactif.'
+            },
+            {
+              id: 'q-cp202-3',
+              question: 'Que prescrit la charte éthique de GLOBAL-AF sur l\'automatisation ?',
+              options: [
+                'Transparence totale, interdiction du spam et respect absolu de la vie privée',
+                'Spammer des milliers de numéros sans leur consentement',
+                'Vendre les données des prospects',
+                'Aucune règle'
+              ],
+              correctAnswerIndex: 0,
+              explanation: 'L\'automatisation doit toujours servir la qualité et respecter scrupuleusement la réglementation locale.'
             }
           ]
         }
       },
       {
         id: 'mod-203',
-        title: 'Palier 3 : Création de Contenu Stratégique & Analyse de Marché',
+        title: 'Palier 3 : Création de Contenu Stratégique & Analyse de Marché Locale',
         durationMinutes: 60,
-        content: `Exploitez l'IA pour synthétiser des rapports de marché, repérer les tendances émergentes de consommation en Afrique de l'Ouest, rédiger des fiches de négociation B2B et concevoir des scripts d'appels commerciaux percutants.`,
+        content: `### 1. Veille concurrentielle et analyse d'opportunités à Abidjan
+Comment exploiter les capacités analytiques des modèles avancés pour :
+- Synthétiser les tendances de consommation émergentes en Côte d'Ivoire (alimentation bio, services à domicile, formation professionnelle).
+- Établir une grille tarifaire compétitive en tenant compte des marges brutes et du pouvoir d'achat par commune.
+- Structurer un calendrier éditorial mensuel pour réseaux sociaux avec thématiques hebdomadaires.`,
         keyTakeaways: [
-          'Analyse concurrentielle rapide et structurée.',
-          'Génération de scripts d\'appels téléphoniques adaptés à la culture d\'affaires ivoirienne.',
-          'Vérification humaine des faits et chiffres cités.'
+          'Analyse rapide des tendances du marché ouest-africain.',
+          'Génération de calendriers éditoriaux complets et diversifiés.',
+          'Validation humaine indispensable de tous les chiffres avancés.'
         ],
         checkpointQuiz: {
           id: 'cpq-203',
           courseId: 'crs-002',
-          title: 'Quiz Palier 3 : Analyse Stratégique & Décision',
+          title: 'Quiz Palier 3 : Veille Stratégique & Décision',
           passingScore: 100,
           rewardPoints: 50,
           questions: [
@@ -567,6 +776,30 @@ export const INITIAL_COURSES: Course[] = [
               ],
               correctAnswerIndex: 1,
               explanation: 'Le professionnel qualifié vérifie toujours les données critiques avant de les engager dans une décision commerciale.'
+            },
+            {
+              id: 'q-cp203-2',
+              question: 'Comment structurer un calendrier éditorial pour une page Facebook commerciale en Côte d\'Ivoire ?',
+              options: [
+                'Poster uniquement des promotions directes 10 fois par jour',
+                'Alterner entre contenu éducatif/conseil (40%), avis clients/coulisses (30%) et offres commerciales directes (30%)',
+                'Ne publier qu\'une fois par mois',
+                'Partager des vidéos sans rapport avec le produit'
+              ],
+              correctAnswerIndex: 1,
+              explanation: 'La règle des 80/20 ou l\'alternance valeur/vente évite la lassitude des abonnés et construit une audience fidèle.'
+            },
+            {
+              id: 'q-cp203-3',
+              question: 'Quel est le rôle de l\'humain dans un processus créatif assisté par IA ?',
+              options: [
+                'L\'humain n\'est plus nécessaire',
+                'L\'humain pilote la vision stratégique, injecte l\'empathie culturelle et valide la vérité des faits',
+                'L\'humain ne fait que copier-coller sans lire',
+                'L\'IA remplace la signature juridique'
+              ],
+              correctAnswerIndex: 1,
+              explanation: 'L\'IA est un multiplicateur de force, mais le discernement stratégique et l\'éthique restent exclusivement humains.'
             }
           ]
         }
@@ -575,41 +808,19 @@ export const INITIAL_COURSES: Course[] = [
     quiz: {
       id: 'qz-201',
       courseId: 'crs-002',
-      title: 'Examen de Certification : Spécialiste IA Générative & Productivité Pro',
+      title: 'Grand Examen Certifiant : Spécialiste IA Générative & Productivité Commerciale (40 Questions Chronométrées)',
       passingScore: 80,
       rewardPoints: 200,
-      questions: [
-        {
-          id: 'q201-1',
-          question: 'Quelle est la composante clé d\'un prompt professionnel performant ?',
-          options: ['Écrire le moins de mots possible', 'Définir clairement le rôle, contexte, tâche et format attendu', 'Attendre le hasard', 'Utiliser un jargon incompréhensible'],
-          correctAnswerIndex: 1,
-          explanation: 'La structure et le cadrage précis conditionnent directement l\'utilité du résultat.'
-        },
-        {
-          id: 'q201-2',
-          question: 'Comment l\'IA contribue-t-elle à la productivité d\'un entrepreneur ivoirien ?',
-          options: ['En rédigeant en quelques minutes devis, fiches produits et synthèses tout en laissant l\'humain valider', 'En remplaçant les clients', 'En spéculant sur des monnaies virtuelles', 'En travaillant sans électricité'],
-          correctAnswerIndex: 0,
-          explanation: 'L\'IA agit comme un accélérateur opérationnel pour les tâches rédactionnelles et d\'analyse.'
-        },
-        {
-          id: 'q201-3',
-          question: 'Que prescrit la charte éthique de GLOBAL-AF sur l\'automatisation ?',
-          options: ['Transparence totale, interdiction du spam et respect de la confidentialité des usagers', 'Spammer les utilisateurs par SMS automatiques', 'Vendre les coordonnées des clients', 'Aucune règle'],
-          correctAnswerIndex: 0,
-          explanation: 'L\'automatisation doit toujours servir la qualité de service et respecter scrupuleusement la vie privée des clients.'
-        }
-      ]
+      questions: generate40ExamQuestions('crs-002', 'Maîtrise Professionnelle de l\'IA Générative Commerciale')
     }
   },
   {
     id: 'crs-003',
     title: 'Lancer une Activité E-Commerce & Logistique Abidjan-Intérieur',
     category: 'E-Commerce',
-    description: 'Guide pratique d\'exécution : approvisionnement local (Adjamé, Treichville, San Pédro), partenariats transporteurs fiables et sécurisation des paiements Mobile Money.',
-    level: 'Intermédiaire',
-    durationHours: 5.0,
+    description: 'Programme certifiant d\'exécution : approvisionnement local (Adjamé, Treichville, San Pédro), partenariats transporteurs fiables et sécurisation des paiements Mobile Money.',
+    level: 'Intermédiaire à Avancé',
+    durationHours: 20.0,
     isPremium: false,
     enrolledUserIds: [],
     completedUserIds: [],
@@ -617,12 +828,19 @@ export const INITIAL_COURSES: Course[] = [
       {
         id: 'mod-301',
         title: 'Palier 1 : Sourcing Produits & Négociation Fournisseurs en Côte d\'Ivoire',
-        durationMinutes: 45,
-        content: `Comment identifier des fournisseurs fiables sur les grands pôles marchands d'Abidjan (marché Gouro d'Adjamé, grossistes de Treichville, importateurs du Port Autonome d'Abidjan). Calcul précis de la marge brute unitaire après transport, conditionnement et pertes potentielles.`,
+        durationMinutes: 50,
+        content: `### 1. Identifier des partenaires d'approvisionnement fiables
+Cartographie des grands pôles commerciaux d'Abidjan :
+- **Marché Gouro et Black Market d'Adjamé** : Pôle majeur pour les accessoires, le textile et les produits du quotidien à tarif grossiste.
+- **Treichville (Avenue 8, Boulevard du Port)** : Spécialistes de l'importation directe, quincaillerie et équipements.
+- **Grossistes du Port Autonome d'Abidjan** : Pour les commandes en carton ou en conteneur partagé.
+
+### 2. Calculer sa marge réelle unitaire
+Formule d'or : \`Marge nette = Prix de vente - (Prix d'achat + Coût d'emballage + Coût d'acquisition publicitaire + Coût de livraison moyen + Provision pour retours)\`.`,
         keyTakeaways: [
-          'Toujours sécuriser un fournisseur de secours (backup).',
-          'Calculer le seuil de rentabilité en tenant compte du taux de retour colis.',
-          'Tester la qualité physique d\'un échantillon avant tout achat en volume.'
+          'Sécuriser au moins 2 fournisseurs pour chaque produit clé.',
+          'Intégrer le taux de retour colis dans le calcul de la marge de rentabilité.',
+          'Tester physiquement un échantillon avant tout achat en volume.'
         ],
         checkpointQuiz: {
           id: 'cpq-301',
@@ -636,25 +854,55 @@ export const INITIAL_COURSES: Course[] = [
               question: 'Dans le calcul de rentabilité d\'un produit e-commerce en Côte d\'Ivoire, quel poste est trop souvent sous-estimé ?',
               options: [
                 'Le coût de la connexion Wi-Fi',
-                'Le coût des livraisons non abouties (taux de refus à la livraison)',
+                'Le coût des livraisons non abouties (taux de refus de colis)',
                 'Le prix de la batterie du téléphone',
                 'Le nom du magasin'
               ],
               correctAnswerIndex: 1,
-              explanation: 'Le taux de refus à la livraison en paiement à la réception impacte lourdement la marge si le client n\'a pas été pré-qualifié par téléphone.'
+              explanation: 'Le taux de refus à la livraison impacte lourdement la marge si le client n\'a pas été pré-qualifié par téléphone.'
+            },
+            {
+              id: 'q-cp301-2',
+              question: 'Pourquoi est-il risqué de dépendre d\'un seul et unique fournisseur à Adjamé ou Treichville ?',
+              options: [
+                'C\'est illégal',
+                'En cas de rupture de stock ou de hausse soudaine de prix, votre commerce est immédiatement paralysé',
+                'Pour payer deux fois plus cher',
+                'Aucun risque'
+              ],
+              correctAnswerIndex: 1,
+              explanation: 'Disposer d\'un fournisseur de secours garantit la continuité de vos ventes même en cas de pénurie.'
+            },
+            {
+              id: 'q-cp301-3',
+              question: 'Quel est le premier réflexe avant de commander 50 unités d\'un nouveau produit ?',
+              options: [
+                'Acheter immédiatement sans vérifier',
+                'Acheter un échantillon test, tester sa résistance et vérifier sa conformité réelle',
+                'Lancer une campagne de 100 000 FCFA',
+                'Demander un prêt bancaire'
+              ],
+              correctAnswerIndex: 1,
+              explanation: 'L\'inspection physique d\'un échantillon évite d\'immobiliser du capital dans des stocks défectueux.'
             }
           ]
         }
       },
       {
         id: 'mod-302',
-        title: 'Palier 2 : Organisation Logistique & Réseau de Livraison Fiable',
-        durationMinutes: 50,
-        content: `Structurer sa logistique du dernier kilomètre : contractualiser avec des livreurs à moto professionnels à Abidjan (horaires stricts, traçabilité des espèces et des reçus Wave), et mettre en place des expéditions sécurisées vers l'intérieur (compagnies de car UTB, CTE, mallettes sécurisées).`,
+        title: 'Palier 2 : Organisation Logistique & Réseau de Livraison Sécurisé',
+        durationMinutes: 55,
+        content: `### 1. Structurer sa logistique à Abidjan
+Contractualiser avec des livreurs à moto professionnels :
+- Fixer des forfaits clairs par zone (ex: 1 500 FCFA pour Cocody-Plateau-Marcory, 2 000 FCFA pour Yopougon-Abobo-Bingerville).
+- Mettre en place un protocole d'encaissement via compte marchand Mobile Money pour limiter les manipulations d'espèces.
+
+### 2. Expéditions sécurisées vers les villes de l'intérieur
+Utiliser les comptoirs d'expédition des compagnies de car réputées (UTB, CTE, SBTA) avec émission d'un bordereau numéroté et retrait sur présentation d'une pièce d'identité officielle.`,
         keyTakeaways: [
-          'Appeler systématiquement le client avant le départ du coursier.',
-          'Mettre en place un protocole d\'encaissement Wave marchand direct.',
-          'Notifier le client à chaque étape d\'acheminement du colis.'
+          'Appel de confirmation obligatoire 1h avant le départ du coursier.',
+          'Encaissement Mobile Money marchand direct pour une traçabilité sans faille.',
+          'Expédition intérieure via compagnies de transport agréées avec code de retrait sécurisé.'
         ],
         checkpointQuiz: {
           id: 'cpq-302',
@@ -674,6 +922,30 @@ export const INITIAL_COURSES: Course[] = [
               ],
               correctAnswerIndex: 1,
               explanation: 'La confirmation téléphonique préalable garantit la présence physique et la disponibilité des fonds chez le client.'
+            },
+            {
+              id: 'q-cp302-2',
+              question: 'Comment organiser l\'expédition vers l\'intérieur de la Côte d\'Ivoire (Bouaké, Korhogo, etc.) ?',
+              options: [
+                'Partenariat avec les comptoirs colis officiels des compagnies de car avec bordereau et retrait sous présentation de pièce d\'identité',
+                'Laisser le colis au bord de la route',
+                'Attendre que le client vienne à pied à Abidjan',
+                'Envoyer par pigeon voyageur'
+              ],
+              correctAnswerIndex: 0,
+              explanation: 'Les compagnies de transport disposent de comptoirs colis officiels fiables et très économiques.'
+            },
+            {
+              id: 'q-cp302-3',
+              question: 'Quel est l\'avantage d\'un compte marchand Wave ou Orange Money par rapport aux transferts personnels ?',
+              options: [
+                'Plafonds de transaction plus élevés, séparation stricte de la trésorerie et reçu automatique pour le client',
+                'Aucun avantage',
+                'Les retraits sont bloqués',
+                'Le compte est anonyme'
+              ],
+              correctAnswerIndex: 0,
+              explanation: 'Le compte marchand professionnalise l\'activité et évite de mélanger l\'argent du commerce avec l\'argent personnel.'
             }
           ]
         }
@@ -681,12 +953,18 @@ export const INITIAL_COURSES: Course[] = [
       {
         id: 'mod-303',
         title: 'Palier 3 : Fidélisation Clientèle & Service Après-Vente Éthique',
-        durationMinutes: 45,
-        content: `Transformer un premier acheteur en client récurrent. Respecter la promesse de conformité produit, traiter les échanges avec bienveillance et appliquer la politique de rétractation garantie de 7 jours de GLOBAL-AF pour asseoir une réputation inattaquable.`,
+        durationMinutes: 50,
+        content: `### 1. Transformer un premier acheteur en client fidèle
+Le coût d'acquisition d'un nouveau client sur Meta Ads augmente chaque année. La vraie rentabilité réside dans le réachat :
+- Message de satisfaction 48h après la livraison.
+- Offre exclusive réservée aux anciens clients sur les nouveaux arrivages via WhatsApp Status et listes de diffusion consenties.
+
+### 2. Gestion éthique des retours et conformité
+Appliquer la politique de rétractation de 7 jours de GLOBAL-AF : un client qui sait qu'il peut échanger sans conflit achète avec le double de confiance.`,
         keyTakeaways: [
-          'Un client satisfait de la gestion d\'un litige devient votre meilleur ambassadeur.',
-          'Proposer des offres de réachat personnalisées sur WhatsApp.',
-          'Mesurer le taux de satisfaction client mensuel.'
+          'La rentabilité à long terme repose sur le réachat des clients satisfaits.',
+          'Le droit de rétractation de 7 jours est un puissant argument de vente.',
+          'Conserver une relation personnalisée et humaine sur WhatsApp.'
         ],
         checkpointQuiz: {
           id: 'cpq-303',
@@ -699,13 +977,37 @@ export const INITIAL_COURSES: Course[] = [
               id: 'q-cp303-1',
               question: 'Quelle est la durée de rétractation et remboursement garantie sur GLOBAL-AF pour protéger les acheteurs ?',
               options: [
-                '0 jour (aucun remboursement)',
+                '0 jour (aucun remboursement possible)',
                 '7 jours sans condition arbitraire sur les achats éligibles',
                 '365 jours',
                 'Uniquement si le client paie une pénalité'
               ],
               correctAnswerIndex: 1,
               explanation: 'La garantie de rétractation de 7 jours est l\'un des piliers cardinaux de la charte éthique de GLOBAL-AF.'
+            },
+            {
+              id: 'q-cp303-2',
+              question: 'Pourquoi envoyer un message WhatsApp de suivi 48h après la livraison ?',
+              options: [
+                'Pour s\'assurer de la satisfaction du client, désamorcer d\'éventuels doutes et favoriser le réachat',
+                'Pour demander de supprimer le produit',
+                'Pour bloquer le client',
+                'C\'est inutile'
+              ],
+              correctAnswerIndex: 0,
+              explanation: 'Un SAV attentif prouve le sérieux de l\'entreprise et fidélise le client pour ses prochains achats.'
+            },
+            {
+              id: 'q-cp303-3',
+              question: 'Quelle est la règle d\'or lors de l\'utilisation de listes de diffusion WhatsApp ?',
+              options: [
+                'Ajouter des numéros inconnus sans leur accord',
+                'N\'envoyer des messages qu\'aux clients ayant enregistré votre numéro et donné leur accord préalable',
+                'Envoyer 20 messages par jour',
+                'Écrire à 3 heures du matin'
+              ],
+              correctAnswerIndex: 1,
+              explanation: 'WhatsApp ne délivre les messages de diffusion qu\'aux contacts ayant enregistré votre numéro, ce qui protège contre le signalement pour spam.'
             }
           ]
         }
@@ -714,41 +1016,19 @@ export const INITIAL_COURSES: Course[] = [
     quiz: {
       id: 'qz-301',
       courseId: 'crs-003',
-      title: 'Certification Finale : Gestionnaire E-Commerce & Logistique CI',
-      passingScore: 75,
-      rewardPoints: 140,
-      questions: [
-        {
-          id: 'q301-1',
-          question: 'Comment sécuriser les encaissements pour éviter les impayés et la fraude à la monnaie fiduciaire ?',
-          options: ['Privilégier le Mobile Money officiel (Wave, OM, MTN) avec notification instantanée sur le terminal marchand', 'Accepter des chèques sans provision', 'Faire confiance à des captures d\'écran non vérifiées', 'Livrer à crédit sans contrat'],
-          correctAnswerIndex: 0,
-          explanation: 'La validation directe du solde sur son compte marchand Mobile Money protège contre toute falsification de SMS.'
-        },
-        {
-          id: 'q301-2',
-          question: 'Quel est l\'impact d\'une politique de retour transparente sur le chiffre d\'affaires ?',
-          options: ['Elle fait fuir les clients', 'Elle lève le frein à l\'achat et multiplie par 2 la confiance des acheteurs indécis', 'Elle ruine systématiquement l\'entreprise', 'Aucun impact'],
-          correctAnswerIndex: 1,
-          explanation: 'La garantie de remboursement rassure les acheteurs et convertit un nombre nettement supérieur de prospects.'
-        },
-        {
-          id: 'q301-3',
-          question: 'Comment organiser l\'expédition vers l\'intérieur de la Côte d\'Ivoire (Bouaké, Korhogo, etc.) ?',
-          options: ['Partenariat avec les gares routières et services d\'expédition de colis enregistrés avec code de retrait', 'Laisser le colis au bord de la route', 'Attendre que le client vienne à pied à Abidjan', 'Envoyer par pigeon voyageur'],
-          correctAnswerIndex: 0,
-          explanation: 'Les compagnies de transport disposent de comptoirs colis officiels avec bordereau et retrait sous présentation de pièce d\'identité.'
-        }
-      ]
+      title: 'Grand Examen Certifiant : Gestionnaire E-Commerce & Logistique CI (40 Questions Chronométrées)',
+      passingScore: 80,
+      rewardPoints: 200,
+      questions: generate40ExamQuestions('crs-003', 'Lancer une Activité E-Commerce & Logistique Abidjan-Intérieur')
     }
   },
   {
     id: 'crs-004',
     title: 'Prospection B2B & Négociation Grands Comptes en Côte d\'Ivoire',
     category: 'Entrepreneuriat',
-    description: 'Formation Premium certifiante : maîtrisez les techniques de prospection auprès des PME, multinationales et institutions basées au Plateau et en Zone Industrielle.',
-    level: 'Avancé',
-    durationHours: 6.5,
+    description: 'Formation Premium certifiante : maîtrisez les techniques de prospection auprès des PME, multinationales et institutions basées au Plateau et en Zone Industrielle d\'Abidjan.',
+    level: 'Avancé & Direction Commerciale',
+    durationHours: 26.0,
     isPremium: true,
     priceXOF: 25000,
     enrolledUserIds: [],
@@ -757,10 +1037,17 @@ export const INITIAL_COURSES: Course[] = [
       {
         id: 'mod-401',
         title: 'Palier 1 : Cartographie des Décideurs & Réseautage au Plateau et Zone 4',
-        durationMinutes: 50,
-        content: `Identifier le circuit décisionnel dans les entreprises ivoiriennes : Directeur Général, Directeur des Achats, DAF. Techniques d'approche directe via LinkedIn, clubs d'affaires locaux (CGECI, Eurocham, chambres consulaires) et événements professionnels d'Abidjan.`,
+        durationMinutes: 55,
+        content: `### 1. Identifier le circuit décisionnel dans les entreprises ivoiriennes
+Dans le secteur B2B à Abidjan, les cycles de vente nécessitent d'identifier précisément les acteurs :
+- **L'Utilisateur final** : Celui qui exprime le besoin (responsable marketing, chef d'atelier, chef de projet).
+- **Le Validateur technique** : Le DSI ou responsable logistique qui s'assure de la compatibilité.
+- **Le Signataire budgétaire** : Le Directeur Général, Gérant ou DAF, seul habilité à engager la trésorerie.
+
+### 2. Canaux d'approche directe
+Techniques de prise de contact via LinkedIn, annuaires professionnels qualifiés (fichiers VCF), clubs d'affaires (CGECI, Eurocham, Chambres consulaires) et salons d'exposition d'Abidjan.`,
         keyTakeaways: [
-          'Comprendre la distinction entre influenceur, utilisateur final et signataire budgétaire.',
+          'Distinguer clairement prescripteur, utilisateur et signataire officiel.',
           'Soigner son pitch d\'introduction en 60 secondes chrono.',
           'Préparer un dossier de présentation avec références locales vérifiées.'
         ],
@@ -773,28 +1060,59 @@ export const INITIAL_COURSES: Course[] = [
           questions: [
             {
               id: 'q-cp401-1',
-              question: 'Dans une négociation B2B à Abidjan, qui a le pouvoir final d\'autoriser la dépense ?',
+              question: 'Dans une négociation B2B à Abidjan, qui a le pouvoir légal et final d\'autoriser la dépense ?',
               options: [
                 'Le stagiaire',
-                'Le signataire autorisé (DG, Gérant ou Directeur Financier)',
+                'Le signataire autorisé (DG, Gérant ou Directeur Financier habilité)',
                 'Le réceptionniste',
-                'Le chauffeur de l\'entreprise'
+                'Le coursier de l\'entreprise'
               ],
               correctAnswerIndex: 1,
-              explanation: 'Le signataire officiel détient le pouvoir budgétaire légal d\'engager l\'entreprise.'
+              explanation: 'Le signataire officiel détient le pouvoir budgétaire légal d\'engager la société.'
+            },
+            {
+              id: 'q-cp401-2',
+              question: 'Pourquoi est-il crucial de soigner son réseau professionnel et sa réputation à Abidjan ?',
+              options: [
+                'Car le marché B2B ivoirien fonctionne par cooptation, recommandation et confiance interpersonnelle',
+                'C\'est obligatoire pour avoir un passeport',
+                'Pour obtenir des cadeaux',
+                'Il n\'y a aucune importance'
+              ],
+              correctAnswerIndex: 0,
+              explanation: 'La recommandation et le bouche-à-oreille entre dirigeants représentent la voie d\'entrée la plus rapide auprès des grands comptes.'
+            },
+            {
+              id: 'q-cp401-3',
+              question: 'Quelle est la première erreur à éviter lors d\'un premier contact avec un dirigeant ?',
+              options: [
+                'Envoyer immédiatement un document de 80 pages sans avoir cerné son besoin réel',
+                'Poser des questions sur ses défis opérationnels',
+                'Être à l\'heure au rendez-vous',
+                'Avoir une carte de visite professionnelle'
+              ],
+              correctAnswerIndex: 0,
+              explanation: 'Un dirigeant attend un diagnostic ciblé et synthétique, et non un argumentaire fleuve générique.'
             }
           ]
         }
       },
       {
         id: 'mod-402',
-        title: 'Palier 2 : Construction de Devis Professionnels & Négociation Contractuelle',
+        title: 'Palier 2 : Construction de Devis Professionnels & Sécurisation Contractuelle',
         durationMinutes: 60,
-        content: `Élaborer des devis conformes aux normes fiscales ivoiriennes (TVA, AIRSI, mentions légales RCCM et Compte Contribuable). Négocier les conditions de règlement (acompte 40% au démarrage, solde à réception) et clauses de confidentialité.`,
+        content: `### 1. Mentions légales et conformité fiscale en Côte d'Ivoire
+Tout devis professionnel B2B doit comporter :
+- Identité légale complète : Raison sociale, RCCM, Compte Contribuable, siège social à Abidjan.
+- Détail des prestations chiffrées en Francs CFA (XOF), avec mention explicite Hors Taxes (HT) et Taxes Comprises (TTC) selon le régime fiscal (TVA, AIRSI).
+
+### 2. Sécurisation financière du contrat
+- **Règle de l'acompte** : Toujours exiger 30% à 50% d'acompte à la signature du Bon de Commande avant de commencer tout travail.
+- **Le Bon de Commande (Purchase Order - PO)** : Signé et tamponné avec mention "Bon pour Accord".`,
         keyTakeaways: [
-          'Toujours formaliser l\'accord par un bon de commande (PO) signé et tamponné.',
-          'Définir clairement le périmètre pour éviter les demandes gratuites non budgétées.',
-          'Proposer des facilités de paiement échelonné pour débloquer les signatures.'
+          'Ne jamais débuter une prestation sans Bon de Commande officiel signé et tamponné.',
+          'Structurer un acompte d\'au moins 40% pour couvrir les frais de production.',
+          'Préciser les délais de livraison et les modalités d\'approbation écrite.'
         ],
         checkpointQuiz: {
           id: 'cpq-402',
@@ -805,15 +1123,39 @@ export const INITIAL_COURSES: Course[] = [
           questions: [
             {
               id: 'q-cp402-1',
-              question: 'Quelle mention garantit la validité juridique d\'une commande commerciale B2B ?',
+              question: 'Quelle formalité garantit la validité juridique d\'une commande commerciale B2B ?',
               options: [
-                'Un simple accord verbal sans trace',
-                'Un Bon de Commande officiel signé et revêtu du cachet de l\'entreprise cliente',
+                'Un simple accord verbal informel',
+                'Un Bon de Commande officiel signé et revêtu du cachet de l\'entreprise cliente avec les conditions générales',
                 'Un SMS non signé',
                 'Une promesse sur les réseaux sociaux'
               ],
               correctAnswerIndex: 1,
               explanation: 'Le Bon de Commande tamponné et signé constitue l\'engagement juridique officiel de paiement.'
+            },
+            {
+              id: 'q-cp402-2',
+              question: 'Pourquoi l\'acompte au démarrage est-il indispensable pour un prestataire de services ?',
+              options: [
+                'Pour financer les dépenses engagées et sceller l\'engagement financier du client',
+                'Pour partir en vacances immédiatement',
+                'C\'est illégal',
+                'Pour doubler le tarif'
+              ],
+              correctAnswerIndex: 0,
+              explanation: 'L\'acompte protège la trésorerie et valide le sérieux de la relation d\'affaires.'
+            },
+            {
+              id: 'q-cp402-3',
+              question: 'Quelle mention fiscale est obligatoire sur une facture formelle en Côte d\'Ivoire ?',
+              options: [
+                'Le signe du zodiaque',
+                'Le numéro de Compte Contribuable et le registre de commerce (RCCM)',
+                'Le prénom des enfants',
+                'Le modèle du smartphone'
+              ],
+              correctAnswerIndex: 1,
+              explanation: 'Le Compte Contribuable et le RCCM sont les identifiants fiscaux légaux de toute entreprise en Côte d\'Ivoire.'
             }
           ]
         }
@@ -822,11 +1164,17 @@ export const INITIAL_COURSES: Course[] = [
         id: 'mod-403',
         title: 'Palier 3 : Recouvrement Amiable & Relations d\'Affaires Long Terme',
         durationMinutes: 55,
-        content: `Gestion saine du compte client : relance préventive des factures à 15 jours, gestion courtoise mais ferme des retards d'échéances et fidélisation pour contrats à reconduction annuelle.`,
+        content: `### 1. Gérer les délais de paiement des entreprises
+À Abidjan, les délais de règlement des grandes entreprises s'étirent fréquemment entre 30 et 90 jours fin de mois.
+- **Relance préventive** : Contacter le service comptabilité 5 jours avant l'échéance pour vérifier que la facture a bien été validée et intégrée dans le plan de décaissement.
+- **Courtoisie et fermeté** : Les retards sont souvent d'ordre administratif plutôt que financier. Maintenir un contact direct et chaleureux avec le comptable chargé du dossier.
+
+### 2. Le contrat de récurrence (Retainer)
+Comment transformer une mission ponctuelle en contrat de maintenance ou de suivi mensuel (ex: 250 000 FCFA/mois) assurant une trésorerie prévisible toute l'année.`,
         keyTakeaways: [
-          'La relance commence avant la date d\'échéance, par un point d\'étape bienveillant.',
-          'Conserver une trace écrite de tous les échanges financiers.',
-          'Développer des contrats de maintenance ou d\'abonnement récurrents.'
+          'La relance préventive 5 jours avant l\'échéance évite 80% des retards de paiement.',
+          'Conserver un historique écrit et poli de tous les échanges financiers.',
+          'Proposer des abonnements mensuels pour stabiliser sa trésorerie.'
         ],
         checkpointQuiz: {
           id: 'cpq-403',
@@ -840,12 +1188,36 @@ export const INITIAL_COURSES: Course[] = [
               question: 'Quel est le meilleur moment pour effectuer la première relance d\'une facture B2B ?',
               options: [
                 '3 mois après l\'impayé',
-                '3 à 5 jours avant la date d\'échéance pour s\'assurer de son bon enregistrement comptable',
-                'Jamais, par timidité',
-                'Le jour du Nouvel An'
+                '3 à 5 jours avant la date d\'échéance pour s\'assurer du bon enregistrement par le service comptabilité',
+                'Jamais, par peur de froisser le client',
+                'Le jour du Nouvel An uniquement'
               ],
               correctAnswerIndex: 1,
               explanation: 'La relance préventive permet de détecter les éventuels blocages de transmission avant le retard effectif.'
+            },
+            {
+              id: 'q-cp403-2',
+              question: 'Comment transformer une mission ponctuelle en revenu récurrent prévisible ?',
+              options: [
+                'En proposant un contrat d\'accompagnement mensuel (retainer) avec des prestations régulières',
+                'En surfacturant la première prestation',
+                'En refusant de rappeler le client',
+                'En lui vendant un produit dont il n\'a pas besoin'
+              ],
+              correctAnswerIndex: 0,
+              explanation: 'Le contrat d\'accompagnement fidélise le grand compte et sécurise une trésorerie mensuelle stable.'
+            },
+            {
+              id: 'q-cp403-3',
+              question: 'Quelle est la clé pour maintenir une collaboration B2B de plus de 5 ans avec une entreprise ivoirienne ?',
+              options: [
+                'Respecter rigoureusement ses engagements de qualité, être réactif et faire preuve d\'intégrité',
+                'Baisser la qualité au fil des mois',
+                'Arriver en retard aux réunions',
+                'Changer les tarifs chaque semaine'
+              ],
+              correctAnswerIndex: 0,
+              explanation: 'L\'intégrité et la fiabilité opérationnelle font la différence sur le marché des affaires à Abidjan.'
             }
           ]
         }
@@ -854,25 +1226,10 @@ export const INITIAL_COURSES: Course[] = [
     quiz: {
       id: 'qz-401',
       courseId: 'crs-004',
-      title: 'Grand Examen : Spécialiste Négociation & Grands Comptes CI',
+      title: 'Grand Examen Certifiant : Spécialiste Négociation B2B & Grands Comptes CI (40 Questions Chronométrées)',
       passingScore: 80,
       rewardPoints: 250,
-      questions: [
-        {
-          id: 'q401-1',
-          question: 'Pourquoi l\'acompte au démarrage est-il primordial en prestation de services B2B ?',
-          options: ['Pour financer les dépenses initiales et tester l\'engagement réel du client', 'Pour partir en vacances', 'C\'est interdit par la loi', 'Pour doubler le prix'],
-          correctAnswerIndex: 0,
-          explanation: 'L\'acompte valide la solidité de l\'engagement du client et couvre les frais de production engagés.'
-        },
-        {
-          id: 'q401-2',
-          question: 'Que stipule l\'éthique commerciale sur la transparence des tarifs ?',
-          options: ['Annoncer des prix fermes, détaillés et sans surfacturations dissimulées', 'Modifier les prix selon l\'humeur', 'Ne jamais donner de facture', 'Refuser d\'indiquer les taxes'],
-          correctAnswerIndex: 0,
-          explanation: 'La clarté contractuelle est le gage d\'une collaboration sereine et durable.'
-        }
-      ]
+      questions: generate40ExamQuestions('crs-004', 'Prospection B2B & Négociation Grands Comptes en Côte d\'Ivoire')
     }
   }
 ];
@@ -1081,28 +1438,46 @@ export const INITIAL_NOTIFICATIONS: NotificationItem[] = [
   {
     id: 'notif-001',
     userId: 'usr_kouame_01',
-    title: 'Commission d\'affiliation validée',
-    message: 'Vous avez reçu 1 500 XOF suite à la souscription d\'un pack formation par votre filleul.',
+    title: 'Commission d\'affiliation (+990 XOF)',
+    message: 'Votre filleul Actif #1 a souscrit au VIP Premium (9 900 XOF). Conformément à nos règles éthiques, votre commission de 10% (990 XOF) sera définitivement libérée après le délai de rétractation légal de 7 jours.',
     type: 'commission',
-    timestamp: '2026-10-11 12:30',
+    timestamp: '2026-10-27 15:45',
     read: false
   },
   {
     id: 'notif-002',
     userId: 'usr_kouame_01',
-    title: 'Mission validée avec succès',
-    message: 'Votre participation au tutoriel Cybersécurité a été créditée (+400 XOF).',
+    title: 'Mission rémunérée validée (+850 XOF)',
+    message: 'Votre test d\'application partenaire "Wave Côte d\'Ivoire - Parcours Transfert" a été validé avec succès. Gains crédités sur votre solde.',
     type: 'reward',
-    timestamp: '2026-10-10 10:18',
-    read: true
+    timestamp: '2026-10-27 11:20',
+    read: false
   },
   {
     id: 'notif-003',
     userId: 'usr_kouame_01',
-    title: 'Bienvenue sur GLOBAL-AF',
-    message: 'Votre compte est actif. Découvrez votre premier module de formation gratuit.',
+    title: 'Certification Académie Réussie (92.5%)',
+    message: 'Félicitations ! Vous avez réussi l\'examen officiel de 40 questions sur "Marketing Digital & Prospection B2B". Votre attestation avec QR Code est disponible.',
     type: 'system',
-    timestamp: '2026-09-15 10:00',
+    timestamp: '2026-10-26 17:30',
+    read: true
+  },
+  {
+    id: 'notif-004',
+    userId: 'usr_kouame_01',
+    title: 'Retrait Mobile Money Réussi (5 000 XOF)',
+    message: 'Votre virement vers Wave (+225 07 56 77 12 10) a été traité et complété avec succès (Réf. #WTH-8821).',
+    type: 'system',
+    timestamp: '2026-10-25 09:15',
+    read: true
+  },
+  {
+    id: 'notif-005',
+    userId: 'usr_kouame_01',
+    title: 'Pass Membre Standard Confirmé (3 000 FCFA)',
+    message: 'Votre accès aux formations certifiantes (18h-26h), aux micro-jobs et aux retraits Mobile Money est activé à vie.',
+    type: 'system',
+    timestamp: '2026-10-24 14:00',
     read: true
   }
 ];
@@ -1123,7 +1498,7 @@ export const INITIAL_AUDIT_LOGS: AuditLogItem[] = [
     actorName: 'Système Affiliation',
     actorRole: 'admin',
     action: 'Attribution Commission Éthique Vente Réelle',
-    details: 'Attribution 1 500 XOF au parrain Kouamé Diallo sur achat pack formation 9 900 XOF par Aïcha Ouattara. Plafond 15% respecté.',
+    details: 'Attribution 990 XOF au parrain Kouamé Diallo sur achat pack formation 9 900 XOF par Aïcha Ouattara. Plafond 10% respecté.',
     complianceRule: 'Charte Éthique : Ventes réelles uniquement'
   },
   {

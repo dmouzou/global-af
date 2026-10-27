@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   ShieldCheck, 
@@ -10,14 +10,23 @@ import {
   Users, 
   Check, 
   HelpCircle, 
-  ExternalLink,
-  DollarSign,
-  Briefcase,
-  AlertTriangle,
-  RotateCcw
+  ExternalLink, 
+  DollarSign, 
+  Briefcase, 
+  AlertTriangle, 
+  RotateCcw,
+  ChevronLeft,
+  ChevronRight,
+  Lock,
+  Zap,
+  TrendingUp,
+  Building,
+  Play,
+  Pause
 } from 'lucide-react';
 import { Task } from '../../types';
 import { OperatorLogo } from '../common/OperatorLogo';
+import { BabiMascot } from '../common/BabiMascot';
 import { FAQGemini } from './FAQGemini';
 
 interface LandingPageProps {
@@ -30,6 +39,16 @@ interface LandingPageProps {
 export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpenAuth, onSelectTask, onNavigatePage }) => {
   const { selectedCountry, tasks, ethicalIndicators } = useApp();
   const [faqOpenIndex, setFaqOpenIndex] = useState<number | null>(0);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+
+  useEffect(() => {
+    if (isPaused) return;
+    const timer = setInterval(() => {
+      setCurrentSlideIndex(prev => (prev + 1) % 4);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [isPaused]);
 
   const faqs = [
     {
@@ -50,122 +69,321 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
     },
     {
       q: "Comment s'applique le droit de rétractation de 7 jours ?",
-      a: "Si vous activez un pack Premium ou Business et que vous n'avez pas largement consommé les contenus, vous pouvez demander votre rétractation en un clic depuis votre espace membre. Le remboursement est renvoyé directement sur votre numéro Mobile Money sous 48h."
+      a: "Le délai de rétractation de 7 jours avec remboursement intégral Mobile Money s'applique exclusivement à l'abonnement mensuel VIP Premium (9 900 FCFA/mois). Il ne s'applique pas au Pass Membre Standard (3 000 FCFA), dont la fourniture et l'accès numérique aux formations et micro-jobs sont immédiats. De plus, les commissions d'affiliation (10%, soit 990 FCFA) sont conservées en réserve de sécurité pendant 7 jours et ne sont définitivement versées au parrain qu'une fois ce délai de rétractation expiré."
     }
   ];
 
   return (
     <div className="bg-slate-50 min-h-screen text-slate-900">
       
-      {/* HERO SECTION */}
-      <section className="relative overflow-hidden pt-12 pb-16 md:pt-16 md:pb-24 border-b border-slate-200 bg-gradient-to-b from-white to-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      {/* HERO SECTION WITH CINEMATIC BACKGROUND PHOTO CAROUSEL (Netflix / Lupin Aesthetic) */}
+      <section 
+        className="relative overflow-hidden min-h-[620px] sm:min-h-[680px] flex flex-col justify-between border-b border-slate-800 bg-slate-950 text-white select-none"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+      >
+        {/* Dynamic High-Contrast Background Photos - Vivid and clearly visible */}
+        <div className="absolute inset-0 z-0 overflow-hidden">
+          {[
+            '/images/hero-freelancers.jpg',
+            '/images/academy-student.jpg',
+            '/images/mobile-money-success.jpg',
+            '/images/support-agent.jpg'
+          ].map((bgImg, idx) => (
+            <img 
+              key={bgImg}
+              src={bgImg} 
+              alt="GLOBAL-AF Côte d'Ivoire" 
+              className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ease-in-out ${
+                currentSlideIndex === idx ? 'opacity-80 scale-100' : 'opacity-0 scale-105 pointer-events-none'
+              }`}
+            />
+          ))}
+          {/* Cinematic Scrim: Dark on the left for crisp text contrast, gentle fade out to reveal photos */}
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-slate-950/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/40" />
+        </div>
+
+        {/* Carousel Content Container */}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 pb-6 w-full my-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
             
-            {/* Left Column: Value Proposition */}
-            <div className="lg:col-span-7 space-y-6">
+            {/* Left Column: Dynamic Informative Slide Content with Mascot to the Right of Header Text */}
+            <div className="lg:col-span-8 space-y-6">
               
-              {/* Clean text kicker with Côte d'Ivoire flag */}
-              <div className="flex items-center gap-2 text-xs font-semibold text-slate-700">
-                <div className="flex items-center h-2.5 w-4 rounded-xs overflow-hidden border border-slate-200">
-                  <span className="w-1/3 h-full bg-[#FF7700]"></span>
-                  <span className="w-1/3 h-full bg-white"></span>
-                  <span className="w-1/3 h-full bg-[#009E49]"></span>
+              {/* Slide 0: Plateforme Éthique de Micro-Jobs */}
+              {currentSlideIndex === 0 && (
+                <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6 animate-fadeIn">
+                  <div className="flex-1 space-y-4 text-left">
+                    <div className="flex items-center gap-2 text-xs font-semibold flex-wrap">
+                      <div className="flex items-center h-2.5 w-4 rounded-xs overflow-hidden border border-slate-400">
+                        <span className="w-1/3 h-full bg-[#FF7700]"></span>
+                        <span className="w-1/3 h-full bg-white"></span>
+                        <span className="w-1/3 h-full bg-[#009E49]"></span>
+                      </div>
+                      <span className="text-orange-400 font-bold uppercase tracking-wider text-[11px]">N°1 Écosystème Côte d'Ivoire (XOF)</span>
+                      <span className="text-slate-500">·</span>
+                      <span className="flex items-center gap-1 text-emerald-400 font-semibold text-xs">
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        Conforme ARTCI & Charte Éthique
+                      </span>
+                    </div>
+
+                    <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
+                      Plateforme éthique de <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-400 to-emerald-400">micro-jobs</span>, formation & outils digitaux
+                    </h1>
+
+                    <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
+                      Réalisez des missions digitales rémunérées, monétisez vos compétences et retirez vos gains en toute sécurité via <strong className="text-white">Wave, Orange Money, MTN MoMo</strong> et <strong className="text-white">Moov Money</strong>.
+                    </p>
+
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
+                      <button
+                        onClick={() => onOpenAuth('signup')}
+                        className="px-6 py-3.5 text-xs sm:text-sm font-bold text-slate-950 bg-gradient-to-r from-orange-400 to-amber-400 hover:from-orange-500 hover:to-amber-500 rounded-xl shadow-lg shadow-orange-500/25 transition-all flex items-center justify-center gap-2 active:scale-95"
+                      >
+                        <span>Créer mon compte</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                      {onNavigatePage ? (
+                        <button
+                          onClick={() => onNavigatePage('missions')}
+                          className="px-6 py-3.5 text-xs sm:text-sm font-semibold text-white bg-white/15 hover:bg-white/25 border border-white/30 rounded-xl transition-colors text-center"
+                        >
+                          Découvrir les micro-jobs
+                        </button>
+                      ) : (
+                        <a
+                          href="#opportunites"
+                          className="px-6 py-3.5 text-xs sm:text-sm font-semibold text-white bg-white/15 hover:bg-white/25 border border-white/30 rounded-xl transition-colors text-center"
+                        >
+                          Découvrir les micro-jobs
+                        </a>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Mascot Largely Enlarged to the Right of Header Text */}
+                  <div className="shrink-0 flex flex-col items-center justify-center p-2 self-center">
+                    <BabiMascot 
+                      variant="welcome" 
+                      size="xl" 
+                      speechText="Akwaba ! Retirez vos gains dès 2 000 FCFA sur Wave & MoMo !" 
+                    />
+                  </div>
                 </div>
-                <span className="text-orange-700 font-bold uppercase tracking-wider text-[11px]">Marché Côte d'Ivoire (XOF)</span>
-                <span aria-hidden="true">·</span>
-                <span className="flex items-center gap-1 text-emerald-700 font-semibold">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  Conforme Charte Éthique & ARTCI
-                </span>
-              </div>
+              )}
 
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-display font-extrabold tracking-tight text-slate-900 leading-tight">
-                Plateforme éthique de <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 via-amber-500 to-emerald-600">micro-jobs</span>, formation & outils digitaux
-              </h1>
+              {/* Slide 1: Digital Academy & 40 Questions Exams */}
+              {currentSlideIndex === 1 && (
+                <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6 animate-fadeIn">
+                  <div className="flex-1 space-y-4 text-left">
+                    <div className="flex items-center gap-2 text-xs font-semibold flex-wrap">
+                      <span className="px-2.5 py-0.5 rounded-full bg-orange-500/30 text-orange-300 font-bold border border-orange-500/40 text-[11px] uppercase tracking-wider">
+                        Digital Academy · Formations Certifiantes (18h - 26h)
+                      </span>
+                    </div>
 
-              <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl font-normal">
-                Réalisez des missions digitales rémunérées, monétisez vos compétences et retirez vos gains instantanément via <strong className="text-slate-900">Wave, Orange Money, MTN MoMo</strong> et <strong className="text-slate-900">Moov Money</strong>.
-              </p>
+                    <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
+                      Des compétences réelles avec <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400">40 questions d'examen</span> certifiant
+                    </h1>
 
-              {/* CTAs */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
-                <button
-                  onClick={onGoToDashboard}
-                  className="px-6 py-3.5 text-sm font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 rounded-xl shadow-md shadow-orange-500/25 transition-all flex items-center justify-center gap-2 active:scale-95"
-                >
-                  <span>Mon Espace Personnel (Accès Libre)</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-                <a
-                  href="#opportunites"
-                  className="px-6 py-3.5 text-sm font-semibold text-slate-700 bg-white hover:bg-orange-50/50 hover:text-orange-600 border border-slate-300 rounded-xl transition-colors text-center"
-                >
-                  Découvrir les micro-jobs
-                </a>
-              </div>
+                    <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
+                      Fini les certificats bidons délivrés en 5 minutes. Nos parcours approfondis exigent un passage d'examen rigoureux avec 80% de réussite pour attester de vos capacités opérationnelles.
+                    </p>
 
-              {/* Trust statement */}
-              <div className="pt-2 text-xs text-slate-500 flex flex-wrap items-center gap-3">
-                <span className="text-emerald-700 font-semibold">✓ Inscription rapide & gratuite</span>
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
+                      {onNavigatePage && (
+                        <button
+                          onClick={() => onNavigatePage('academie')}
+                          className="px-6 py-3.5 text-xs sm:text-sm font-bold text-slate-950 bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-500 hover:to-orange-500 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95"
+                        >
+                          <span>Découvrir l'Académie</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                      )}
+                      <button
+                        onClick={() => onOpenAuth('signup')}
+                        className="px-6 py-3.5 text-xs sm:text-sm font-semibold text-white bg-white/15 hover:bg-white/25 border border-white/30 rounded-xl transition-colors text-center"
+                      >
+                        S'inscrire pour étudier
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Mascot Largely Enlarged to the Right of Header Text */}
+                  <div className="shrink-0 flex flex-col items-center justify-center p-2 self-center">
+                    <BabiMascot 
+                      variant="academic" 
+                      size="xl" 
+                      speechText="40 questions chronométrées en 45 min ! Obtenez un vrai diplôme !" 
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Slide 2: Mobile Money Direct Payments */}
+              {currentSlideIndex === 2 && (
+                <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6 animate-fadeIn">
+                  <div className="flex-1 space-y-4 text-left">
+                    <div className="flex items-center gap-2 text-xs font-semibold flex-wrap">
+                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/30 text-emerald-300 font-bold border border-emerald-500/40 text-[11px] uppercase tracking-wider">
+                        Mobile Money Garanti · Wave, OM, MTN & Moov
+                      </span>
+                    </div>
+
+                    <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
+                      Vos gains crédités <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400">directement</span> sur votre numéro mobile
+                    </h1>
+
+                    <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
+                      Dès 2 000 FCFA de gains accumulés, demandez un virement vers votre compte personnel. Vérification sécurisée par email sans frais de SMS.
+                    </p>
+
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
+                      <button
+                        onClick={() => onOpenAuth('signup')}
+                        className="px-6 py-3.5 text-xs sm:text-sm font-bold text-slate-950 bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-500 hover:to-teal-500 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95"
+                      >
+                        <span>Créer mon compte</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                      {onNavigatePage && (
+                        <button
+                          onClick={() => onNavigatePage('transparence')}
+                          className="px-6 py-3.5 text-xs sm:text-sm font-semibold text-white bg-white/15 hover:bg-white/25 border border-white/30 rounded-xl transition-colors text-center"
+                        >
+                          Consulter la Charte Éthique
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Mascot Largely Enlarged to the Right of Header Text */}
+                  <div className="shrink-0 flex flex-col items-center justify-center p-2 self-center">
+                    <BabiMascot 
+                      variant="wallet" 
+                      size="xl" 
+                      speechText="Zéro jeu de hasard, zéro frais caché. Vos gains de missions à 100% !" 
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Slide 3: Espace Partenaire & Entreprise */}
+              {currentSlideIndex === 3 && (
+                <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6 animate-fadeIn">
+                  <div className="flex-1 space-y-4 text-left">
+                    <div className="flex items-center gap-2 text-xs font-semibold flex-wrap">
+                      <span className="px-2.5 py-0.5 rounded-full bg-blue-500/30 text-blue-300 font-bold border border-blue-500/40 text-[11px] uppercase tracking-wider">
+                        Espace Partenaire · Recrutement & Campagnes Entreprises
+                      </span>
+                    </div>
+
+                    <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
+                      Entreprises : <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400">Déléguez vos micro-tâches</span> à des profils certifiés
+                    </h1>
+
+                    <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
+                      Études d'usage, tests d'ergonomie, enquêtes terrain ou avis produits : bénéficiez d'une communauté ivoirienne active et suivez vos résultats en temps réel sur votre tableau de bord dédié.
+                    </p>
+
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
+                      {onNavigatePage && (
+                        <button
+                          onClick={() => onNavigatePage('partenaire')}
+                          className="px-6 py-3.5 text-xs sm:text-sm font-bold text-slate-950 bg-gradient-to-r from-blue-400 to-indigo-400 hover:from-blue-500 hover:to-indigo-500 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95"
+                        >
+                          <Building className="w-4 h-4" />
+                          <span>Accéder à l'Espace Partenaire</span>
+                        </button>
+                      )}
+                      <button
+                        onClick={() => onOpenAuth('signup')}
+                        className="px-6 py-3.5 text-xs sm:text-sm font-semibold text-white bg-white/15 hover:bg-white/25 border border-white/30 rounded-xl transition-colors text-center"
+                      >
+                        Créer un compte
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Mascot Largely Enlarged to the Right of Header Text */}
+                  <div className="shrink-0 flex flex-col items-center justify-center p-2 self-center">
+                    <BabiMascot 
+                      variant="security" 
+                      size="xl" 
+                      speechText="Inscrivez votre entreprise avec RCCM pour lancer vos missions !" 
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Trust statement & guarantees */}
+              <div className="pt-2 text-xs text-slate-400 flex flex-wrap items-center gap-3">
+                <span className="text-emerald-400 font-semibold">✓ Inscription rapide</span>
                 <span>·</span>
                 <span>✓ Retraits dès 2 000 FCFA</span>
                 <span>·</span>
                 <span>✓ Zéro jeu de hasard</span>
                 <span>·</span>
-                <span>✓ Rétractation 7 jours</span>
+                <span className="text-amber-300 font-semibold">✓ Rétractation 7j sur VIP</span>
               </div>
             </div>
 
-            {/* Right Column: Hero Visual Container - Mobile Money Operators */}
-            <div className="lg:col-span-5">
-              <div className="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-8 shadow-sm space-y-6 flex flex-col justify-center">
+            {/* Right Column: Floating Interactive Card (Reseau National Actif - NO Mascot on it) */}
+            <div className="lg:col-span-4 relative">
+              <div className="relative liquid-glass-dark p-6 rounded-3xl border border-white/20 shadow-2xl space-y-4">
                 
-                {/* Single Clean Title */}
-                <div className="flex items-center gap-2.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
-                  <h3 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900 leading-snug">
-                    Paiements sécurisés à travers tous les opérateurs
-                  </h3>
+                {/* Header of Glass Card */}
+                <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
+                      Réseau National Actif 🇨🇮
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-mono text-emerald-300 bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+                    28 500 FCFA Médian
+                  </span>
                 </div>
 
-                {/* 4 Large & Prominent Square Logos */}
-                <div className="grid grid-cols-2 gap-4 sm:gap-5 w-full">
-                  <div className="flex flex-col items-center justify-center p-4 bg-slate-50/80 hover:bg-[#00C2E0]/5 rounded-2xl border border-slate-200/80 hover:border-[#00C2E0]/50 transition-all group shadow-2xs hover:shadow-md">
-                    <img 
-                      src="/logos/wave.svg" 
-                      alt="Wave Côte d'Ivoire" 
-                      className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-contain drop-shadow-sm group-hover:scale-105 transition-transform" 
-                    />
-                    <span className="text-xs sm:text-sm font-bold text-[#003B73] mt-2.5">Wave</span>
+                {/* Micro-jobs Live Metric */}
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
+                    <div className="text-[10px] text-slate-400 uppercase font-semibold">Missions Récentes</div>
+                    <div className="text-lg font-extrabold text-white font-mono mt-0.5">32 450+</div>
+                    <div className="text-[10px] text-emerald-400 font-medium">Validées sans litige</div>
                   </div>
-
-                  <div className="flex flex-col items-center justify-center p-4 bg-slate-50/80 hover:bg-[#FF7900]/5 rounded-2xl border border-slate-200/80 hover:border-[#FF7900]/50 transition-all group shadow-2xs hover:shadow-md">
-                    <img 
-                      src="/logos/orange-money.svg" 
-                      alt="Orange Money" 
-                      className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-contain drop-shadow-sm group-hover:scale-105 transition-transform" 
-                    />
-                    <span className="text-xs sm:text-sm font-bold text-[#FF7900] mt-2.5">Orange Money</span>
+                  <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
+                    <div className="text-[10px] text-slate-400 uppercase font-semibold">Retraits Mobile Money</div>
+                    <div className="text-lg font-extrabold text-emerald-400 font-mono mt-0.5">100%</div>
+                    <div className="text-[10px] text-slate-300 font-medium">Wave, OM, MTN, Moov</div>
                   </div>
+                </div>
 
-                  <div className="flex flex-col items-center justify-center p-4 bg-slate-50/80 hover:bg-[#FFCC00]/5 rounded-2xl border border-slate-200/80 hover:border-[#FFCC00]/50 transition-all group shadow-2xs hover:shadow-md">
-                    <img 
-                      src="/logos/mtn-momo.png" 
-                      alt="MTN MoMo" 
-                      className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-contain drop-shadow-sm group-hover:scale-105 transition-transform" 
-                    />
-                    <span className="text-xs sm:text-sm font-bold text-[#002B49] mt-2.5">MTN MoMo</span>
+                {/* Operator Logos Pills */}
+                <div className="space-y-2">
+                  <div className="text-[11px] text-slate-400 font-semibold flex items-center justify-between">
+                    <span>Partenaires de Paiement Reconnus</span>
+                    <span className="text-emerald-400 font-bold">Dès 2 000 FCFA</span>
                   </div>
-
-                  <div className="flex flex-col items-center justify-center p-4 bg-slate-50/80 hover:bg-[#0058A8]/5 rounded-2xl border border-slate-200/80 hover:border-[#0058A8]/50 transition-all group shadow-2xs hover:shadow-md">
-                    <img 
-                      src="/logos/moov-africa.svg" 
-                      alt="Moov Africa" 
-                      className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-contain drop-shadow-sm group-hover:scale-105 transition-transform" 
-                    />
-                    <span className="text-xs sm:text-sm font-bold text-[#0058A8] mt-2.5">Moov Africa</span>
+                  <div className="grid grid-cols-4 gap-2">
+                    <div className="flex flex-col items-center justify-center p-2 bg-white/10 hover:bg-white/20 rounded-xl border border-white/15 transition-all">
+                      <img src="/logos/wave.svg" alt="Wave" className="w-6 h-6 sm:w-7 sm:h-7 object-contain" />
+                      <span className="text-[10px] font-bold text-white mt-1">Wave</span>
+                    </div>
+                    <div className="flex flex-col items-center justify-center p-2 bg-white/10 hover:bg-white/20 rounded-xl border border-white/15 transition-all">
+                      <img src="/logos/orange-money.svg" alt="Orange Money" className="w-6 h-6 sm:w-7 sm:h-7 object-contain" />
+                      <span className="text-[10px] font-bold text-[#FF7900] mt-1">Orange</span>
+                    </div>
+                    <div className="flex flex-col items-center justify-center p-2 bg-white/10 hover:bg-white/20 rounded-xl border border-white/15 transition-all">
+                      <img src="/logos/mtn-momo.png" alt="MTN MoMo" className="w-6 h-6 sm:w-7 sm:h-7 object-contain" />
+                      <span className="text-[10px] font-bold text-amber-300 mt-1">MTN</span>
+                    </div>
+                    <div className="flex flex-col items-center justify-center p-2 bg-white/10 hover:bg-white/20 rounded-xl border border-white/15 transition-all">
+                      <img src="/logos/moov-africa.svg" alt="Moov Africa" className="w-6 h-6 sm:w-7 sm:h-7 object-contain" />
+                      <span className="text-[10px] font-bold text-blue-300 mt-1">Moov</span>
+                    </div>
                   </div>
                 </div>
 
@@ -173,7 +391,54 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
             </div>
 
           </div>
+        </div>
 
+        {/* Netflix / Lupin Style Bottom Carousel Progress Dashes & Controls */}
+        <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-5 flex items-center justify-between w-full">
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-semibold text-slate-300 font-mono">
+              0{currentSlideIndex + 1} <span className="text-slate-500">/ 04</span>
+            </span>
+            <div className="flex items-center gap-2">
+              {[0, 1, 2, 3].map((idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentSlideIndex(idx)}
+                  className={`h-1.5 rounded-full transition-all ${
+                    currentSlideIndex === idx 
+                      ? 'w-10 sm:w-14 bg-gradient-to-r from-orange-400 to-amber-400' 
+                      : 'w-4 sm:w-6 bg-white/30 hover:bg-white/60'
+                  }`}
+                  aria-label={`Slide ${idx + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsPaused(!isPaused)}
+              className="px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-medium flex items-center gap-1.5 transition-colors"
+              title={isPaused ? "Reprendre le défilement automatique" : "Mettre en pause"}
+            >
+              {isPaused ? <Play className="w-3.5 h-3.5 fill-current" /> : <Pause className="w-3.5 h-3.5 fill-current" />}
+              <span className="hidden sm:inline">{isPaused ? "Reprendre" : "Pause"}</span>
+            </button>
+            <button
+              onClick={() => setCurrentSlideIndex((prev) => (prev === 0 ? 3 : prev - 1))}
+              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center text-white transition-colors"
+              aria-label="Slide précédent"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setCurrentSlideIndex((prev) => (prev === 3 ? 0 : prev + 1))}
+              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center text-white transition-colors"
+              aria-label="Slide suivant"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </section>
 
@@ -201,7 +466,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
         </div>
       </section>
 
-      {/* COMMENT ÇA MARCHE */}
+      {/* COMMENT ÇA MARCHE EN 4 ÉTAPES AVEC MASCOTTES VECTORIELLES 3D */}
       <section className="py-16 border-b border-slate-200 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
@@ -214,43 +479,43 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             
-            <div className="space-y-3">
-              <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 text-slate-900 font-bold text-sm flex items-center justify-center">
-                01
+            <div className="p-5 bg-slate-50/80 rounded-2xl border border-slate-200/80 space-y-3 relative hover:shadow-md transition-all">
+              <div className="flex items-center gap-3">
+                <BabiMascot variant="number" number="01" size="sm" />
+                <h3 className="font-bold text-slate-900 text-sm">01. Inscription & Activation</h3>
               </div>
-              <h3 className="font-bold text-slate-900 text-sm">Inscription & Vérification</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Créez votre compte en quelques instants avec votre numéro Mobile Money et commencez vos missions qualifiées.
+                Créez votre compte en quelques instants. Activez votre Pass Membre pour débloquer l'accès complet à tous nos services rémunérés.
               </p>
             </div>
 
-            <div className="space-y-3">
-              <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 text-slate-900 font-bold text-sm flex items-center justify-center">
-                02
+            <div className="p-5 bg-slate-50/80 rounded-2xl border border-slate-200/80 space-y-3 relative hover:shadow-md transition-all">
+              <div className="flex items-center gap-3">
+                <BabiMascot variant="number" number="02" size="sm" />
+                <h3 className="font-bold text-slate-900 text-sm">02. Réalisation de Micro-jobs</h3>
               </div>
-              <h3 className="font-bold text-slate-900 text-sm">Réalisation de Micro-jobs</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Participez aux sondages, tests d'applications locales et modules éducatifs. Chaque gain est connu à l'avance sans tirage au sort.
+                Participez aux sondages, tests d'applications locales et missions partenaires. Rémunérations fixes garanties sans tirage au sort.
               </p>
             </div>
 
-            <div className="space-y-3">
-              <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 text-slate-900 font-bold text-sm flex items-center justify-center">
-                03
+            <div className="p-5 bg-slate-50/80 rounded-2xl border border-slate-200/80 space-y-3 relative hover:shadow-md transition-all">
+              <div className="flex items-center gap-3">
+                <BabiMascot variant="number" number="03" size="sm" />
+                <h3 className="font-bold text-slate-900 text-sm">03. Formation & Certifications</h3>
               </div>
-              <h3 className="font-bold text-slate-900 text-sm">Formation & Outils IA</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Développez vos compétences concrètes grâce à l'Académie et utilisez nos générateurs de textes pour booster vos affaires.
+                Suivez des formations denses de 18h à 26h, réussissez l'examen chronométré de 40 questions et obtenez votre certificat vérifiable.
               </p>
             </div>
 
-            <div className="space-y-3">
-              <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 text-slate-900 font-bold text-sm flex items-center justify-center">
-                04
+            <div className="p-5 bg-slate-50/80 rounded-2xl border border-slate-200/80 space-y-3 relative hover:shadow-md transition-all">
+              <div className="flex items-center gap-3">
+                <BabiMascot variant="number" number="04" size="sm" />
+                <h3 className="font-bold text-slate-900 text-sm">04. Retrait Mobile Money</h3>
               </div>
-              <h3 className="font-bold text-slate-900 text-sm">Retrait Mobile Money</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Demandez le retrait de votre solde disponible vers votre compte Wave, Orange Money ou MTN MoMo dès 2 000 FCFA.
+                Demandez le retrait de vos gains disponibles vers Wave, Orange Money ou MTN MoMo dès 2 000 FCFA avec validation sécurisée par email.
               </p>
             </div>
 
@@ -271,10 +536,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
               </h2>
             </div>
             <button
-              onClick={onGoToDashboard}
+              onClick={() => onNavigatePage ? onNavigatePage('missions') : onGoToDashboard()}
               className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 self-start"
             >
-              <span>Voir toutes les missions sur le dashboard</span>
+              <span>Voir toutes les missions disponibles</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -311,7 +576,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
                   </div>
                   <button
                     onClick={() => {
-                      onGoToDashboard();
                       onSelectTask(task);
                     }}
                     className="px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-md transition-colors"
@@ -371,30 +635,46 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
 
               <div>
                 <button
-                  onClick={onGoToDashboard}
-                  className="px-5 py-2.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors"
+                  onClick={() => onNavigatePage ? onNavigatePage('academie') : onGoToDashboard()}
+                  className="px-5 py-2.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-all shadow-sm flex items-center gap-2 hover:scale-105 active:scale-95"
                 >
-                  Explorer l'Académie sur le Dashboard
+                  <span>Explorer l'Académie Digitale</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
 
-            {/* Visual preview box */}
-            <div className="bg-slate-900 text-slate-100 rounded-xl p-6 border border-slate-800 space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <span className="text-xs font-mono text-emerald-400">MODULE EXCLUSIF ACADÉMIE</span>
-                <span className="text-xs text-slate-400">Niveau Débutant</span>
+            {/* Visual preview box with real photo + Apple Liquid Glass Overlay */}
+            <div className="relative rounded-3xl overflow-hidden border border-slate-200 shadow-xl group">
+              <img
+                src="/images/academy-student.jpg"
+                alt="Apprenante de l'Académie Digitale GLOBAL-AF"
+                className="w-full h-[380px] sm:h-[420px] object-cover group-hover:scale-105 transition-transform duration-700"
+              />
+
+              {/* Babi Academy Badge */}
+              <div className="absolute top-3 right-3 flex items-center gap-2 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/20 shadow-lg text-white">
+                <img src="/images/mascot-academy.jpg" alt="Babi Diplômé" className="w-8 h-8 rounded-xl object-cover border border-amber-400" />
+                <div className="text-left">
+                  <div className="text-[10px] text-amber-400 font-bold uppercase">Babi Académie</div>
+                  <div className="text-[11px] font-bold">Certificat Inviolable</div>
+                </div>
               </div>
-              <h3 className="text-lg font-bold text-white">
-                « Vendre efficacement avec WhatsApp & Wave en Côte d'Ivoire »
-              </h3>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Apprenez la méthode pas-à-pas pour convertir des contacts en clients fidèles sans dépenser des fortunes en publicité, avec des flux d'encaissement Mobile Money transparents.
-              </p>
-              <div className="p-3 bg-slate-800/80 rounded border border-slate-700 text-xs space-y-1.5 font-mono text-slate-300">
-                <div>✓ 3 vidéos explicatives pas-à-pas</div>
-                <div>✓ Modèles de messages de prospection prêts à l'emploi</div>
-                <div>✓ Quiz d'évaluation avec récompense en points</div>
+              <div className="absolute inset-x-3 bottom-3 liquid-glass p-4 rounded-2xl border border-white/80 shadow-xl space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-900 font-mono">
+                    Module Pratique Certifié
+                  </span>
+                  <span className="text-[11px] font-bold text-emerald-800">
+                    Niveau Débutant & Pro
+                  </span>
+                </div>
+                <h3 className="text-sm font-bold text-slate-900 leading-snug">
+                  « Vendre efficacement avec WhatsApp & Wave en Côte d'Ivoire »
+                </h3>
+                <p className="text-[11px] text-slate-700 leading-relaxed">
+                  Méthode pas-à-pas pour convertir des contacts en clients fidèles avec des flux d'encaissement Mobile Money transparents.
+                </p>
               </div>
             </div>
 
@@ -407,15 +687,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
       <section id="affiliation" className="py-16 border-b border-slate-200 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          <div className="max-w-3xl mx-auto text-center space-y-3 mb-12">
-            <span className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">
-              Programme Partenaire & Affiliation
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-              Règles de Rémunération des Parrains
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-              Un système de rémunération clair, éthique et transparent, calculé exclusivement sur les ventes réelles de services et produits utiles (formations certifiantes et outils digitaux).
+          <div className="max-w-3xl mx-auto text-center space-y-4 mb-12 flex flex-col items-center">
+            <BabiMascot 
+              variant="wallet" 
+              size="md" 
+              speechBubble="Le parrainage continue chaque mois tant que votre filleul dépense dans l'application ! 10% Niveau 1 et 5% Niveau 2 garantis !" 
+            />
+            <div>
+              <span className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">
+                Programme Partenaire & Affiliation
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">
+                Règles de Rémunération des Parrains
+              </h2>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-2xl">
+              Un système de rémunération récurrent, clair et éthique, calculé exclusivement sur les ventes réelles de services et produits utiles (abonnements et formations certifiantes).
             </p>
           </div>
 
@@ -428,24 +715,24 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
                   <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">
                     Niveau 1 · Direct
                   </span>
-                  <span className="text-2xl font-black text-emerald-600 font-mono">15%</span>
+                  <span className="text-2xl font-black text-emerald-600 font-mono">10%</span>
                 </div>
                 <h3 className="font-bold text-slate-900 text-lg">
                   Parrainage Direct sur Ventes Réelles
                 </h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  Percevez <strong>15% de commission nette</strong> sur chaque achat effectué par les membres que vous avez directement recommandés.
+                  Percevez <strong>10% de commission nette</strong> sur chaque achat effectué par les membres que vous avez directement recommandés.
                 </p>
                 <div className="p-3.5 bg-emerald-50 rounded-xl border border-emerald-200/80 text-xs text-emerald-950 space-y-1">
                   <div className="font-semibold text-emerald-900">Exemple concret :</div>
                   <p className="text-[11px] text-emerald-800 leading-relaxed">
-                    Votre filleul achète une formation ou un pack à <strong>10 000 FCFA</strong> → Vous recevez <strong>1 500 FCFA</strong> immédiatement crédités sur votre solde retirable.
+                    Votre filleul achète une formation ou un pack à <strong>10 000 FCFA</strong> → Vous recevez <strong>1 000 FCFA</strong> crédités après validation du délai de rétractation (7 jours).
                   </p>
                 </div>
               </div>
 
               <div className="pt-2 border-t border-slate-100 text-[11px] text-slate-500">
-                ✓ Crédité instantanément · Retirable dès 2 000 FCFA sur Wave, Orange, MTN ou Moov
+                ✓ Retirable dès 2 000 FCFA sur Wave, Orange Money, MTN MoMo ou Moov Money
               </div>
             </div>
 
@@ -510,14 +797,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
             </div>
           </div>
 
-          {/* CTA Link */}
+          {/* CTA Link to Transparence */}
           {onNavigatePage && (
             <div className="text-center mt-8">
               <button
-                onClick={() => onNavigatePage('affiliation')}
+                onClick={() => onNavigatePage('transparence')}
                 className="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 hover:bg-orange-600 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm active:scale-95"
               >
-                <span>Accéder au simulateur et détails d'affiliation</span>
+                <span>Consulter la Charte de Transparence & Barème Complet</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
@@ -526,173 +813,253 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
         </div>
       </section>
 
-      {/* TARIFS & ACTIVATION (SECTION 6 & 18 & 39 CONDITION 2) */}
+      {/* TARIFS & ACTIVATION : TICKET D'ENTRÉE & ABONNEMENT VIP PREMIUM */}
       <section id="tarifs" className="py-16 border-b border-slate-200 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
           
-          <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Offres & Transparence
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-              Des tarifs clairs en Francs CFA (XOF)
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-600">
-              Le palier gratuit est réellement utile et pérenne. Les offres payantes achètent des biens identifiables et bénéficient de la garantie de rétractation 7 jours.
+          <div className="text-center max-w-3xl mx-auto space-y-4 flex flex-col items-center">
+            <BabiMascot 
+              variant="waving" 
+              size="md" 
+              speechBubble="Des montants adaptés à la réalité ivoirienne et rentabilisés dès vos premières missions !" 
+            />
+            <div>
+              <span className="text-xs font-semibold text-orange-600 uppercase tracking-wider">
+                Grille Tarifaire Transparente (XOF)
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">
+                Choisissez votre formule selon vos ambitions
+              </h2>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-2xl">
+              L'inscription crée votre compte gratuitement. L'accès aux missions rémunérées et aux formations est débloqué par le <strong className="text-slate-800">Pass Membre Standard (Ticket d'Entrée)</strong>. L'abonnement <strong className="text-slate-800">VIP Premium</strong> multiplie vos gains et vos opportunités.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
             
-            {/* PALIER GRATUIT */}
-            <div className="bg-white rounded-xl border border-slate-200 p-6 flex flex-col justify-between">
+            {/* PALIER 1 : COMPTE DÉCOUVERTE */}
+            <div className="bg-slate-50/80 rounded-2xl border border-slate-200 p-6 flex flex-col justify-between hover:border-slate-300 transition-all">
               <div className="space-y-4">
                 <div>
-                  <h3 className="font-bold text-slate-900 text-lg">Membre Gratuit</h3>
-                  <p className="text-xs text-slate-500">Pour débuter et réaliser des micro-missions</p>
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">
+                    Découverte
+                  </span>
+                  <h3 className="font-bold text-slate-900 text-lg mt-2">Compte Gratuit</h3>
+                  <p className="text-xs text-slate-500">Pour créer son profil et explorer la plateforme</p>
                 </div>
 
                 <div className="text-3xl font-black text-slate-900 font-anton">
                   0 XOF
-                  <span className="text-xs font-normal text-slate-500 block font-sans">Gratuit pour toujours</span>
+                  <span className="text-xs font-normal text-slate-500 block font-sans">Sans aucun engagement</span>
                 </div>
 
-                <ul className="text-xs text-slate-600 space-y-2 pt-2 border-t border-slate-100">
+                <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-[11px] leading-relaxed">
+                  <span className="font-bold block mb-0.5 flex items-center gap-1">
+                    <Lock className="w-3.5 h-3.5 text-amber-700" />
+                    Accès en mode consultation :
+                  </span>
+                  L'accès actif aux missions rémunérées, examens certifiants et retraits Mobile Money nécessite le règlement du Pass Membre Initial.
+                </div>
+
+                <ul className="text-xs text-slate-600 space-y-2 pt-2 border-t border-slate-200">
                   <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Accès aux micro-jobs standard</span>
+                    <Check className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Création du profil membre sécurisé</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Formations d'initiation Académie</span>
+                    <Check className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Consultation du catalogue des micro-jobs</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Wallet & Retraits Mobile Money dès 2 000 XOF</span>
+                    <Check className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Consultation des résumés de cours</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Lien d'affiliation éthique 2 niveaux</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Support par ticket</span>
+                    <Check className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Lien de parrainage éthique actif</span>
                   </li>
                 </ul>
               </div>
 
               <div className="pt-6">
                 <button
-                  onClick={onGoToDashboard}
-                  className="w-full py-2.5 px-4 text-xs font-semibold text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                  onClick={() => onOpenAuth('signup')}
+                  className="w-full py-2.5 px-4 text-xs font-semibold text-slate-800 bg-white hover:bg-slate-100 border border-slate-300 rounded-xl transition-colors shadow-2xs hover:shadow-xs active:scale-95"
                 >
-                  Accès Libre Immédiat
+                  Créer un Compte Gratuit
                 </button>
               </div>
             </div>
 
-            {/* PACK PREMIUM */}
-            <div className="bg-slate-900 text-white rounded-xl border-2 border-emerald-500 p-6 flex flex-col justify-between shadow-lg relative">
-              <div className="absolute -top-3 right-6 bg-emerald-500 text-slate-950 font-bold text-[10px] uppercase tracking-wider py-0.5 px-2.5 rounded-full">
-                Recommandé
+            {/* PALIER 2 : PASS MEMBRE STANDARD (TICKET D'ENTRÉE) */}
+            <div className="bg-white rounded-2xl border-2 border-orange-500 p-6 flex flex-col justify-between shadow-md relative">
+              <div className="absolute -top-3 right-6 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold text-[10px] uppercase tracking-wider py-0.5 px-3 rounded-full shadow-2xs">
+                Ticket d'Entrée
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <h3 className="font-bold text-white text-lg">Membre Premium</h3>
-                  <p className="text-xs text-slate-400">Pour créateurs et entrepreneurs digitaux</p>
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-100 text-orange-900">
+                    Accès Complet Actif
+                  </span>
+                  <h3 className="font-bold text-slate-900 text-lg mt-2">Pass Membre Standard</h3>
+                  <p className="text-xs text-slate-500">Le sésame pour débloquer l'ensemble de nos services</p>
+                </div>
+
+                <div className="text-3xl font-black text-orange-600 font-anton">
+                  3 000 XOF
+                  <span className="text-xs font-normal text-slate-600 block font-sans">
+                    Paiement unique d'activation à vie
+                  </span>
+                </div>
+
+                <ul className="text-xs text-slate-700 space-y-2 pt-2 border-t border-slate-100">
+                  <li className="flex items-center gap-2">
+                    <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span><strong>Accès complet et immédiat</strong> aux micro-jobs rémunérés</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>Accès aux 4 formations approfondies de l'Académie</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>Wallet & Retraits Mobile Money dès <strong>2 000 XOF</strong></span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>Commissions de parrainage (10% N1 + 5% N2)</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>Support membre par ticket</span>
+                  </li>
+                </ul>
+
+                <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-[11px] text-slate-700 flex items-start gap-2">
+                  <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                  <span>Accès numérique immédiat à vie aux 15 cours et micro-jobs (non soumis au droit de rétractation).</span>
+                </div>
+              </div>
+
+              <div className="pt-6">
+                <button
+                  onClick={() => onOpenAuth('signup')}
+                  className="w-full py-3 px-4 text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <Zap className="w-4 h-4" />
+                  <span>Activer mon Pass (3 000 FCFA)</span>
+                </button>
+              </div>
+            </div>
+
+            {/* PALIER 3 : MEMBRE VIP PREMIUM */}
+            <div className="bg-slate-900 text-white rounded-2xl border-2 border-emerald-400 p-6 flex flex-col justify-between shadow-xl relative">
+              <div className="absolute -top-3 right-6 bg-emerald-400 text-slate-950 font-bold text-[10px] uppercase tracking-wider py-0.5 px-3 rounded-full shadow-2xs">
+                Recommandé VIP
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-500/40">
+                    Abonnement Mensuel
+                  </span>
+                  <h3 className="font-bold text-white text-lg mt-2">Membre VIP Premium</h3>
+                  <p className="text-xs text-slate-400">Pour créateurs et entrepreneurs exigeant le meilleur</p>
                 </div>
 
                 <div className="text-3xl font-black text-white font-anton">
                   9 900 XOF
                   <span className="text-xs font-normal text-emerald-400 block font-sans">
-                    Bien identifiable · Rétractation 7j
+                    Par mois · Sans engagement à long terme
                   </span>
                 </div>
 
                 <ul className="text-xs text-slate-300 space-y-2 pt-2 border-t border-slate-800">
                   <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Tous les avantages du palier Gratuit</span>
+                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span>Tous les avantages du Pass Membre Standard</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Missions prioritaires et rémunérations majorées</span>
+                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span><strong className="text-emerald-300">Rémunérations majorées (+40%)</strong> sur chaque tâche</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Outils IA illimités (Assistant Rédactionnel & Idées)</span>
+                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span>Missions exclusives VIP à fort montant</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Téléchargement des répertoires VCF qualifiés</span>
+                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span><strong className="text-white">Outils IA illimités</strong> (Gemini Flash sans quota)</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Certifications reconnues de l'Académie</span>
+                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span>Téléchargement illimité des répertoires VCF qualifiés</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span>Retraits prioritaires traités <strong className="text-emerald-300">sous 2h ouvrées</strong></span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span>4 Certifications Professionnelles vérifiées</span>
                   </li>
                 </ul>
 
-                {/* Retraction guarantee notice */}
-                <div className="p-2.5 bg-slate-800/80 rounded border border-slate-700 text-[11px] text-slate-300 flex items-start gap-2">
+                <div className="p-2.5 bg-slate-800/90 rounded-xl border border-slate-700 text-[11px] text-slate-300 flex items-start gap-2">
                   <RotateCcw className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                  <span>Délai de rétractation de 7 jours avec remboursement intégral par Mobile Money.</span>
+                  <span>Délai de rétractation de 7 jours avec remboursement intégral Mobile Money. (Commission parrain de 10% / 990 FCFA débloquée après ce délai).</span>
                 </div>
               </div>
 
               <div className="pt-6">
                 <button
-                  onClick={onGoToDashboard}
-                  className="w-full py-2.5 px-4 text-xs font-semibold text-slate-950 bg-emerald-400 hover:bg-emerald-300 rounded-lg transition-colors"
+                  onClick={() => onOpenAuth('signup')}
+                  className="w-full py-3 px-4 text-xs font-bold text-slate-950 bg-emerald-400 hover:bg-emerald-300 rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
                 >
-                  Activer par Mobile Money
+                  <Award className="w-4 h-4" />
+                  <span>Devenir Membre VIP (9 900 FCFA/m)</span>
                 </button>
               </div>
             </div>
 
-            {/* PACK BUSINESS / PARTENAIRE */}
-            <div className="bg-white rounded-xl border border-slate-200 p-6 flex flex-col justify-between">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-bold text-slate-900 text-lg">Partenaire & Entreprise</h3>
-                  <p className="text-xs text-slate-500">Pour diffuser des campagnes et micro-jobs</p>
-                </div>
+          </div>
 
-                <div className="text-3xl font-black text-slate-900 font-anton">
-                  25 000 XOF
-                  <span className="text-xs font-normal text-slate-500 block font-sans">À partir de / campagne</span>
-                </div>
-
-                <ul className="text-xs text-slate-600 space-y-2 pt-2 border-t border-slate-100">
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Publication de micro-jobs vérifiés</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Ciblage précis Côte d'Ivoire & UEMOA</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Vérification anti-fraude des soumissions</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Tableau de bord de reporting en temps réel</span>
-                  </li>
-                </ul>
+          {/* BANNER : PARTENAIRES & ENTREPRISES */}
+          <div className="p-6 sm:p-8 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white rounded-3xl border border-slate-700 flex flex-col md:flex-row items-center justify-between gap-6 shadow-lg">
+            <div className="space-y-2 max-w-2xl text-left">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-bold">
+                <Building className="w-3.5 h-3.5" />
+                <span>Pour Entreprises, Marques & PME</span>
               </div>
+              <h3 className="text-xl sm:text-2xl font-bold">
+                Vous souhaitez déposer des micro-jobs et recruter des testeurs ?
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                Créez votre compte entreprise avec votre RCCM. Une fois votre compte validé par nos équipes administratives, diffusez vos campagnes et suivez vos retombées en temps réel sur votre Espace Partenaire dédié.
+              </p>
+            </div>
 
-              <div className="pt-6">
+            <div className="shrink-0 flex items-center gap-4">
+              {onNavigatePage ? (
                 <button
-                  onClick={onGoToDashboard}
-                  className="w-full py-2.5 px-4 text-xs font-semibold text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+                  onClick={() => onNavigatePage('partenaire')}
+                  className="px-6 py-3.5 bg-white hover:bg-slate-100 text-slate-900 font-bold rounded-xl text-xs sm:text-sm shadow-md transition-all active:scale-95 flex items-center gap-2"
                 >
-                  Contacter le service Partenariats
+                  <span>Accéder à l'Espace Partenaire</span>
+                  <ArrowRight className="w-4 h-4" />
                 </button>
-              </div>
+              ) : (
+                <button
+                  onClick={() => onOpenAuth('signup')}
+                  className="px-6 py-3.5 bg-white hover:bg-slate-100 text-slate-900 font-bold rounded-xl text-xs sm:text-sm shadow-md transition-all active:scale-95 flex items-center gap-2"
+                >
+                  <span>Inscrire mon entreprise</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              )}
             </div>
-
           </div>
 
         </div>
@@ -716,62 +1083,62 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-xs">
             
-            <div className="p-5 bg-white rounded-lg border border-slate-200 space-y-2">
-              <div className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                <span className="w-6 h-6 rounded bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">1</span>
-                Ventes réelles uniquement
+            <div className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all space-y-2.5">
+              <div className="font-bold text-slate-900 text-sm flex items-center gap-2.5">
+                <span className="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200/60 flex items-center justify-center font-extrabold text-xs shadow-2xs">1</span>
+                <span>Ventes réelles uniquement</span>
               </div>
-              <p className="text-slate-600 leading-relaxed">
+              <p className="text-slate-600 leading-relaxed text-[11px]">
                 Aucune commission n'est versée sur les frais d'entrée d'autres membres. Rémunération liée exclusivement à des services utiles vendus à de vrais clients.
               </p>
             </div>
 
-            <div className="p-5 bg-white rounded-lg border border-slate-200 space-y-2">
-              <div className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                <span className="w-6 h-6 rounded bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">2</span>
-                Biens réels & Rétractation 7j
+            <div className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all space-y-2.5">
+              <div className="font-bold text-slate-900 text-sm flex items-center gap-2.5">
+                <span className="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200/60 flex items-center justify-center font-extrabold text-xs shadow-2xs">2</span>
+                <span>Biens réels & Rétractation 7j</span>
               </div>
-              <p className="text-slate-600 leading-relaxed">
+              <p className="text-slate-600 leading-relaxed text-[11px]">
                 Toute activation payante donne accès à un bien identifiable (formations, outils IA, répertoires). Remboursement par Mobile Money garanti sous 7 jours.
               </p>
             </div>
 
-            <div className="p-5 bg-white rounded-lg border border-slate-200 space-y-2">
-              <div className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                <span className="w-6 h-6 rounded bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">3</span>
-                Honnêteté sur les gains
+            <div className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all space-y-2.5">
+              <div className="font-bold text-slate-900 text-sm flex items-center gap-2.5">
+                <span className="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200/60 flex items-center justify-center font-extrabold text-xs shadow-2xs">3</span>
+                <span>Honnêteté sur les gains</span>
               </div>
-              <p className="text-slate-600 leading-relaxed">
+              <p className="text-slate-600 leading-relaxed text-[11px]">
                 Interdiction des promesses trompeuses et des faux montages. Publication transparente du revenu médian réel et du délai d'obtention du premier virement.
               </p>
             </div>
 
-            <div className="p-5 bg-white rounded-lg border border-slate-200 space-y-2">
-              <div className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                <span className="w-6 h-6 rounded bg-rose-100 text-rose-800 flex items-center justify-center font-bold text-xs">4</span>
-                Interdiction absolue des jeux de hasard
+            <div className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all space-y-2.5">
+              <div className="font-bold text-slate-900 text-sm flex items-center gap-2.5">
+                <span className="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200/60 flex items-center justify-center font-extrabold text-xs shadow-2xs">4</span>
+                <span>Interdiction absolue des jeux de hasard</span>
               </div>
-              <p className="text-slate-600 leading-relaxed">
+              <p className="text-slate-600 leading-relaxed text-[11px]">
                 Suppression totale des roues de la chance, loteries, tirages au sort et coffres aléatoires. Toutes les récompenses sont 100% déterministes.
               </p>
             </div>
 
-            <div className="p-5 bg-white rounded-lg border border-slate-200 space-y-2">
-              <div className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                <span className="w-6 h-6 rounded bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs">5</span>
-                Protection des membres
+            <div className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all space-y-2.5">
+              <div className="font-bold text-slate-900 text-sm flex items-center gap-2.5">
+                <span className="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200/60 flex items-center justify-center font-extrabold text-xs shadow-2xs">5</span>
+                <span>Protection des membres</span>
               </div>
-              <p className="text-slate-600 leading-relaxed">
+              <p className="text-slate-600 leading-relaxed text-[11px]">
                 Plafonds de dépense mensuels configurables, conformité aux CGU, validation éthique et mécanismes de suspension volontaire en cas de besoin.
               </p>
             </div>
 
-            <div className="p-5 bg-white rounded-lg border border-slate-200 space-y-2">
-              <div className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                <span className="w-6 h-6 rounded bg-blue-100 text-blue-800 flex items-center justify-center font-bold text-xs">6</span>
-                Conformité ARTCI Côte d'Ivoire
+            <div className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all space-y-2.5">
+              <div className="font-bold text-slate-900 text-sm flex items-center gap-2.5">
+                <span className="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200/60 flex items-center justify-center font-extrabold text-xs shadow-2xs">6</span>
+                <span>Conformité ARTCI Côte d'Ivoire</span>
               </div>
-              <p className="text-slate-600 leading-relaxed">
+              <p className="text-slate-600 leading-relaxed text-[11px]">
                 Respect de la réglementation ivoirienne relative à la protection des données personnelles, au commerce électronique et à la traçabilité financière.
               </p>
             </div>

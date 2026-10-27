@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Lock, Mail, KeyRound, ShieldAlert, CheckCircle2, ArrowLeft, Building2, Sparkles } from 'lucide-react';
 import { BrandLogo } from '../common/BrandLogo';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth, db } from '../../lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 interface AdvertiserAdminLoginProps {
   onLoginSuccess: (advertiserData: { email: string; companyName: string; role: 'admin' | 'advertiser' }) => void;
@@ -17,42 +20,12 @@ export const AdvertiserAdminLogin: React.FC<AdvertiserAdminLoginProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const demoAccounts = [
-    {
-      label: 'Administrateur Général',
-      email: 'admin@global-af.ci',
-      pass: 'Admin2026!',
-      company: 'GLOBAL-AF Direction Générale',
-      role: 'admin' as const
-    },
-    {
-      label: 'Annonceur Orange CI',
-      email: 'campagnes@orange-ci.ci',
-      pass: 'Orange2026!',
-      company: 'Orange Côte d\'Ivoire Marketing',
-      role: 'advertiser' as const
-    },
-    {
-      label: 'Annonceur Wave CI',
-      email: 'marketing@wave.com',
-      pass: 'Wave2026!',
-      company: 'Wave Digital Côte d\'Ivoire',
-      role: 'advertiser' as const
-    }
-  ];
-
-  const handleFillDemo = (acc: typeof demoAccounts[0]) => {
-    setEmail(acc.email);
-    setPassword(acc.pass);
-    setError(null);
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     if (!email || !password) {
-      setError('Veuillez renseigner votre email et mot de passe annonceur.');
+      setError('Veuillez renseigner votre email et mot de passe administrateur.');
       return;
     }
 
@@ -63,29 +36,33 @@ export const AdvertiserAdminLogin: React.FC<AdvertiserAdminLoginProps> = ({
 
     setIsLoading(true);
 
-    setTimeout(() => {
-      setIsLoading(false);
-      // Find matching demo or allow valid credentials
-      const matched = demoAccounts.find(a => a.email.toLowerCase() === email.toLowerCase());
-      
-      const sessionData = {
-        email: email.trim(),
-        companyName: matched ? matched.company : 'Annonceur Partenaire Partagé',
-        role: matched ? matched.role : (email.includes('admin') ? 'admin' as const : 'advertiser' as const)
-      };
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email.trim(), password);
+      const userDocRef = doc(db, 'users', cred.user.uid);
+      const userSnap = await getDoc(userDocRef);
 
-      try {
-        localStorage.setItem('gaf_admin_auth', JSON.stringify({
-          ...sessionData,
-          token: 'gaf_adm_sec_' + Date.now(),
-          timestamp: new Date().toISOString()
-        }));
-      } catch (err) {
-        console.error('Storage error:', err);
+      const role = userSnap.exists() ? userSnap.data().role : null;
+      if (role !== 'admin' && role !== 'super_admin' && role !== 'financial_manager') {
+        setError("Accès refusé. Ce compte ne possède pas de privilèges administratifs (Section 25).");
+        setIsLoading(false);
+        return;
       }
 
+      const sessionData = {
+        email: cred.user.email || email.trim(),
+        companyName: 'GLOBAL-AF Direction Générale',
+        role: 'admin' as const
+      };
+
       onLoginSuccess(sessionData);
-    }, 600);
+    } catch (err: any) {
+      const msg = err.code === 'auth/invalid-credential'
+        ? 'Identifiants administrateur incorrects.'
+        : (err.message || 'Erreur lors de la connexion administrative.');
+      setError(msg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -108,80 +85,70 @@ export const AdvertiserAdminLogin: React.FC<AdvertiserAdminLoginProps> = ({
           }}
           className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors"
         >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Retour au site public (global-af-dev.web.app)</span>
+          <ArrowLeft className="w-4 h-4" />
+          <span>Retour au site public</span>
         </a>
 
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-[11px] text-emerald-400 font-mono">
+        <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-900/80 border border-slate-800 text-[11px] font-mono text-emerald-400">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>Portail Dédié</span>
+          <span>Portail d'Administration</span>
         </div>
       </div>
 
-      {/* Main Card */}
-      <div className="w-full max-w-md bg-slate-900/90 border border-slate-800/90 backdrop-blur-md rounded-2xl p-6 sm:p-8 shadow-2xl relative z-10">
+      {/* Card Container with Apple Liquid Glass Dark */}
+      <div className="w-full max-w-md liquid-glass-dark rounded-3xl p-6 sm:p-8 relative z-10 shadow-2xl">
         
-        {/* Header */}
-        <div className="text-center space-y-4 mb-6">
-          <div className="flex justify-center">
-            <BrandLogo variant="admin" />
+        {/* Brand Header */}
+        <div className="text-center space-y-2 mb-6">
+          <div className="inline-flex items-center justify-center p-3 rounded-2xl liquid-glass-btn mb-2">
+            <BrandLogo size="md" showSubtitle={false} variant="white" />
           </div>
-
-          <div className="pt-2 border-t border-slate-800/80">
-            <h2 className="text-xl sm:text-2xl font-black font-display tracking-tight text-white">
-              Connexion Partenaire & Annonceur
-            </h2>
-            <p className="text-xs text-slate-400 leading-relaxed mt-1">
-              Accès réservé pour le pilotage des campagnes de micro-jobs, validation des preuves et suivi budgétaire.
-            </p>
-          </div>
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white font-display">
+            Console d'Administration
+          </h1>
+          <p className="text-xs text-slate-400 max-w-xs mx-auto">
+            Accès sécurisé réservé aux administrateurs certifiés et auditeurs financiers
+          </p>
         </div>
 
-        {/* Error message */}
+        {/* Error Alert */}
         {error && (
-          <div className="mb-5 p-3 rounded-xl bg-red-950/60 border border-red-800/80 text-red-200 text-xs flex items-center gap-2">
-            <ShieldAlert className="w-4 h-4 text-red-400 shrink-0" />
-            <span>{error}</span>
+          <div className="mb-5 p-3 rounded-xl bg-red-950/60 border border-red-800/60 flex items-start gap-2.5 text-xs text-red-300">
+            <ShieldAlert className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+            <div className="flex-1">{error}</div>
           </div>
         )}
 
-        {/* Form */}
+        {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Email Annonceur ou Partenaire
+          <div className="space-y-1.5">
+            <label className="block text-xs font-semibold text-slate-300">
+              Adresse email professionnelle
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Mail className="h-4 w-4 text-slate-500" />
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                <Mail className="w-4 h-4" />
               </div>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="nom@entreprise.ci"
+                placeholder="admin@global-af.ci"
                 required
-                className="w-full pl-9 pr-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all font-mono"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700/80 text-white placeholder-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500 transition-all font-mono"
               />
             </div>
           </div>
 
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-semibold text-slate-300">
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-semibold text-slate-300">
                 Mot de passe sécurisé
               </label>
-              <button
-                type="button"
-                onClick={() => alert('Veuillez contacter le support à contact@global-af.ci pour réinitialiser votre accès annonceur.')}
-                className="text-[11px] text-orange-400 hover:text-orange-300 transition-colors"
-              >
-                Oublié ?
-              </button>
             </div>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <KeyRound className="h-4 w-4 text-slate-500" />
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                <KeyRound className="w-4 h-4" />
               </div>
               <input
                 type="password"
@@ -189,13 +156,13 @@ export const AdvertiserAdminLogin: React.FC<AdvertiserAdminLoginProps> = ({
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••••••"
                 required
-                className="w-full pl-9 pr-3 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all font-mono"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700/80 text-white placeholder-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500 transition-all font-mono"
               />
             </div>
           </div>
 
-          <div className="flex items-center justify-between text-xs pt-1">
-            <label className="flex items-center gap-2 cursor-pointer select-none text-slate-400 hover:text-slate-200">
+          <div className="flex items-center justify-between pt-1 text-xs">
+            <label className="flex items-center gap-2 cursor-pointer text-slate-400 hover:text-slate-300">
               <input
                 type="checkbox"
                 checked={rememberMe}
@@ -206,7 +173,7 @@ export const AdvertiserAdminLogin: React.FC<AdvertiserAdminLoginProps> = ({
             </label>
 
             <span className="text-[11px] text-slate-500 font-mono">
-              SSL / AES-256
+              Firebase Auth / TLS 1.3
             </span>
           </div>
 
@@ -218,7 +185,7 @@ export const AdvertiserAdminLogin: React.FC<AdvertiserAdminLoginProps> = ({
             {isLoading ? (
               <>
                 <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                <span>Vérification des accréditations...</span>
+                <span>Authentification en cours...</span>
               </>
             ) : (
               <>
@@ -229,48 +196,10 @@ export const AdvertiserAdminLogin: React.FC<AdvertiserAdminLoginProps> = ({
           </button>
         </form>
 
-        {/* Quick Demo Accounts Selection */}
-        <div className="mt-6 pt-5 border-t border-slate-800 space-y-2.5">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-              Accès démo prédéfinis :
-            </span>
-            <span className="text-[10px] text-amber-400/90 font-medium">1-clic pour tester</span>
-          </div>
-
-          <div className="grid grid-cols-1 gap-1.5">
-            {demoAccounts.map(acc => (
-              <button
-                key={acc.email}
-                type="button"
-                onClick={() => handleFillDemo(acc)}
-                className="w-full text-left p-2 rounded-lg bg-slate-950/60 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 transition-all flex items-center justify-between text-xs group"
-              >
-                <div>
-                  <div className="font-semibold text-slate-200 group-hover:text-white flex items-center gap-1.5">
-                    <span>{acc.label}</span>
-                    <span className="text-[10px] text-slate-500">({acc.company})</span>
-                  </div>
-                  <div className="text-[11px] text-slate-400 font-mono">{acc.email}</div>
-                </div>
-                <span className="text-[10px] text-orange-400 font-mono font-bold group-hover:translate-x-0.5 transition-transform">
-                  Utiliser →
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Notice for new advertisers */}
+        {/* Notice for administration */}
         <div className="mt-5 p-3 rounded-xl bg-slate-950/40 border border-slate-800/60 text-center">
           <p className="text-[11px] text-slate-400">
-            Vous souhaitez devenir annonceur et diffuser des missions rémunérées ?{' '}
-            <a 
-              href="mailto:partenaires@global-af.ci" 
-              className="text-orange-400 hover:underline font-semibold"
-            >
-              Contactez le pôle Entreprises
-            </a>
+            Conformité Section 25 : les accès de niveau administrateur sont vérifiés par règles de sécurité Firebase et audités.
           </p>
         </div>
 

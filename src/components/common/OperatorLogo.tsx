@@ -70,7 +70,7 @@ export const WaveLogo: React.FC<LogoProps> = ({
             <span className="font-black text-sm tracking-tight text-[#003B73]">Wave</span>
             <span className="text-[9px] font-black uppercase px-1 py-0.5 rounded bg-[#00C2E0]/20 text-[#003B73]">CI</span>
           </div>
-          <span className="text-[10px] text-slate-500 font-medium mt-0.5">1% frais de retrait</span>
+          <span className="text-[10px] text-slate-500 font-medium mt-0.5">1,5% frais de transfert</span>
         </div>
       )}
     </div>

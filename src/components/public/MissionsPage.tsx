@@ -15,6 +15,7 @@ import {
   Users
 } from 'lucide-react';
 import { OperatorLogo } from '../common/OperatorLogo';
+import { BabiMascot } from '../common/BabiMascot';
 
 interface MissionsPageProps {
   onGoToDashboard: () => void;
@@ -70,76 +71,57 @@ export const MissionsPage: React.FC<MissionsPageProps> = ({
           </p>
         </div>
 
-        {/* Interactive Earnings Simulator */}
-        <div className="bg-gradient-to-br from-slate-900 to-orange-950 rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-orange-500/20">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            
-            <div className="lg:col-span-7 space-y-4">
-              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-orange-500/20 border border-orange-500/30 text-orange-300 text-xs font-semibold">
-                <Calculator className="w-3.5 h-3.5" />
-                <span>Simulateur d'activité réelle</span>
-              </div>
-              <h2 className="text-xl sm:text-2xl font-anton text-white tracking-wide">
-                Combien pouvez-vous générer avec vos micro-jobs ?
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                Ajustez le curseur selon le temps que vous souhaitez consacrer quotidiennement. Vos gains sont cumulés et retirables dès 2 000 FCFA sur Wave, Orange Money, MTN MoMo ou Moov Africa.
-              </p>
-
-              {/* Slider */}
-              <div className="space-y-2 pt-2">
-                <div className="flex justify-between text-xs font-semibold">
-                  <span className="text-slate-300">Temps consacré :</span>
-                  <span className="text-orange-400 font-bold">{hoursPerDay} heure(s) / jour</span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="6"
-                  step="0.5"
-                  value={hoursPerDay}
-                  onChange={(e) => setHoursPerDay(parseFloat(e.target.value))}
-                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-orange-500"
-                />
-                <div className="flex justify-between text-[10px] text-slate-400 font-mono">
-                  <span>1h (temps libre)</span>
-                  <span>3h (régulier)</span>
-                  <span>6h (assidu)</span>
-                </div>
-              </div>
+        {/* Informative Micro-Jobs Overview Banner (Sans simulateur) */}
+        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-orange-950 rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-orange-500/20 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="space-y-3 max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-orange-500/20 border border-orange-500/30 text-orange-300 text-xs font-semibold">
+              <Briefcase className="w-3.5 h-3.5" />
+              <span>Missions Déterministes & Rémunérations Nettes</span>
             </div>
-
-            {/* Results Card */}
-            <div className="lg:col-span-5 bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 space-y-4 text-center">
-              <div className="text-xs uppercase tracking-wider text-orange-300 font-bold">
-                Estimation Réaliste Constatée
-              </div>
-              <div className="space-y-1">
-                <div className="text-3xl sm:text-4xl font-extrabold text-white font-notable">
-                  ~{estimatedMonthly.toLocaleString()} FCFA
-                </div>
-                <div className="text-[11px] text-slate-300">par mois (26 jours d'activité)</div>
-              </div>
-              <div className="pt-3 border-t border-white/10 flex justify-around text-xs">
-                <div>
-                  <div className="text-slate-400 text-[10px]">Gain journalier</div>
-                  <div className="font-bold text-orange-400 font-notable text-xs sm:text-sm">~{estimatedDaily.toLocaleString()} FCFA</div>
-                </div>
-                <div>
-                  <div className="text-slate-400 text-[10px]">Retrait minimum</div>
-                  <div className="font-bold text-emerald-400 font-notable text-xs sm:text-sm">2 000 FCFA</div>
-                </div>
-              </div>
-              <button
-                onClick={() => onOpenAuth('signup')}
-                className="w-full py-2.5 px-4 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold text-xs shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
-              >
-                <span>Commencer à postuler</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-
+            <h2 className="text-xl sm:text-2xl font-bold text-white">
+              Réalisez des tâches concrètes et encaissez directement
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              Chaque micro-job validé est immédiatement crédité dans votre grand livre comptable. Dès que vous atteignez le seuil de 2 000 FCFA, demandez votre virement vers Wave, Orange Money, MTN MoMo ou Moov Africa.
+            </p>
           </div>
+
+          <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
+            <BabiMascot variant="wallet" size="lg" />
+            <button
+              onClick={() => onOpenAuth('signup')}
+              className="py-3 px-6 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl font-bold text-xs shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
+            >
+              <span>Accéder aux missions</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Babi l'Éléphant Conseil Pratique */}
+        <div className="bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-emerald-500/10 rounded-2xl p-4 sm:p-5 border border-orange-200/80 shadow-xs flex flex-col sm:flex-row items-center gap-4">
+          <img
+            src="/images/mascot-wallet.jpg"
+            alt="Babi l'Éléphant - Encaissements Mobile Money"
+            className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-orange-400 shadow-md shrink-0"
+          />
+          <div className="space-y-1 text-center sm:text-left flex-1">
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+              <span className="font-extrabold text-orange-950 text-sm">Le Conseil Rémunération de Babi 🇨🇮</span>
+              <span className="text-[10px] font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-full">
+                Mobile Money Immédiat
+              </span>
+            </div>
+            <p className="text-xs text-slate-700 leading-relaxed">
+              « Chaque micro-job complété crédite instantanément votre cagnotte. Dès que vous atteignez <strong>2 000 FCFA</strong>, faites votre demande de retrait : vos fonds arrivent directement sur votre compte <strong>Wave, Orange Money, MTN MoMo ou Moov</strong> sans frais cachés ! »
+            </p>
+          </div>
+          <button
+            onClick={() => onOpenAuth('signup')}
+            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold text-xs transition-colors shrink-0 shadow-xs"
+          >
+            Créer mon compte
+          </button>
         </div>
 
         {/* Filters & Search */}
@@ -229,6 +211,32 @@ export const MissionsPage: React.FC<MissionsPageProps> = ({
           ))}
         </div>
 
+        {/* Real Success Story Banner with Mobile Money Photo */}
+        <div className="relative rounded-3xl overflow-hidden border border-slate-200 shadow-xl group">
+          <img
+            src="/images/mobile-money-success.jpg"
+            alt="Membre GLOBAL-AF recevant son retrait Mobile Money à Abidjan"
+            className="w-full h-[280px] sm:h-[350px] object-cover group-hover:scale-105 transition-transform duration-700"
+          />
+          <div className="absolute inset-x-4 bottom-4 liquid-glass p-4 rounded-2xl border border-white/80 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="text-xs font-bold text-slate-900">Paiements effectifs constatés sur le terrain</span>
+              </div>
+              <p className="text-[11px] text-slate-600 mt-0.5">
+                Des membres à Abidjan, Bouaké, San-Pédro et dans toute la Côte d'Ivoire effectuent leurs retraits dès 2 000 FCFA sans frais cachés.
+              </p>
+            </div>
+            <button
+              onClick={() => onOpenAuth('signup')}
+              className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-xs rounded-xl shadow-xs shrink-0"
+            >
+              Rejoindre les membres
+            </button>
+          </div>
+        </div>
+
         {/* Quality & Ethics Callout */}
         <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-xs">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center md:text-left">
@@ -257,7 +265,7 @@ export const MissionsPage: React.FC<MissionsPageProps> = ({
                 <Smartphone className="w-6 h-6" />
               </div>
               <div>
-                <h4 className="font-bold text-slate-900 text-sm">Retraits Instantanés</h4>
+                <h4 className="font-bold text-slate-900 text-sm">Retraits Sécurisés</h4>
                 <p className="text-xs text-slate-500 mt-0.5">Dès 2 000 FCFA vers Wave, Orange Money, MTN MoMo ou Moov Africa.</p>
               </div>
             </div>

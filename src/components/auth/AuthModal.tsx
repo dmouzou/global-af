@@ -12,7 +12,7 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'signup', onComplete }) => {
-  const { selectedCountry, currentUser } = useApp();
+  const { selectedCountry, login, signup } = useApp();
   const [mode, setMode] = useState<'login' | 'signup' | 'verify' | 'onboarding'>(initialMode);
   
   // Form states
@@ -25,6 +25,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
   const [referralCode, setReferralCode] = useState('');
   const [isAdult, setIsAdult] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Email verification simulation
   const [verificationCode, setVerificationCode] = useState('');
@@ -38,24 +40,63 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
 
   if (!isOpen) return null;
 
-  const handleSignupSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setAuthError(null);
+    setIsSubmitting(true);
+    try {
+      const res = await login(email, password);
+      if (res.success) {
+        onComplete();
+        onClose();
+      } else {
+        setAuthError(res.error || 'Erreur lors de la connexion.');
+      }
+    } catch (err: any) {
+      setAuthError(err.message || 'Erreur lors de la connexion.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSignupSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError(null);
     if (!isAdult) {
-      alert("Vous devez avoir au moins 18 ans pour créer un compte conformément à la section 5 et 39.");
+      setAuthError("Vous devez avoir au moins 18 ans pour créer un compte conformément à la section 5 et 39.");
       return;
     }
     if (!termsAccepted) {
-      alert("Veuillez accepter les conditions d'utilisation et la charte éthique.");
+      setAuthError("Veuillez accepter les conditions d'utilisation et la charte éthique.");
       return;
     }
-    // Simulate email verification code
-    setVerificationSent(true);
-    setMode('verify');
+    setIsSubmitting(true);
+    try {
+      const res = await signup({
+        email,
+        password,
+        firstName,
+        lastName,
+        country: 'CI',
+        phone,
+        birthDate: '1995-01-01',
+        acceptedTerms: true,
+        referralCode: referralCode || undefined
+      });
+      if (res.success) {
+        setMode('onboarding');
+      } else {
+        setAuthError(res.error || 'Erreur lors de la création du compte.');
+      }
+    } catch (err: any) {
+      setAuthError(err.message || 'Erreur lors de la création du compte.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleVerifySubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate successful code
     setMode('onboarding');
   };
 
@@ -69,11 +110,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-      <div className="relative w-full max-w-lg bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-md">
+      <div className="relative w-full max-w-lg liquid-glass-card shadow-2xl border border-white/60 overflow-hidden">
         
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/40 bg-white/50 backdrop-blur-sm">
           <div className="flex items-center gap-3">
             <BrandLogo size="sm" showSubtitle={false} />
             <div>
@@ -96,36 +137,46 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
 
         {/* Content body */}
         <div className="p-6">
+          {authError && (
+            <div className="mb-4 p-3 rounded-xl bg-rose-50/90 border border-rose-200 text-xs text-rose-700 flex items-center gap-2">
+              <span className="font-bold">Attention :</span>
+              <span>{authError}</span>
+            </div>
+          )}
           
           {/* LOGIN FORM */}
           {mode === 'login' && (
-            <form onSubmit={(e) => { e.preventDefault(); onComplete(); onClose(); }} className="space-y-4">
+            <form onSubmit={handleLoginSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Adresse E-mail</label>
                 <input 
                   type="email" 
-                  defaultValue={currentUser.email} 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                   placeholder="nom@example.ci"
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-orange-500"
+                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white/80 focus:bg-white focus:outline-none focus:ring-1 focus:ring-orange-500"
                 />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">Mot de passe</label>
                 <input 
                   type="password" 
-                  defaultValue="demo1234" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-orange-500"
+                  placeholder="••••••••"
+                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white/80 focus:bg-white focus:outline-none focus:ring-1 focus:ring-orange-500"
                 />
               </div>
 
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full py-2.5 px-4 text-xs font-semibold text-white bg-orange-600 hover:bg-orange-700 rounded-xl transition-colors shadow-xs"
+                  disabled={isSubmitting}
+                  className="w-full py-2.5 px-4 text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 rounded-xl transition-all shadow-xs active:scale-95 disabled:opacity-50"
                 >
-                  Se connecter à mon espace
+                  {isSubmitting ? 'Connexion en cours...' : 'Se connecter à mon espace'}
                 </button>
               </div>
 
@@ -280,9 +331,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full py-2.5 px-4 text-xs font-semibold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 rounded-xl transition-all shadow-xs"
+                  disabled={isSubmitting}
+                  className="w-full py-2.5 px-4 text-xs font-semibold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 rounded-xl transition-all shadow-xs disabled:opacity-50"
                 >
-                  Créer mon Espace Personnel
+                  {isSubmitting ? 'Création en cours...' : 'Créer mon Espace Personnel'}
                 </button>
               </div>
 
