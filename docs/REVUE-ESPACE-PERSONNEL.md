@@ -5,6 +5,20 @@ après le commit `3123f96`. Les constats viennent de la lecture du code, du
 build et des tests ; **rien n'a été testé dans un navigateur ni avec les
 émulateurs Firebase.**
 
+## 0. Couverture de la revue
+
+| Rubrique | Lue en détail | Remarques |
+|---|---|---|
+| Vue d'ensemble, Profil, Portefeuille, Retraits, Notifications, Paramètres | Oui | Corrigées (voir §1) |
+| Équipe / Affiliation | Oui | Affichait un faux filleul et un faux gain (+990 XOF) à tous : remplacé par des données réelles |
+| Bonus | Oui | Faux « bonus d'inscription 1 000 XOF reçu » retiré |
+| Mes activités (missions) | Oui | Majoration « +40 % » inexistante retirée ; envoi de preuve non disponible (pas de backend) |
+| Académie (cours, quiz) | Oui | Message de quiz corrigé (plus de points/certificat annoncés) ; notation locale seulement |
+| VCF, Outils IA, Communauté, Support | Parcourues | Pas de backend : messages explicites ; contenu VCF/IA non audité ligne à ligne |
+| Barre de navigation, pages publiques (accueil, tarifs, etc.) | Non | Seule la mention « +40 % » de l'accueil a été retirée ; reste à relire |
+| `server.ts` (chatbot), `storage.rules` | Non revus dans ce lot | |
+| Comportement réel (navigateur, émulateurs Firebase, mobile) | **Non testé** | Aucun test de bout en bout n'a été exécuté |
+
 ## 1. Corrigé dans ce lot
 
 ### Isolation des données (demande initiale)
@@ -74,8 +88,11 @@ build et des tests ; **rien n'a été testé dans un navigateur ni avec les
    `MTN_WEBHOOK_SECRET`, `MOOV_WEBHOOK_SECRET` (sans eux, aucun webhook n'est accepté).
 2. `node lib/scripts/seedConfig.js` pour créer le produit `standard` (3 000 XOF,
    prototype) en plus de `premium` et `business` ; déployer règles, **index** et fonctions.
-3. Brancher les vraies API Wave/Orange/MTN/Moov (les adaptateurs actuels fabriquent
-   des URL de paiement fictives) puis retirer le garde-fou.
+3. Brancher les API de paiement : voir `docs/PAIEMENTS-MOBILE-MONEY.md` (Wave est
+   implémenté d'après la doc officielle ; Orange, MTN, Moov restent simulés et fermés).
+   **Ne pas ouvrir l'activation payante avant que les missions et les retraits
+   fonctionnent réellement** : le Pass Standard vend l'accès à un catalogue de missions
+   dont l'envoi de preuves n'existe pas encore.
 4. Restreindre la clé web Firebase dans Google Cloud (référents HTTP, API limitées).
 5. Tester avec les émulateurs : inscription → e-mail → retrait → traitement admin,
    paiement → webhook → rétractation → remboursement, plafond.
