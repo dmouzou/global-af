@@ -9,13 +9,23 @@ export type PaymentStatus =
   | "refund_pending"
   | "refunded";
 
+/** Prestataire de paiement (passerelle) utilisé pour encaisser. */
+export type PaymentProviderId = "cinetpay" | "wave";
+/** Univers de paiement choisi par le membre sur notre site. */
+export type PaymentMethod = "mobile_money" | "card";
+
 export interface PaymentRecord {
   id: string;
   userId: string;
   amount: number;
   currency: "XOF";
-  operator: Operator;
-  phone: string;
+  provider: PaymentProviderId;
+  method: PaymentMethod;
+  /** Moyen réellement utilisé (ex. OM, MOMO, FLOOZ, WAVECI, VISA), connu à la confirmation. */
+  paidWith?: string;
+  /** Opérateur Mobile Money (passerelle Wave directe uniquement). */
+  operator?: Operator;
+  phone?: string;
   kind: SaleKind;
   /** Identifiant du produit du catalogue (products/{id}). */
   plan?: string;
@@ -116,4 +126,39 @@ export function toDate(value: unknown): Date {
   if (v && typeof v.seconds === "number") return new Date(v.seconds * 1000);
   if (typeof value === "number") return new Date(value);
   throw new DomainError("invalid_date", "Date invalide.");
+}
+
+/**
+ * Contraintes de montant de la passerelle CinetPay : entier, multiple de 5
+ * (sinon la transaction échoue), 100 XOF minimum.
+ * @param {number} amount Montant en XOF.
+ * @param {number} max Plafond par transaction.
+ * @return {number} Montant validé.
+ */
+export function validateCheckoutAmount(amount: number, max = 500000): number {
+  if (!Number.isInteger(amount) || amount < 100 || amount > max ||
+    amount % 5 !== 0) {
+    throw new DomainError("invalid_amount",
+      `Montant invalide : entier, multiple de 5, entre 100 et ${max} XOF.`);
+  }
+  return amount;
+}
+
+/**
+ * Libellé lisible du moyen de paiement réellement utilisé.
+ * Codes CinetPay : OM (Orange Money), MOMO (MTN MoMo), FLOOZ (Moov Money),
+ * WAVECI (Wave) ; une carte bancaire est signalée par le canal « card ».
+ * @param {string|undefined|null} paidWith Code reçu à la confirmation.
+ * @param {PaymentMethod} method Univers choisi par le membre.
+ * @return {string} Libellé.
+ */
+export function paymentMethodLabel(paidWith: string | null | undefined,
+  method: PaymentMethod): string {
+  const code = (paidWith ?? "").toUpperCase();
+  const known: Record<string, string> = {
+    OM: "Orange Money", MOMO: "MTN MoMo", FLOOZ: "Moov Money",
+    WAVECI: "Wave", WAVE: "Wave",
+  };
+  if (known[code]) return known[code];
+  return method === "card" ? "carte bancaire" : "Mobile Money";
 }

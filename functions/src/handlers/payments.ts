@@ -1,6 +1,7 @@
 import {FieldValue, Timestamp} from "firebase-admin/firestore";
 import {CallableRequest, HttpsError, onCall, onRequest} from "firebase-functions/v2/https";
 import {onSchedule} from "firebase-functions/v2/scheduler";
+import {defineSecret} from "firebase-functions/params";
 import {Request, Response} from "express";
 import {db} from "../lib/db";
 import {guard} from "../lib/errors";
@@ -9,33 +10,23 @@ import {enforceRateLimit} from "../lib/rateLimit";
 import {asObject, optString, reqString} from "../lib/validate";
 import {DomainError} from "../domain/errors";
 import {
-  amountMatches, assertSellableProduct, PaymentRecord, toDate,
-  validatePaymentInitiation,
+  amountMatches, assertSellableProduct, PaymentMethod, PaymentProviderId,
+  PaymentRecord, paymentMethodLabel, toDate, validateCheckoutAmount,
 } from "../domain/payment";
-import {Balances, Operator, OPERATORS, Posting, Role} from "../domain/types";
-import {getPaymentAdapter} from "../services/payments/paymentRegistry";
+import {Balances, Posting, Role} from "../domain/types";
+import {
+  getPaymentProvider, PAYMENT_PROVIDERS,
+} from "../services/payments/paymentRegistry";
 import {
   assertWithinSpendingLimit, effectiveLimit, monthKey, spentInCurrentMonth,
 } from "../domain/spending";
 import {computeCommissions, SponsorChain} from "../domain/commission";
 import {checkRetraction} from "../domain/retraction";
-import {getCountryConfig, getPlatformConfig} from "../lib/config";
+import {getPlatformConfig} from "../lib/config";
 import {readBalances, writeWalletAndLedger} from "../lib/walletStore";
 import {applyPosting} from "../domain/ledger";
-import {normalizePhone} from "../domain/phone";
 
 const FINANCE_ROLES: Role[] = ["financial_manager", "admin", "super_admin"];
-
-/**
- * Seul Wave a un vrai adaptateur. Orange Money, MTN MoMo et Moov Money
- * SIMULENT encore le prestataire : ils restent fermés en production (on
- * n'envoie jamais un membre vers une page de paiement fictive). En
- * développement/émulateur, définir PAYMENTS_SIMULATION=true.
- * @return {boolean} true si la simulation est explicitement autorisée.
- */
-function simulationAllowed(): boolean {
-  return process.env.PAYMENTS_SIMULATION === "true";
-}
 
 /**
  * Crée une notification interne pour un membre (écriture serveur : les
@@ -53,12 +44,39 @@ function notify(tx: FirebaseFirestore.Transaction, userId: string,
   });
 }
 
+// Clés sensibles CinetPay : Secret Manager (exposées en variables d'environnement
+// uniquement dans les fonctions qui les déclarent). CINETPAY_SITE_ID et
+// APP_BASE_URL (non secrets) se règlent dans functions/.env.<projet>.
+const cinetpaySecrets = [
+  defineSecret("CINETPAY_API_KEY"),
+  defineSecret("CINETPAY_SECRET_KEY"),
+];
+
+/** Passerelle d'encaissement (CinetPay par défaut ; Wave direct possible). */
+function activeProvider(): PaymentProviderId {
+  const p = (process.env.PAYMENT_PROVIDER ?? "cinetpay") as PaymentProviderId;
+  return PAYMENT_PROVIDERS.includes(p) ? p : "cinetpay";
+}
+
 /**
- * Initialise un paiement Mobile Money pour un produit du catalogue.
- * Le PRIX et le TYPE de vente viennent du catalogue serveur (products/{id}),
- * jamais du navigateur.
+ * Identifiant de transaction : alphanumérique, court, imprévisible
+ * (CinetPay exige un identifiant unique).
+ * @return {string} Identifiant de paiement.
  */
-export const initiateMobileMoneyPayment = onCall(
+function newPaymentId(): string {
+  const rand = Math.random().toString(36).slice(2, 8).toUpperCase();
+  return `GAF${Date.now().toString(36).toUpperCase()}${rand}`;
+}
+
+/**
+ * Initialise un paiement en ligne pour un produit du catalogue : Mobile Money
+ * (Wave, Orange, MTN, Moov) ou carte bancaire Visa, sur le guichet sécurisé
+ * de la passerelle. Le PRIX et le TYPE de vente viennent du catalogue
+ * serveur (products/{id}), jamais du navigateur ; aucune donnée de carte ne
+ * transite par nos serveurs.
+ */
+export const initiateOnlinePayment = onCall(
+  {secrets: cinetpaySecrets},
   async (request: CallableRequest) => {
     return guard(async () => {
       if (!request.auth) {
@@ -73,15 +91,27 @@ export const initiateMobileMoneyPayment = onCall(
       await enforceRateLimit("initiate_payment", uid, 10, 3600);
 
       const data = asObject(request.data);
-      const rawOperator = reqString(data, "operator", 20);
-      const rawPhone = reqString(data, "phone", 30);
-      // `plan` : ancien nom du champ, conservé pour compatibilité.
-      const productId = reqString(
-        data.productId !== undefined ? data : {productId: data.plan},
-        "productId", 40);
+      const method = reqString(data, "method", 20) as PaymentMethod;
+      if (method !== "mobile_money" && method !== "card") {
+        throw new DomainError("invalid_method",
+          "Moyen de paiement non supporté.");
+      }
+      const productId = reqString(data, "productId", 40);
       if (!/^[a-z0-9_-]+$/.test(productId)) {
         throw new DomainError("product_unavailable",
           "Ce produit n'est pas disponible.");
+      }
+      let billing: {address: string; city: string; zipCode: string} | undefined;
+      if (method === "card") {
+        const b = asObject(data.billing);
+        billing = {
+          address: reqString(b, "address", 120),
+          city: reqString(b, "city", 60),
+          zipCode: reqString(b, "zipCode", 5),
+        };
+        if (!/^[0-9A-Za-z-]{3,5}$/.test(billing.zipCode)) {
+          throw new DomainError("invalid_zip", "Code postal invalide.");
+        }
       }
 
       const [productSnap, userSnap, platform] = await Promise.all([
@@ -96,6 +126,7 @@ export const initiateMobileMoneyPayment = onCall(
         throw new DomainError("user_not_found", "Profil introuvable.");
       }
       const user = userSnap.data() as {
+        firstName: string; lastName: string; email: string; phone: string;
         country: string; status?: string; spentThisMonth?: number;
         spentMonth?: string; spendingLimitMonthly?: number;
         pendingSpendingLimit?: {amount: number; effectiveAtMs: number} | null;
@@ -104,14 +135,7 @@ export const initiateMobileMoneyPayment = onCall(
         throw new DomainError("account_not_active",
           "Votre compte ne permet pas de paiement pour le moment.");
       }
-      const country = await getCountryConfig(user.country);
-      const phone = normalizePhone(rawPhone, country);
-      const {operator, amount} = validatePaymentInitiation(
-        product.priceXOF, rawOperator, phone);
-      if (!country.withdrawal.operators.includes(operator)) {
-        throw new DomainError("operator_not_allowed",
-          "Cet opérateur n'est pas disponible dans votre pays.");
-      }
+      const amount = validateCheckoutAmount(product.priceXOF);
 
       const now = new Date();
       assertWithinSpendingLimit({
@@ -120,33 +144,40 @@ export const initiateMobileMoneyPayment = onCall(
         limit: effectiveLimit(user, platform.defaultMonthlyLimit, now),
       });
 
-      // Wave dispose d'un vrai adaptateur (il refuse lui-même si la clé API
-      // n'est pas configurée). Les trois autres opérateurs sont encore simulés.
-      if (operator !== "wave" && !simulationAllowed()) {
+      const baseUrl = (process.env.APP_BASE_URL ?? "").replace(/\/+$/, "");
+      if (!baseUrl.startsWith("https://")) {
         throw new DomainError("provider_not_configured",
-          "Ce moyen de paiement n'est pas encore ouvert. Utilisez Wave.");
+          "Le paiement en ligne n'est pas encore configuré.");
       }
-
-      const paymentId = `pmt_${uid}_${Date.now()}`;
+      const provider = activeProvider();
+      const paymentId = newPaymentId();
       const paymentRef = db.collection("payments").doc(paymentId);
       const record: PaymentRecord = {
-        id: paymentId, userId: uid, amount, currency: "XOF", operator,
-        phone, kind: product.kind, plan: product.id, status: "initiated",
-        transactionReference: `TX-${Date.now()}`, createdAt: now,
+        id: paymentId, userId: uid, amount, currency: "XOF", provider, method,
+        kind: product.kind, plan: product.id, status: "initiated",
+        transactionReference: paymentId, createdAt: now,
       };
-      // Le paiement est enregistré AVANT l'appel au prestataire : un webhook
-      // qui arriverait très vite trouve toujours son enregistrement.
+      // Le paiement est enregistré AVANT d'ouvrir le guichet : une
+      // notification très rapide trouve toujours son enregistrement.
       await paymentRef.set({...record, createdAt: FieldValue.serverTimestamp()});
 
       const projectId = process.env.GCLOUD_PROJECT ?? "global-af-dev";
-      const callbackUrl = `https://europe-west1-${projectId}.cloudfunctions` +
-        `.net/paymentWebhook?operator=${operator}`;
       let init;
       try {
-        init = await getPaymentAdapter(operator)
-          .initiatePayment(record, callbackUrl);
+        init = await getPaymentProvider(provider).initiatePayment(record, {
+          notifyUrl: `https://europe-west1-${projectId}.cloudfunctions.net/` +
+            `${provider}Webhook`,
+          returnUrl: `${baseUrl}/?payment=return&pid=${paymentId}`,
+          description: `GLOBAL-AF - ${product.name}`.slice(0, 100),
+          customer: {
+            firstName: user.firstName, lastName: user.lastName,
+            email: user.email, phone: user.phone, country: user.country,
+            ...billing,
+          },
+        });
       } catch (err) {
         await paymentRef.update({status: "failed",
+          failureReason: "initiation_failed",
           failedAt: FieldValue.serverTimestamp()});
         throw err;
       }
@@ -156,7 +187,8 @@ export const initiateMobileMoneyPayment = onCall(
       await writeAudit({
         actorUid: uid, actorRole: "member", action: "payment.initiated",
         target: paymentId, rule: "section 6",
-        details: {amount, operator, productId: product.id, kind: product.kind},
+        details: {amount, provider, method, productId: product.id,
+          kind: product.kind},
       });
       return {
         success: true, paymentId, checkoutUrl: init.checkoutUrl,
@@ -167,38 +199,38 @@ export const initiateMobileMoneyPayment = onCall(
   });
 
 /**
- * Webhook unifié de confirmation Mobile Money (signature vérifiée,
+ * Fabrique le webhook de confirmation d'une passerelle (signature vérifiée,
  * idempotent). Un paiement déjà confirmé ou remboursé n'est JAMAIS modifié
- * par un webhook tardif ou rejoué.
+ * par une notification tardive ou rejouée ; un paiement marqué « échoué »
+ * peut encore être confirmé (le membre peut réessayer sur le guichet).
+ * @param {PaymentProviderId} providerId Passerelle concernée.
+ * @param {Array} secrets Secrets Secret Manager nécessaires à la passerelle.
+ * @return {Function} Fonction HTTPS Firebase.
  */
-export const paymentWebhook = onRequest(
-  async (req: Request, res: Response): Promise<void> => {
+function makePaymentWebhook(providerId: PaymentProviderId,
+  secrets: ReturnType<typeof defineSecret>[] = []) {
+  return onRequest({secrets}, async (req: Request, res: Response): Promise<void> => {
     if (req.method !== "POST") {
       res.status(405).json({error: "Méthode non autorisée"});
       return;
     }
-    const operatorParam = String(req.query.operator ?? "").toLowerCase();
-    if (!OPERATORS.includes(operatorParam as Operator)) {
-      res.status(400).json({error: "Opérateur manquant ou invalide"});
-      return;
-    }
-    const operator = operatorParam as Operator;
     const rawBody = (req as unknown as {rawBody?: Buffer}).rawBody ??
       JSON.stringify(req.body);
     const headers = req.headers as Record<string, string | string[] |
       undefined>;
-    const result = await getPaymentAdapter(operator)
+    const result = await getPaymentProvider(providerId)
       .verifyWebhook(rawBody, headers);
 
     // Journal brut de tout appel reçu (valide ou non) pour l'enquête.
     await db.collection("payment_webhooks").doc().set({
-      operator, isValid: result.isValid, status: result.status,
+      provider: providerId, isValid: result.isValid, status: result.status,
       paymentId: result.paymentId ?? null,
       providerReference: result.providerReference ?? null,
-      receivedAt: FieldValue.serverTimestamp(), payload: result.rawPayload,
+      receivedAt: FieldValue.serverTimestamp(),
+      payload: JSON.parse(JSON.stringify(result.rawPayload ?? null)),
     });
     if (!result.isValid || !result.paymentId) {
-      res.status(401).json({error: "Signature de webhook invalide"});
+      res.status(401).json({error: "Notification invalide"});
       return;
     }
 
@@ -208,11 +240,16 @@ export const paymentWebhook = onRequest(
       const pmtSnap = await tx.get(paymentRef);
       if (!pmtSnap.exists) return "unknown_payment";
       const pmt = pmtSnap.data() as PaymentRecord;
-      // Idempotence : seul un paiement en attente peut changer d'état.
-      if (pmt.status !== "pending" && pmt.status !== "initiated") {
-        return "ignored_" + pmt.status;
-      }
-      if (pmt.operator !== operator) return "operator_mismatch";
+      if (pmt.provider !== providerId) return "provider_mismatch";
+      const failedByAmount = (pmtSnap.data() as {failureReason?: string})
+        .failureReason === "amount_mismatch";
+      // Idempotence : un paiement confirmé/remboursé ne change plus ; un
+      // paiement « échoué » peut encore être confirmé (nouvel essai du
+      // membre), sauf s'il a été refusé pour montant incohérent.
+      const open = pmt.status === "pending" || pmt.status === "initiated";
+      const retryable = pmt.status === "failed" && !failedByAmount &&
+        result.status === "succeeded";
+      if (!open && !retryable) return "ignored_" + pmt.status;
 
       // Événement sans effet (ex. échec Wave non définitif : le membre peut
       // réessayer dans la même session) : on n'écrit rien.
@@ -237,6 +274,7 @@ export const paymentWebhook = onRequest(
 
       tx.update(paymentRef, {
         status: "succeeded", paidAt: FieldValue.serverTimestamp(),
+        paidWith: result.paidWith ?? null,
         retractionUntil: Timestamp.fromDate(retractionUntil),
         providerReference: result.providerReference ?? pmt.providerReference ??
           null,
@@ -270,7 +308,7 @@ export const paymentWebhook = onRequest(
         entryId: `pay_${pmt.id}`, userId: pmt.userId,
         type: grantsAccess ? "activation_payment" : "subscription_payment",
         phase: "paid", posting, currency: "XOF",
-        origin: `Paiement ${pmt.plan ?? pmt.kind} via ${pmt.operator}`,
+        origin: `Paiement ${pmt.plan ?? pmt.kind} (${result.paidWith ?? pmt.method})`,
         ref: {kind: "payment", id: pmt.id},
       }]);
       notify(tx, pmt.userId, "Paiement confirmé",
@@ -303,6 +341,10 @@ export const paymentWebhook = onRequest(
     });
     res.status(200).json({status: outcome});
   });
+}
+
+export const cinetpayWebhook = makePaymentWebhook("cinetpay", cinetpaySecrets);
+export const waveWebhook = makePaymentWebhook("wave");
 
 /**
  * Résout les parrains de niveau 1 et 2 d'un acheteur (comptes actifs
@@ -408,7 +450,8 @@ export const requestPaymentRetraction = onCall(
         });
         tx.set(refundRef, {
           userId: uid, paymentId, amount: pmt.amount, currency: "XOF",
-          operator: pmt.operator, phone: pmt.phone, status: "pending",
+          provider: pmt.provider, method: pmt.method,
+          paidWith: pmt.paidWith ?? null, status: "pending",
           reason, createdAt: FieldValue.serverTimestamp(),
         });
         if (userSnap.exists) {
@@ -426,7 +469,8 @@ export const requestPaymentRetraction = onCall(
         }
         notify(tx, uid, "Rétractation enregistrée",
           `Votre remboursement de ${pmt.amount.toLocaleString("fr-FR")} XOF ` +
-          `vers ${pmt.operator} est en cours de traitement.`);
+          `par ${paymentMethodLabel(pmt.paidWith, pmt.method)} est en cours ` +
+          "de traitement.");
         return pmt.amount;
       });
 
@@ -478,7 +522,8 @@ export const adminProcessRefund = onCall(async (request: CallableRequest) => {
         throw new DomainError("not_found", "Remboursement introuvable.");
       }
       const refund = refundSnap.data() as {
-        status: string; userId: string; amount: number; operator: string;
+        status: string; userId: string; amount: number; method: PaymentMethod;
+        paidWith?: string | null;
       };
       if (refund.status !== "pending") {
         throw new DomainError("invalid_status",
@@ -495,12 +540,14 @@ export const adminProcessRefund = onCall(async (request: CallableRequest) => {
         entryId: `refund_${refundId}`, userId: refund.userId, type: "refund",
         phase: "paid", currency: "XOF",
         posting: {from: "external", to: "external", amount: refund.amount},
-        origin: `Remboursement rétractation via ${refund.operator}`,
+        origin: "Remboursement rétractation (" +
+          `${paymentMethodLabel(refund.paidWith, refund.method)})`,
         ref: {kind: "payment", id: refundId}, meta: {providerReference},
       }]);
       notify(tx, refund.userId, "Remboursement effectué",
         `${refund.amount.toLocaleString("fr-FR")} XOF ont été renvoyés vers ` +
-        `votre compte ${refund.operator}.`);
+        `votre moyen de paiement (${paymentMethodLabel(refund.paidWith,
+          refund.method)}).`);
       await writeAudit({
         actorUid: request.auth?.uid ?? null, actorRole: role,
         action: "refund.paid", target: refundId, rule: "section 6",

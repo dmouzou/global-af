@@ -8,8 +8,9 @@ export {registerUser} from "./handlers/register";
 export {requestWithdrawal, adminProcessWithdrawal} from "./handlers/withdrawals";
 export {adminSetUserRole} from "./handlers/admin";
 export {
-  initiateMobileMoneyPayment,
-  paymentWebhook,
+  initiateOnlinePayment,
+  cinetpayWebhook,
+  waveWebhook,
   requestPaymentRetraction,
   validateMaturedCommissions,
   creditMaturedCommissionsDaily,

@@ -48,7 +48,8 @@ import {
   db,
   registerUserCallable,
   requestWithdrawalCallable,
-  initiateMobileMoneyPaymentCallable,
+  initiateOnlinePaymentCallable,
+  PaymentMethod,
   requestPaymentRetractionCallable,
   adminProcessWithdrawalCallable,
   updateMyProfileCallable,
@@ -93,10 +94,11 @@ interface AppContextType {
     action: 'approve' | 'payout_initiated' | 'paid' | 'failed' | 'reject' | 'reconcile',
     reasonOrReference?: string
   ) => Promise<ActionResult>;
-  activateAccountWithMobileMoney: (
-    plan: 'standard' | 'premium' | 'business', 
-    operator: 'Wave' | 'Orange Money' | 'MTN MoMo' | 'Moov Money', 
-    phone: string
+  /** Ouvre le guichet de paiement sécurisé (Mobile Money ou carte Visa) pour un pack. */
+  startActivationPayment: (
+    plan: 'standard' | 'premium' | 'business',
+    method: PaymentMethod,
+    billing?: { address: string; city: string; zipCode: string }
   ) => Promise<{ success: boolean; message: string; checkoutUrl?: string }>;
   requestRetractionRefund: (reason: string) => Promise<{ success: boolean; message: string }>;
   updateMonthlySpendingLimit: (amount: number) => Promise<ActionResult>;
@@ -594,27 +596,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // Activation : le compte n'est activé QUE par la confirmation du prestataire (webhook).
-  const activateAccountWithMobileMoney = async (
-    plan: 'standard' | 'premium' | 'business',
-    operator: OperatorLabel,
-    phone: string
-  ): Promise<{ success: boolean; message: string; checkoutUrl?: string }> => {
+  // Activation : le compte n'est activé QUE par la confirmation de la passerelle (webhook).
+  const startActivationPayment: AppContextType['startActivationPayment'] = async (plan, method, billing) => {
     if (!currentUser) return { success: false, message: 'Veuillez vous connecter pour activer un pack.' };
+    if (!currentUser.isEmailVerified) {
+      return { success: false, message: 'Confirmez votre adresse e-mail avant de payer.' };
+    }
     try {
-      // Le prix est fixé par le serveur : seul l'identifiant du pack est envoyé.
-      const res = await initiateMobileMoneyPaymentCallable({
-        operator: OPERATOR_MAP[operator] || 'wave',
-        productId: plan,
-        phone
-      });
+      // Le prix est fixé par le serveur : seuls l'identifiant du pack et le moyen de paiement sont envoyés.
+      const res = await initiateOnlinePaymentCallable({ method, productId: plan, billing });
       return {
         success: true,
-        message: res.data.instructions || 'Paiement initié. Votre compte sera activé dès la confirmation de l\'opérateur.',
+        message: res.data.instructions || 'Paiement initié. Votre compte sera activé dès la confirmation du paiement.',
         checkoutUrl: res.data.checkoutUrl
       };
     } catch (err) {
-      return { success: false, message: fnError(err, "Erreur lors de l'initiation du paiement Mobile Money.") };
+      return { success: false, message: fnError(err, "Erreur lors de l'ouverture du paiement.") };
     }
   };
 
@@ -795,7 +792,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       adminWithdrawals,
       requestWithdrawal,
       processWithdrawalAdmin,
-      activateAccountWithMobileMoney,
+      startActivationPayment,
       requestRetractionRefund,
       updateMonthlySpendingLimit,
       tasks,

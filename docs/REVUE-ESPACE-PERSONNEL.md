@@ -84,12 +84,12 @@ build et des tests ; **rien n'a été testé dans un navigateur ni avec les
 
 ## 2. À faire avant toute mise en production
 
-1. Définir les secrets : `WAVE_WEBHOOK_SECRET`, `ORANGE_WEBHOOK_SECRET`,
-   `MTN_WEBHOOK_SECRET`, `MOOV_WEBHOOK_SECRET` (sans eux, aucun webhook n'est accepté).
+1. Définir les secrets `CINETPAY_API_KEY` et `CINETPAY_SECRET_KEY` (sans eux, aucun
+   webhook n'est accepté) et `CINETPAY_SITE_ID`, `APP_BASE_URL`.
 2. `node lib/scripts/seedConfig.js` pour créer le produit `standard` (3 000 XOF,
    prototype) en plus de `premium` et `business` ; déployer règles, **index** et fonctions.
-3. Brancher les API de paiement : voir `docs/PAIEMENTS-MOBILE-MONEY.md` (Wave est
-   implémenté d'après la doc officielle ; Orange, MTN, Moov restent simulés et fermés).
+3. Configurer CinetPay : voir `docs/PAIEMENTS-MOBILE-MONEY.md` (clés, secrets, variables,
+   canal carte à activer chez CinetPay).
    **Ne pas ouvrir l'activation payante avant que les missions et les retraits
    fonctionnent réellement** : le Pass Standard vend l'accès à un catalogue de missions
    dont l'envoi de preuves n'existe pas encore.

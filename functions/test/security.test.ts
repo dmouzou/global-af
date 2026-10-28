@@ -1,9 +1,9 @@
 import {describe, expect, it} from "vitest";
 import {createHmac} from "node:crypto";
 import {WaveAdapter} from "../src/services/payments/wave.adapter";
-import {MtnMomoAdapter} from "../src/services/payments/mtn.adapter";
-import {OrangeMoneyAdapter} from "../src/services/payments/orange.adapter";
-import {MoovMoneyAdapter} from "../src/services/payments/moov.adapter";
+import {
+  CinetPayAdapter, cinetpayToken,
+} from "../src/services/payments/cinetpay.adapter";
 import {verifyHmacSha256Hex} from "../src/services/payments/signature";
 import {
   amountMatches, assertSellableProduct, toDate,
@@ -19,17 +19,17 @@ const forge = (secret: string) =>
 
 describe("Webhooks : échec fermé sans secret", () => {
   it("refuse une signature forgée avec une clé vide ou l'ancien secret par défaut", async () => {
-    const adapters = [
-      [new WaveAdapter(""), {"wave-signature": `v1=${forge("")}`}],
-      [new WaveAdapter(""), {"wave-signature": `v1=${forge("dev_wave_secret")}`}],
-      [new OrangeMoneyAdapter(""), {"x-orange-signature": forge("")}],
-      [new MtnMomoAdapter(""), {"x-momo-signature": forge("")}],
-      [new MoovMoneyAdapter(""), {"x-moov-signature": forge("")}],
-    ] as const;
-    for (const [adapter, headers] of adapters) {
-      const r = await adapter.verifyWebhook(payload, headers as never);
+    const wave = new WaveAdapter("");
+    for (const secret of ["", "dev_wave_secret"]) {
+      const r = await wave.verifyWebhook(payload,
+        {"wave-signature": `t=1700000000,v1=${forge(secret)}`});
       expect(r.isValid).toBe(false);
     }
+    // CinetPay sans clés configurées : tout est refusé, même un jeton « valide ».
+    const cinetpay = new CinetPayAdapter({apiKey: "", siteId: "", secretKey: ""});
+    const r2 = await cinetpay.verifyWebhook("cpm_site_id=1&cpm_trans_id=A",
+      {"x-token": cinetpayToken({cpm_site_id: "1", cpm_trans_id: "A"}, "")});
+    expect(r2.isValid).toBe(false);
   });
 
   it("verifyHmacSha256Hex : secret absent = refus, secret correct = accepté", () => {

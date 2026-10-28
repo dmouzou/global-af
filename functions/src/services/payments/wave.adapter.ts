@@ -23,7 +23,7 @@
 import {createHmac, timingSafeEqual} from "node:crypto";
 import {PaymentRecord} from "../../domain/payment";
 import {DomainError} from "../../domain/errors";
-import {MobileMoneyAdapter, PaymentInitiationResult, WebhookVerificationResult}
+import {PaymentProvider, PaymentInitiationResult, WebhookVerificationResult}
   from "./provider.interface";
 
 const API_BASE = "https://api.wave.com";
@@ -41,8 +41,8 @@ export interface WaveOptions {
   nowSeconds?: () => number;
 }
 
-export class WaveAdapter implements MobileMoneyAdapter {
-  readonly operator = "wave" as const;
+export class WaveAdapter implements PaymentProvider {
+  readonly id = "wave" as const;
   private readonly webhookSecret: string;
   private readonly apiKey: string;
   private readonly signingSecret: string;
@@ -72,10 +72,10 @@ export class WaveAdapter implements MobileMoneyAdapter {
       amount: String(Math.trunc(payment.amount)),
       currency: "XOF",
       client_reference: payment.id,
-      success_url: `${this.appBaseUrl}/?payment=success&ref=${encodeURIComponent(payment.id)}`,
-      error_url: `${this.appBaseUrl}/?payment=error&ref=${encodeURIComponent(payment.id)}`,
+      success_url: `${this.appBaseUrl}/?payment=success&pid=${encodeURIComponent(payment.id)}`,
+      error_url: `${this.appBaseUrl}/?payment=error&pid=${encodeURIComponent(payment.id)}`,
       // Protection contre les arnaques : seul le numéro du membre peut payer.
-      restrict_payer_mobile: payment.phone,
+      ...(payment.phone ? {restrict_payer_mobile: payment.phone} : {}),
     });
     const headers: Record<string, string> = {
       "Authorization": `Bearer ${this.apiKey}`,

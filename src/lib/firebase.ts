@@ -60,11 +60,15 @@ export const requestWithdrawalCallable = httpsCallable<RequestWithdrawalInput, R
   'requestWithdrawal'
 );
 
+export type PaymentMethod = 'mobile_money' | 'card';
+
 export interface InitiatePaymentInput {
-  operator: 'wave' | 'orange_money' | 'mtn_momo' | 'moov_money';
+  /** Mobile Money (Wave, Orange, MTN, Moov) ou carte bancaire Visa : choisi ici, l'opérateur l'est sur la page sécurisée. */
+  method: PaymentMethod;
   /** Identifiant du produit du catalogue serveur : le prix est fixé côté serveur. */
   productId: string;
-  phone: string;
+  /** Obligatoire pour la carte (exigé par la passerelle). */
+  billing?: { address: string; city: string; zipCode: string };
 }
 
 export interface InitiatePaymentOutput {
@@ -77,9 +81,9 @@ export interface InitiatePaymentOutput {
   currency: string;
 }
 
-export const initiateMobileMoneyPaymentCallable = httpsCallable<InitiatePaymentInput, InitiatePaymentOutput>(
+export const initiateOnlinePaymentCallable = httpsCallable<InitiatePaymentInput, InitiatePaymentOutput>(
   functions,
-  'initiateMobileMoneyPayment'
+  'initiateOnlinePayment'
 );
 
 export interface RetractionInput {

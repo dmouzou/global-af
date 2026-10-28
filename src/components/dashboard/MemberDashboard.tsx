@@ -55,7 +55,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
     ledger, 
     withdrawals, 
     requestWithdrawal, 
-    activateAccountWithMobileMoney,
+    startActivationPayment,
     requestRetractionRefund,
     updateMonthlySpendingLimit,
     tasks, 
@@ -105,8 +105,11 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
   // Activation modal state (Standard: 3 000 FCFA single, VIP Premium: 9 900 FCFA/m)
   const [isActivationModalOpen, setIsActivationModalOpen] = useState(false);
   const [activationPlan, setActivationPlan] = useState<'standard' | 'premium'>('standard');
-  const [activationOperator, setActivationOperator] = useState<'Wave' | 'Orange Money' | 'MTN MoMo' | 'Moov Money'>('Wave');
-  const [activationPhone, setActivationPhone] = useState(currentUser?.phone || '');
+  const [activationMethod, setActivationMethod] = useState<'mobile_money' | 'card'>('mobile_money');
+  const [billingAddress, setBillingAddress] = useState('');
+  const [billingCity, setBillingCity] = useState(currentUser?.city || '');
+  const [billingZip, setBillingZip] = useState('');
+  const [isPaying, setIsPaying] = useState(false);
 
   // Profile Edit State
   const [editFirstName, setEditFirstName] = useState(currentUser?.firstName || '');
@@ -122,7 +125,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
     if (currentUser) {
       setWithdrawalOperator(currentUser.defaultPayoutOperator || 'Wave');
       setWithdrawalPhone(currentUser.phone);
-      setActivationPhone(currentUser.phone);
+      setBillingCity(prev => prev || currentUser.city || '');
       setEditFirstName(currentUser.firstName);
       setEditLastName(currentUser.lastName);
       setEditCity(currentUser.city || '');
@@ -262,7 +265,15 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
 
   const handleActivationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await activateAccountWithMobileMoney(activationPlan, activationOperator, activationPhone);
+    setIsPaying(true);
+    const res = await startActivationPayment(
+      activationPlan,
+      activationMethod,
+      activationMethod === 'card'
+        ? { address: billingAddress.trim(), city: billingCity.trim(), zipCode: billingZip.trim() }
+        : undefined
+    );
+    setIsPaying(false);
     if (res.success) {
       if (res.checkoutUrl) {
         window.location.href = res.checkoutUrl;
@@ -2801,63 +2812,83 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                 </button>
               </div>
 
-              {/* Operator Selection */}
+              {/* Moyen de paiement : la passerelle affiche ensuite sa page sécurisée */}
               <div>
-                <label className="block font-semibold text-slate-700 mb-2">Moyen de paiement Mobile Money</label>
-                <div className="grid grid-cols-2 gap-2.5">
-                  {(['Wave', 'Orange Money', 'MTN MoMo', 'Moov Money'] as const).map(op => (
-                    <button
-                      type="button"
-                      key={op}
-                      onClick={() => setActivationOperator(op)}
-                      className={`p-2 rounded-xl border flex items-center gap-2 transition-all text-left ${
-                        activationOperator === op 
-                          ? 'border-orange-500 bg-orange-50/70 shadow-xs ring-1 ring-orange-400' 
-                          : 'border-slate-200 hover:bg-slate-50/80 bg-white'
-                      }`}
-                    >
-                      <OperatorLogo operator={op} variant="icon" size="sm" />
-                      <div className="leading-tight truncate">
-                        <div className="font-bold text-slate-900 text-xs truncate">{op}</div>
-                        <div className="text-[10px] text-slate-500">Paiement instantané</div>
-                      </div>
-                    </button>
-                  ))}
+                <label className="block font-semibold text-slate-700 mb-1">Moyen de paiement</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setActivationMethod('mobile_money')}
+                    className={`p-3 rounded-xl border text-left transition-all ${
+                      activationMethod === 'mobile_money'
+                        ? 'border-orange-500 bg-orange-50/70 ring-1 ring-orange-400'
+                        : 'border-slate-200 hover:bg-slate-50/80 bg-white'
+                    }`}
+                  >
+                    <div className="font-bold text-slate-900 text-xs">Mobile Money</div>
+                    <div className="text-[10px] text-slate-500 mt-0.5">Wave, Orange Money, MTN MoMo, Moov Money</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActivationMethod('card')}
+                    className={`p-3 rounded-xl border text-left transition-all ${
+                      activationMethod === 'card'
+                        ? 'border-orange-500 bg-orange-50/70 ring-1 ring-orange-400'
+                        : 'border-slate-200 hover:bg-slate-50/80 bg-white'
+                    }`}
+                  >
+                    <div className="font-bold text-slate-900 text-xs">Carte bancaire Visa</div>
+                    <div className="text-[10px] text-slate-500 mt-0.5">Paiement par carte sur page sécurisée</div>
+                  </button>
                 </div>
+                <p className="text-[10px] text-slate-500 mt-1.5">
+                  {activationMethod === 'mobile_money'
+                    ? "Vous choisirez votre opérateur et confirmerez le paiement sur la page sécurisée CinetPay."
+                    : "Les données de votre carte sont saisies uniquement sur la page sécurisée CinetPay : GLOBAL-AF ne les voit jamais."}
+                </p>
               </div>
 
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Votre numéro {activationOperator}</label>
-                <input
-                  type="tel"
-                  required
-                  value={activationPhone}
-                  onChange={(e) => setActivationPhone(e.target.value)}
-                  className="w-full p-2.5 border border-slate-300 rounded-lg font-mono text-xs"
-                />
-              </div>
+              {activationMethod === 'card' && (
+                <div className="space-y-2 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                  <div className="text-[11px] font-semibold text-slate-700">Adresse de facturation (exigée pour le paiement par carte)</div>
+                  <input
+                    type="text" required autoComplete="street-address" placeholder="Adresse" maxLength={120}
+                    value={billingAddress} onChange={(e) => setBillingAddress(e.target.value)}
+                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-orange-500"
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="text" required autoComplete="address-level2" placeholder="Ville" maxLength={60}
+                      value={billingCity} onChange={(e) => setBillingCity(e.target.value)}
+                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    />
+                    <input
+                      type="text" required autoComplete="postal-code" placeholder="Code postal" maxLength={5}
+                      value={billingZip} onChange={(e) => setBillingZip(e.target.value)}
+                      className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-orange-500"
+                    />
+                  </div>
+                </div>
+              )}
 
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                <div className="flex justify-between items-center font-bold text-slate-900 text-sm">
-                  <span>Total à régler :</span>
-                  <span className="font-mono text-orange-600 font-extrabold text-base">
-                    {activationPlan === 'standard' ? '3 000 FCFA' : '9 900 FCFA / mois'}
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-600 font-semibold">Total à régler :</span>
+                  <span className="font-mono font-extrabold text-slate-900">
+                    {activationPlan === 'standard' ? '3 000 FCFA' : '9 900 FCFA'}
                   </span>
                 </div>
-                <div className="text-[10px] text-emerald-700 font-semibold pt-1">
-                  {activationPlan === 'premium' ? (
-                    <span>✓ Droit de rétractation de 7 jours avec remboursement intégral Mobile Money garanti. La commission parrain (990 FCFA) sera débloquée après ce délai.</span>
-                  ) : (
-                    <span>✓ Ticket unique à vie · Fourniture et accès immédiat aux 15 formations et micro-jobs (non soumis au droit de rétractation).</span>
-                  )}
+                <div className="text-[11px] text-slate-600 leading-snug">
+                  ✓ Droit de rétractation de 7 jours : demandez le remboursement depuis Paramètres, il est versé sur votre moyen de paiement après traitement. Le montant, les frais éventuels et le contenu de l'offre vous sont présentés avant tout paiement.
                 </div>
               </div>
 
               <button
                 type="submit"
-                className="w-full py-2.5 px-4 text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 rounded-xl transition-all shadow-xs"
+                disabled={isPaying}
+                className="w-full py-3 px-4 text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 rounded-xl transition-all shadow-xs disabled:opacity-60"
               >
-                Payer {activationPlan === 'standard' ? '3 000 FCFA' : '9 900 FCFA'} via {activationOperator}
+                {isPaying ? 'Ouverture du paiement…' : `Payer ${activationPlan === 'standard' ? '3 000 FCFA' : '9 900 FCFA'} (${activationMethod === 'card' ? 'carte Visa' : 'Mobile Money'})`}
               </button>
             </form>
           </div>

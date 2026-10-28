@@ -20,6 +20,7 @@ import { AdvertiserAdminLogin } from './components/admin/AdvertiserAdminLogin';
 import { AuthModal } from './components/auth/AuthModal';
 import { FloatingChatbotWidget } from './components/common/InformationalChatbot';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { PaymentReturnBanner } from './components/common/PaymentReturnBanner';
 import { Task, AppView } from './types';
 
 export const isExplicitAdminPortal = (): boolean => {
@@ -71,6 +72,14 @@ function AppContent() {
     // une seule fois au chargement de la page
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Retour de la passerelle de paiement : on ramène le membre connecté sur son espace.
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    if (q.get('payment') === 'return' && currentUser) {
+      setCurrentView('dashboard');
+    }
+  }, [currentUser?.id]);
 
   const handleOpenAuth = (mode: 'login' | 'signup') => {
     setAuthMode(mode);
@@ -166,6 +175,7 @@ function AppContent() {
         setCurrentView={navigateToView}
         onOpenAuth={handleOpenAuth}
       />
+      <PaymentReturnBanner />
 
       {/* Main Content Area: Multi-Page Routing */}
       <main className="flex-1">
