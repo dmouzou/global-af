@@ -2,6 +2,7 @@ import {describe, expect, it} from "vitest";
 import {createHmac} from "node:crypto";
 import {validatePaymentInitiation} from "../src/domain/payment";
 import {WaveAdapter} from "../src/services/payments/wave.adapter";
+import {MobileMoneyAdapter} from "../src/services/payments/provider.interface";
 import {OrangeMoneyAdapter} from "../src/services/payments/orange.adapter";
 import {MtnMomoAdapter} from "../src/services/payments/mtn.adapter";
 import {MoovMoneyAdapter} from "../src/services/payments/moov.adapter";
@@ -20,7 +21,8 @@ describe("Mobile Money Payment Domain & Adapters", () => {
 
   it("WaveAdapter : génère une session et vérifie la signature HMAC", async () => {
     const secret = "test_wave_secret";
-    const adapter = new WaveAdapter(secret);
+    // Typé par l'interface : l'URL de rappel fait partie du contrat commun.
+    const adapter: MobileMoneyAdapter = new WaveAdapter(secret);
 
     const init = await adapter.initiatePayment(
       {
