@@ -942,7 +942,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    <span><strong className="text-emerald-300">Rémunérations majorées (+40%)</strong> sur chaque tâche</span>
+                    <span><strong className="text-emerald-300">Contenu de l'offre détaillé avant paiement</strong> (aucune majoration de gains promise)</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />

@@ -16,4 +16,4 @@ export {
   adminProcessRefund,
 } from "./handlers/payments";
 
-export {updateMyProfile, setSpendingLimit} from "./handlers/account";
+export {updateMyProfile, setSpendingLimit, getMyAffiliation} from "./handlers/account";

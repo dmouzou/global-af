@@ -314,3 +314,14 @@ export interface PartnerApplication {
   submittedAt?: string;
   reviewedAt?: string;
 }
+
+/** Commission d'affiliation du membre (lue dans Firestore : commissions/{id}). */
+export interface AffiliationCommission {
+  id: string;
+  level: 1 | 2;
+  amount: number;
+  /** pending_retraction : en attente de la fin du délai de rétractation. */
+  status: 'pending_retraction' | 'credited' | 'cancelled_retraction';
+  date: string;
+  matureAt: string;
+}

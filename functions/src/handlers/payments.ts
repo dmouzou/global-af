@@ -27,11 +27,10 @@ import {normalizePhone} from "../domain/phone";
 const FINANCE_ROLES: Role[] = ["financial_manager", "admin", "super_admin"];
 
 /**
- * Les adaptateurs actuels SIMULENT les prestataires (aucun appel réel à
- * Wave, Orange, MTN ou Moov). Tant que les vraies API ne sont pas branchées,
- * le paiement reste fermé en production : on n'envoie jamais un membre vers
- * une page de paiement fictive. En développement/émulateur, définir
- * PAYMENTS_SIMULATION=true.
+ * Seul Wave a un vrai adaptateur. Orange Money, MTN MoMo et Moov Money
+ * SIMULENT encore le prestataire : ils restent fermés en production (on
+ * n'envoie jamais un membre vers une page de paiement fictive). En
+ * développement/émulateur, définir PAYMENTS_SIMULATION=true.
  * @return {boolean} true si la simulation est explicitement autorisée.
  */
 function simulationAllowed(): boolean {
@@ -121,9 +120,11 @@ export const initiateMobileMoneyPayment = onCall(
         limit: effectiveLimit(user, platform.defaultMonthlyLimit, now),
       });
 
-      if (!simulationAllowed()) {
+      // Wave dispose d'un vrai adaptateur (il refuse lui-même si la clé API
+      // n'est pas configurée). Les trois autres opérateurs sont encore simulés.
+      if (operator !== "wave" && !simulationAllowed()) {
         throw new DomainError("provider_not_configured",
-          "Le paiement Mobile Money n'est pas encore ouvert.");
+          "Ce moyen de paiement n'est pas encore ouvert. Utilisez Wave.");
       }
 
       const paymentId = `pmt_${uid}_${Date.now()}`;
@@ -213,6 +214,9 @@ export const paymentWebhook = onRequest(
       }
       if (pmt.operator !== operator) return "operator_mismatch";
 
+      // Événement sans effet (ex. échec Wave non définitif : le membre peut
+      // réessayer dans la même session) : on n'écrit rien.
+      if (result.status === "pending") return "ignored_event";
       if (result.status !== "succeeded") {
         tx.update(paymentRef, {status: "failed",
           failedAt: FieldValue.serverTimestamp()});

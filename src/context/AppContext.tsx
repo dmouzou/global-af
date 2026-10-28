@@ -14,6 +14,7 @@ import {
   NotificationItem,
   AuditLogItem,
   RiskAlert,
+  AffiliationCommission,
   Wallet,
   CountryCode,
   UserRole
@@ -52,6 +53,8 @@ import {
   adminProcessWithdrawalCallable,
   updateMyProfileCallable,
   setSpendingLimitCallable,
+  getMyAffiliationCallable,
+  AffiliationStats,
   RegisterUserInput
 } from '../lib/firebase';
 
@@ -130,6 +133,10 @@ interface AppContextType {
   createTicket: (subject: string, category: SupportTicket['category'], priority: SupportTicket['priority'], message: string) => ActionResult;
   replyTicket: (ticketId: string, message: string) => ActionResult;
   resolveTicketAdmin: (ticketId: string) => ActionResult;
+
+  // Affiliation (données réelles : comptage serveur + commissions du membre)
+  affiliation: { stats: AffiliationStats | null; commissions: AffiliationCommission[]; loading: boolean; error: boolean };
+  refreshAffiliation: () => Promise<void>;
 
   // Notifications
   notifications: NotificationItem[];
@@ -249,6 +256,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
   const [adminWithdrawals, setAdminWithdrawals] = useState<WithdrawalRequest[]>([]);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [affiliationStats, setAffiliationStats] = useState<AffiliationStats | null>(null);
+  const [affiliationCommissions, setAffiliationCommissions] = useState<AffiliationCommission[]>([]);
+  const [affiliationLoading, setAffiliationLoading] = useState(false);
+  const [affiliationError, setAffiliationError] = useState(false);
 
   // Catalogues non personnels (démonstration, en attente des modules serveur).
   const [tasks] = useState<Task[]>(INITIAL_TASKS);
@@ -285,6 +296,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setWithdrawals([]);
       setAdminWithdrawals([]);
       setNotifications([]);
+      setAffiliationStats(null);
+      setAffiliationCommissions([]);
+      setAffiliationError(false);
       setCourses(INITIAL_COURSES.map(c => ({ ...c, enrolledUserIds: [] })));
     };
 
@@ -391,6 +405,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           setNotifications(snap.docs.map(x => mapNotification(x.id, x.data())));
         },
         (err) => console.warn('Lecture des notifications refusée:', err.code)
+      ));
+
+      unsubs.push(onSnapshot(
+        query(collection(db, 'commissions'), where('beneficiaryUid', '==', uid), orderBy('createdAt', 'desc'), limit(200)),
+        (snap) => {
+          if (generation !== authGeneration.current) return;
+          setAffiliationCommissions(snap.docs.map(x => {
+            const d = x.data();
+            return {
+              id: x.id,
+              level: d.level === 2 ? 2 : 1,
+              amount: Number(d.amount ?? 0),
+              status: d.status,
+              date: fmtDate(d.createdAt),
+              matureAt: fmtDate(d.matureAt),
+            } as AffiliationCommission;
+          }));
+        },
+        (err) => console.warn('Lecture des commissions refusée:', err.code)
       ));
 
       if (FINANCE_ROLES.includes(claimRole)) {
@@ -656,6 +689,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const replyTicket = (): ActionResult => NOT_AVAILABLE('Le support par tickets');
   const resolveTicketAdmin = (): ActionResult => NOT_AVAILABLE('Le support par tickets');
 
+  // Comptage des filleuls (serveur : les profils des autres membres ne sont pas lisibles).
+  const refreshAffiliation = async (): Promise<void> => {
+    if (!currentUser) return;
+    setAffiliationLoading(true);
+    setAffiliationError(false);
+    try {
+      const res = await getMyAffiliationCallable({});
+      setAffiliationStats(res.data);
+    } catch (err) {
+      console.warn('Statistiques d\'affiliation indisponibles:', err);
+      setAffiliationError(true);
+    } finally {
+      setAffiliationLoading(false);
+    }
+  };
+
   // Notifications : le titulaire ne peut modifier que le champ « read » (règles Firestore).
   const markNotificationAsRead = async (id: string) => {
     const target = notifications.find(n => n.id === id);
@@ -770,6 +819,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createTicket,
       replyTicket,
       resolveTicketAdmin,
+      affiliation: { stats: affiliationStats, commissions: affiliationCommissions, loading: affiliationLoading, error: affiliationError },
+      refreshAffiliation,
       notifications,
       markNotificationAsRead,
       markAllNotificationsRead,

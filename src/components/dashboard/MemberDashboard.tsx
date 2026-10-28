@@ -80,7 +80,9 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
     markNotificationAsRead,
     markAllNotificationsRead,
     resendEmailVerification,
-    refreshEmailVerification
+    refreshEmailVerification,
+    affiliation,
+    refreshAffiliation
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<
@@ -162,6 +164,14 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
 
   // Copy referral code state
   const [copiedReferral, setCopiedReferral] = useState(false);
+
+  // Les statistiques d'affiliation sont comptées par le serveur à l'ouverture de l'onglet.
+  useEffect(() => {
+    if (activeTab === 'team' && currentUser) {
+      refreshAffiliation();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, currentUser?.id]);
 
   const handleCopyReferral = () => {
     if (!currentUser) return;
@@ -1078,7 +1088,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                     Les Micro-jobs Rémunérés Nécessitent le Pass Membre
                   </h2>
                   <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-lg mx-auto">
-                    Afin de garantir des missions fiables et conformes à l'ARTCI, l'accès au catalogue de micro-jobs (sondages, tests d'applications ivoiriennes, missions d'interaction) requiert l'activation du <strong>Pass Membre Standard (3 000 FCFA unique)</strong> ou l'abonnement <strong>VIP Premium (9 900 FCFA/mois)</strong> avec gains majorés de +40%.
+                    Afin de garantir des missions fiables et conformes à l'ARTCI, l'accès au catalogue de micro-jobs (sondages, tests d'applications ivoiriennes, missions d'interaction) requiert l'activation du <strong>Pass Membre Standard (3 000 FCFA unique)</strong> ou l'offre <strong>Premium (9 900 FCFA/mois)</strong>. Le contenu exact de chaque offre est détaillé avant tout paiement.
                   </p>
                 </div>
                 <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -1099,7 +1109,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                     }}
                     className="w-full sm:w-auto px-6 py-3 text-xs font-bold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 rounded-xl transition-all"
                   >
-                    <span>Passer VIP Premium (+40% de gains)</span>
+                    <span>Voir l'offre Premium</span>
                   </button>
                 </div>
               </div>
@@ -1113,14 +1123,10 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                         <h1 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900 tracking-tight">
                           Catalogue des Micro-jobs & Missions Rémunérées
                         </h1>
-                        {currentUser.subscriptionPlan === 'premium' && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
-                            ★ VIP +40% actif
-                          </span>
-                        )}
+                        
                       </div>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        Tâches déterministes vérifiées. Rémunération garantie dès validation de votre preuve.
+                        Récompense indiquée à l'avance pour chaque mission, versée si votre preuve est validée.
                       </p>
                     </div>
                   </div>
@@ -1174,8 +1180,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {filteredTasks.map(task => {
                     const userSub = submissions.find(s => s.taskId === task.id && s.userId === currentUser.id);
-                    const isVip = currentUser.subscriptionPlan === 'premium';
-                    const finalReward = isVip ? Math.round(task.rewardAmount * 1.4) : task.rewardAmount;
+                    const finalReward = task.rewardAmount;
 
                     return (
                       <div key={task.id} className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col justify-between shadow-xs space-y-4 hover:border-orange-300 transition-colors">
@@ -1188,11 +1193,6 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                               <span className="font-extrabold text-emerald-700 font-mono text-sm tabular-nums">
                                 +{finalReward.toLocaleString()} {task.currency}
                               </span>
-                              {isVip && (
-                                <div className="text-[10px] text-amber-600 font-bold">
-                                  ★ Bonus VIP +40% inclus
-                                </div>
-                              )}
                             </div>
                           </div>
 
@@ -1547,14 +1547,11 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                     Mon Réseau d'Affiliation Éthique (1 à 2 Niveaux)
                   </h1>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Commissions déterministes sur achats réels et abonnements mensuels récurrents.
+                    Commissions sur ventes réelles uniquement, jamais sur le simple recrutement.
                   </p>
                 </div>
               </div>
 
-              <div className="px-3 py-1.5 bg-orange-100 text-orange-900 border border-orange-200 rounded-xl text-xs font-bold flex items-center gap-1.5">
-                <span>Commissions Récurrentes Mensuelles Actives</span>
-              </div>
             </div>
 
             {/* Recurring Commission Rule Banner (Demande 3) */}
@@ -1609,45 +1606,77 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
               )}
             </div>
 
-            {/* Network Structure Overview - 2 Levels strictly enforced */}
+            {/* Réseau : chiffres réels comptés par le serveur */}
+            {affiliation.error && (
+              <div role="alert" className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-center justify-between gap-3">
+                <span>Les statistiques du réseau sont momentanément indisponibles.</span>
+                <button type="button" onClick={() => refreshAffiliation()} className="px-3 py-1 font-semibold bg-white border border-amber-300 rounded-lg hover:bg-amber-100">Réessayer</button>
+              </div>
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-1">
                 <span className="text-xs text-slate-500 font-semibold">Niveau 1 (Direct)</span>
-                <div className="text-2xl font-extrabold text-slate-900 font-mono">1 Filleul Actif</div>
-                <div className="text-[11px] text-orange-600 font-semibold">Commission : 10% sur abonnements VIP (990 XOF)</div>
+                <div className="text-2xl font-extrabold text-slate-900 font-mono">
+                  {affiliation.stats ? `${affiliation.stats.level1.count} filleul${affiliation.stats.level1.count > 1 ? 's' : ''}` : affiliation.loading ? '…' : '—'}
+                </div>
+                <div className="text-[11px] text-slate-500">
+                  {affiliation.stats ? `${affiliation.stats.level1.activeCount} actif${affiliation.stats.level1.activeCount > 1 ? 's' : ''} · taux ${(affiliation.stats.rates.level1Bps / 100).toLocaleString('fr-FR')} % sur les ventes éligibles` : ' '}
+                </div>
               </div>
 
               <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-1">
                 <span className="text-xs text-slate-500 font-semibold">Niveau 2 (Indirect)</span>
-                <div className="text-2xl font-extrabold text-slate-900 font-mono">0 Filleul</div>
-                <div className="text-[11px] text-slate-500">Commission : 5% sur abonnements VIP (495 XOF)</div>
+                <div className="text-2xl font-extrabold text-slate-900 font-mono">
+                  {affiliation.stats ? `${affiliation.stats.level2.count} filleul${affiliation.stats.level2.count > 1 ? 's' : ''}` : affiliation.loading ? '…' : '—'}
+                </div>
+                <div className="text-[11px] text-slate-500">
+                  {affiliation.stats ? `${affiliation.stats.level2.activeCount} actif${affiliation.stats.level2.activeCount > 1 ? 's' : ''} · taux ${(affiliation.stats.rates.level2Bps / 100).toLocaleString('fr-FR')} % sur les ventes éligibles` : ' '}
+                </div>
               </div>
             </div>
 
-            {/* Referrals list */}
+            {/* Commissions réelles du membre */}
             <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 shadow-xs">
               <div className="flex items-center justify-between">
-                <h3 className="font-display font-bold text-slate-900 text-sm">Détail des Filleuls et Ventes Réelles Rémunérées</h3>
-                <span className="text-[11px] text-slate-500 font-medium">Réserve de sécurité légale : 7 jours</span>
+                <h3 className="font-display font-bold text-slate-900 text-sm">Vos commissions sur ventes réelles</h3>
+                <span className="text-[11px] text-slate-500 font-medium">Réserve de sécurité légale : {affiliation.stats?.retractionDays ?? 7} jours</span>
               </div>
 
-              <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-900">Filleul Actif #1</span>
-                    <span className="px-2 py-0.5 text-[10px] bg-emerald-100 text-emerald-800 rounded-md font-bold">Niveau 1 (10%)</span>
-                    <span className="px-2 py-0.5 text-[10px] bg-amber-100 text-amber-800 rounded-md font-semibold">En réserve rétractation 7j</span>
-                  </div>
-                  <div className="text-[11px] text-slate-500">
-                    Abonnement VIP Premium activé (9 900 XOF) · Achat de service réel vérifié
-                  </div>
+              {affiliation.commissions.length === 0 ? (
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 leading-relaxed">
+                  Aucune commission pour le moment. Elles apparaissent ici lorsqu'un de vos filleuls effectue un achat éligible.
                 </div>
-
-                <div className="text-right">
-                  <div className="font-mono font-bold text-emerald-700 text-sm">+990 XOF</div>
-                  <div className="text-[10px] text-amber-700 font-semibold">Libéré après le délai de 7 jours</div>
+              ) : (
+                <div className="space-y-2">
+                  {affiliation.commissions.map(com => (
+                    <div key={com.id} className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-bold text-slate-900">Niveau {com.level}</span>
+                          <span className={`px-2 py-0.5 text-[10px] rounded-md font-semibold ${
+                            com.status === 'credited' ? 'bg-emerald-100 text-emerald-800' :
+                            com.status === 'pending_retraction' ? 'bg-amber-100 text-amber-800' :
+                            'bg-slate-200 text-slate-700'
+                          }`}>
+                            {com.status === 'credited' && 'Créditée'}
+                            {com.status === 'pending_retraction' && 'En attente (délai de rétractation)'}
+                            {com.status === 'cancelled_retraction' && 'Annulée (rétractation du filleul)'}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-slate-500">Enregistrée le {com.date}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className={`font-mono font-bold text-sm ${com.status === 'cancelled_retraction' ? 'text-slate-400 line-through' : 'text-emerald-700'}`}>
+                          +{com.amount.toLocaleString('fr-FR')} {selectedCountry.currency}
+                        </div>
+                        {com.status === 'pending_retraction' && (
+                          <div className="text-[10px] text-amber-700 font-semibold">Créditée à partir du {com.matureAt}</div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
+              )}
             </div>
 
           </div>
@@ -1840,11 +1869,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                         <h1 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">
                           Outils IA & Assistants Numériques
                         </h1>
-                        {currentUser.subscriptionPlan === 'premium' && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
-                            ★ Accès Illimité VIP
-                          </span>
-                        )}
+                        
                       </div>
                       <p className="text-xs text-slate-500 mt-0.5">
                         Générez des argumentaires de vente, des idées marketing locales et des synthèses adaptées au marché ouest-africain.
@@ -2092,12 +2117,9 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                 <div className="w-8 h-8 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center font-bold">
                   <Gift className="w-4 h-4" />
                 </div>
-                <h3 className="font-display font-bold text-slate-900 text-sm">Bonus d'Inscription & Vérification</h3>
-                <div className="text-xl font-mono font-extrabold text-orange-600">1 000 XOF</div>
-                <p className="text-xs text-slate-500">Crédité automatiquement après la vérification de l'adresse e-mail et validation du premier profil.</p>
-                <div className="text-[11px] text-emerald-700 font-bold flex items-center gap-1 pt-1">
-                  <Check className="w-3.5 h-3.5" /> Reçu sur votre ledger
-                </div>
+                <h3 className="font-display font-bold text-slate-900 text-sm">Bonus en vigueur</h3>
+                <div className="text-xl font-mono font-extrabold text-orange-600">Aucun pour l'instant</div>
+                <p className="text-xs text-slate-500">Un bonus n'est crédité que si une règle publiée le prévoit. Tout bonus crédité apparaît dans votre historique du portefeuille.</p>
               </div>
 
               <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-2">
@@ -2105,8 +2127,8 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                   <Award className="w-4 h-4" />
                 </div>
                 <h3 className="font-display font-bold text-slate-900 text-sm">Bonus Certification Académie</h3>
-                <div className="text-xl font-mono font-extrabold text-emerald-700">100 à 250 Pts</div>
-                <p className="text-xs text-slate-500">Attribué dès l'obtention d'un score $\ge 70\%$ au quiz d'un cours. Débloque le rang Bronze / Silver.</p>
+                <div className="text-xl font-mono font-extrabold text-emerald-700">Bientôt disponible</div>
+                <p className="text-xs text-slate-500">Les points et certificats récompenseront la réussite d'un quiz de formation ; la délivrance se fera côté serveur, avec une règle connue à l'avance.</p>
                 <div className="text-[11px] text-slate-600 font-medium pt-1">
                   Progression active : {currentUser.points} points
                 </div>
@@ -2215,6 +2237,9 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
         {/* 12. COMMUNITY TAB */}
         {activeTab === 'community' && (
           <div className="space-y-6">
+            <div role="status" className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900">
+              La communauté n'est pas encore ouverte : les publications, réactions et signalements ne sont pas enregistrés pour le moment.
+            </div>
             
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
@@ -2318,6 +2343,9 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
         {/* 13. SUPPORT TAB */}
         {activeTab === 'support' && (
           <div className="space-y-6">
+            <div role="status" className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900">
+              Le support par tickets n'est pas encore ouvert : un ticket envoyé d'ici ne serait pas enregistré. Les demandes de remboursement et de rétractation se font depuis Paramètres.
+            </div>
             
             <div className="flex items-center gap-3">
               <BabiMascot variant="support" size="sm" />
@@ -3047,12 +3075,12 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                         : 'bg-rose-50 border-rose-200 text-rose-900'
                     }`}>
                       <div className="font-bold text-sm">
-                        {quizResult.passed ? '🎉 Félicitations ! Quiz Réussi !' : 'Score insuffisant'}
+                        {quizResult.passed ? 'Quiz réussi' : 'Score insuffisant'}
                       </div>
                       <p>
                         Votre score : <strong>{quizResult.score}%</strong>.
                         {quizResult.passed 
-                          ? ` Vous gagnez ${quizResult.pointsEarned} points et un certificat officiel est ajouté à votre profil personnel !` 
+                          ? ` Les points et certificats seront délivrés lorsque la validation côté serveur sera ouverte : aucun point ni certificat n'est enregistré pour le moment.` 
                           : ' Vous pouvez réviser les modules et retenter le test.'}
                       </p>
                     </div>

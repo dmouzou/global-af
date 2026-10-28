@@ -13,7 +13,11 @@ export interface WebhookVerificationResult {
   isValid: boolean;
   paymentId?: string;
   providerReference?: string;
-  status: "succeeded" | "failed";
+  /**
+   * succeeded : paiement confirmé ; failed : échec définitif ;
+   * pending : événement sans effet sur l'état (ex. échec non définitif).
+   */
+  status: "succeeded" | "failed" | "pending";
   amountPaid?: number;
   currency?: string;
   rawPayload: unknown;

@@ -104,3 +104,60 @@ export const setSpendingLimit = onCall(async (request: CallableRequest) => {
     };
   });
 });
+
+interface AffiliationStats {
+  level1: { count: number; activeCount: number };
+  level2: { count: number; activeCount: number };
+  rates: { level1Bps: number; level2Bps: number };
+  retractionDays: number;
+  truncated: boolean;
+}
+
+/**
+ * Statistiques d'affiliation du membre : NOMBRE de filleuls de niveau 1 et 2
+ * (jamais leur identité) et taux en vigueur. Le client ne peut pas lire les
+ * profils des autres membres : ce comptage se fait donc côté serveur.
+ * Les commissions elles-mêmes sont lues directement par le client
+ * (règles : le bénéficiaire lit les siennes).
+ */
+export const getMyAffiliation = onCall(async (request: CallableRequest) => {
+  return guard(async (): Promise<AffiliationStats> => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Connexion requise.");
+    }
+    const uid = request.auth.uid;
+    await enforceRateLimit("affiliation_stats", uid, 60, 3600);
+    const platform = await getPlatformConfig();
+    const LIMIT = 500;
+
+    const isActive = (d: FirebaseFirestore.DocumentData) =>
+      Boolean(d.isActivated || d.activatedAt);
+
+    const l1 = await db.collection("users")
+      .where("referredByUid", "==", uid).limit(LIMIT).get();
+    const l1Ids = l1.docs.map((d) => d.id);
+    let level2Count = 0;
+    let level2Active = 0;
+    // Les requêtes « in » sont limitées à 30 valeurs.
+    for (let i = 0; i < l1Ids.length; i += 30) {
+      const chunk = l1Ids.slice(i, i + 30);
+      const l2 = await db.collection("users")
+        .where("referredByUid", "in", chunk).get();
+      level2Count += l2.size;
+      level2Active += l2.docs.filter((d) => isActive(d.data())).length;
+    }
+    return {
+      level1: {
+        count: l1.size,
+        activeCount: l1.docs.filter((d) => isActive(d.data())).length,
+      },
+      level2: {count: level2Count, activeCount: level2Active},
+      rates: {
+        level1Bps: platform.affiliation.level1Bps,
+        level2Bps: platform.affiliation.level2Bps,
+      },
+      retractionDays: platform.retractionDays,
+      truncated: l1.size >= LIMIT,
+    };
+  });
+});

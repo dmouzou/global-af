@@ -145,3 +145,16 @@ export const adminProcessRefundCallable = httpsCallable<
   { refundId: string; providerReference: string },
   { refundId: string; status: string }
 >(functions, 'adminProcessRefund');
+
+export interface AffiliationStats {
+  level1: { count: number; activeCount: number };
+  level2: { count: number; activeCount: number };
+  rates: { level1Bps: number; level2Bps: number };
+  retractionDays: number;
+  truncated: boolean;
+}
+
+export const getMyAffiliationCallable = httpsCallable<Record<string, never>, AffiliationStats>(
+  functions,
+  'getMyAffiliation'
+);
