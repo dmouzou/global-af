@@ -12,7 +12,7 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'signup', onComplete }) => {
-  const { selectedCountry, login, signup } = useApp();
+  const { login, signup, resendEmailVerification, refreshEmailVerification } = useApp();
   const [mode, setMode] = useState<'login' | 'signup' | 'verify' | 'onboarding'>(initialMode);
   
   // Form states
@@ -22,15 +22,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [country, setCountry] = useState<CountryCode>('CI');
-  const [referralCode, setReferralCode] = useState('');
-  const [isAdult, setIsAdult] = useState(false);
+  // Code parrain : prérempli depuis le lien de parrainage (?ref=CODE).
+  const [referralCode, setReferralCode] = useState(() => {
+    const ref = new URLSearchParams(window.location.search).get('ref') || '';
+    return /^[A-Za-z0-9_-]{3,40}$/.test(ref) ? ref : '';
+  });
+  const [birthDate, setBirthDate] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Email verification simulation
-  const [verificationCode, setVerificationCode] = useState('');
-  const [verificationSent, setVerificationSent] = useState(false);
+  const [verifyInfo, setVerifyInfo] = useState<string | null>(null);
+  const [verifyBusy, setVerifyBusy] = useState(false);
 
   // Onboarding step
   const [onboardingStep, setOnboardingStep] = useState(1);
@@ -62,8 +65,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
   const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
-    if (!isAdult) {
-      setAuthError("Vous devez avoir au moins 18 ans pour créer un compte conformément à la section 5 et 39.");
+    // Contrôle de confort ; le serveur vérifie l'âge de façon définitive.
+    const birth = new Date(birthDate);
+    const now = new Date();
+    let age = now.getFullYear() - birth.getFullYear();
+    if (now.getMonth() < birth.getMonth() || (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate())) age--;
+    if (!birthDate || Number.isNaN(birth.getTime()) || age < 18) {
+      setAuthError("Vous devez avoir au moins 18 ans pour créer un compte (sections 5 et 39).");
       return;
     }
     if (!termsAccepted) {
@@ -79,12 +87,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
         lastName,
         country: 'CI',
         phone,
-        birthDate: '1995-01-01',
+        birthDate,
         acceptedTerms: true,
         referralCode: referralCode || undefined
       });
       if (res.success) {
-        setMode('onboarding');
+        setMode('verify');
       } else {
         setAuthError(res.error || 'Erreur lors de la création du compte.');
       }
@@ -95,9 +103,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
     }
   };
 
-  const handleVerifySubmit = (e: React.FormEvent) => {
+  const handleVerifySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setMode('onboarding');
+    setVerifyBusy(true);
+    setVerifyInfo(null);
+    try {
+      if (await refreshEmailVerification()) {
+        setMode('onboarding');
+      } else {
+        setVerifyInfo("Adresse non encore confirmée. Cliquez sur le lien reçu par e-mail, puis réessayez.");
+      }
+    } catch {
+      setVerifyInfo('Vérification impossible pour le moment. Réessayez.');
+    } finally {
+      setVerifyBusy(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setVerifyBusy(true);
+    const res = await resendEmailVerification();
+    setVerifyInfo(res.message);
+    setVerifyBusy(false);
   };
 
   const handleOnboardingNext = () => {
@@ -294,18 +321,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
 
               {/* Certification & CGU Approval */}
               <div className="space-y-2.5 pt-3 border-t border-slate-100 text-xs">
-                <label className="flex items-start gap-2.5 cursor-pointer">
-                  <input 
-                    type="checkbox" 
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Date de naissance</label>
+                  <input
+                    type="date"
                     required
-                    checked={isAdult}
-                    onChange={(e) => setIsAdult(e.target.checked)}
-                    className="mt-0.5 rounded text-orange-600 focus:ring-orange-500 w-4 h-4"
+                    autoComplete="bday"
+                    max={new Date().toISOString().slice(0, 10)}
+                    value={birthDate}
+                    onChange={(e) => setBirthDate(e.target.value)}
+                    className="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl bg-white/80 focus:bg-white focus:outline-none focus:ring-1 focus:ring-orange-500"
                   />
-                  <span className="text-slate-600 text-[11px] leading-tight">
-                    <strong className="text-slate-900">Vous certifiez que votre âge est de 18 ans ou plus</strong> et que vous disposez de la pleine capacité juridique pour ouvrir cet espace.
-                  </span>
-                </label>
+                  <p className="text-[10px] text-slate-500 mt-1">Âge minimum : 18 ans, vérifié à l'inscription. Vous disposez de la pleine capacité juridique pour ouvrir cet espace.</p>
+                </div>
 
                 <label className="flex items-start gap-2.5 cursor-pointer">
                   <input 
@@ -350,34 +378,36 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
             </form>
           )}
 
-          {/* VERIFY EMAIL SIMULATION */}
+          {/* VERIFICATION DE L'E-MAIL (lien envoyé par e-mail, section 5) */}
           {mode === 'verify' && (
             <form onSubmit={handleVerifySubmit} className="space-y-4 text-center">
               <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto">
                 <CheckCircle className="w-6 h-6" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-slate-900">Vérification de l'adresse e-mail</h4>
+                <h4 className="text-sm font-bold text-slate-900">Confirmez votre adresse e-mail</h4>
                 <p className="text-xs text-slate-500 mt-1">
-                  Un code de confirmation a été simulé et envoyé à votre adresse e-mail (Section 5 : aucune vérification SMS requise).
+                  Nous avons envoyé un lien de confirmation à <strong className="text-slate-800">{email}</strong>. Cliquez dessus, puis revenez ici. Pensez à vérifier vos courriers indésirables. Aucune vérification par SMS n'est requise.
                 </p>
               </div>
-              <div>
-                <input 
-                  type="text"
-                  maxLength={6}
-                  placeholder="Code : 123456"
-                  defaultValue="784910"
-                  onChange={(e) => setVerificationCode(e.target.value)}
-                  className="w-48 mx-auto text-center tracking-widest text-base font-mono py-2 border border-slate-300 rounded-md focus:ring-emerald-500 focus:border-emerald-500"
-                />
-              </div>
+              {verifyInfo && (
+                <p className="text-xs text-slate-700 bg-slate-50 border border-slate-200 rounded-md p-2">{verifyInfo}</p>
+              )}
               <button
                 type="submit"
-                className="w-full py-2.5 px-4 text-xs font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700"
+                disabled={verifyBusy}
+                className="w-full py-2.5 px-4 text-xs font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 disabled:opacity-60"
               >
-                Confirmer l'e-mail & Démarrer l'Onboarding
+                J'ai confirmé mon e-mail
               </button>
+              <div className="flex items-center justify-center gap-4 text-xs">
+                <button type="button" disabled={verifyBusy} onClick={handleResendVerification} className="text-orange-600 hover:underline font-semibold disabled:opacity-60">
+                  Renvoyer l'e-mail
+                </button>
+                <button type="button" onClick={() => setMode('onboarding')} className="text-slate-500 hover:text-slate-800">
+                  Plus tard
+                </button>
+              </div>
             </form>
           )}
 
@@ -411,7 +441,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
               {onboardingStep === 2 && (
                 <div className="space-y-2 text-xs text-slate-600">
                   <h4 className="font-bold text-slate-900 text-sm">Vérification de sécurité validée</h4>
-                  <p>Votre e-mail est vérifié. La plateforme limite la création abusive de multi-comptes et protège l'intégrité de vos récompenses.</p>
+                  <p>La confirmation de votre e-mail est requise pour les paiements et les retraits. La plateforme limite la création abusive de multi-comptes et protège l'intégrité de vos récompenses.</p>
                 </div>
               )}
 
@@ -446,7 +476,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
               {onboardingStep === 5 && (
                 <div className="space-y-2 text-xs text-slate-600">
                   <h4 className="font-bold text-slate-900 text-sm">Votre première activité disponible</h4>
-                  <p>Vous pouvez immédiatement participer à l'étude d'usage du Mobile Money en Côte d'Ivoire pour recevoir 600 FCFA crédités sur votre ledger.</p>
+                  <p>Consultez le catalogue des missions : chaque mission indique à l'avance sa récompense et ses conditions. Aucun gain n'est garanti.</p>
                 </div>
               )}
 
@@ -589,7 +619,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
                   type="button"
                   onClick={() => {
                     setTermsAccepted(true);
-                    setIsAdult(true);
                     setShowCguModal(false);
                   }}
                   className="px-5 py-2 text-xs font-semibold text-white bg-orange-600 hover:bg-orange-700 rounded-xl transition-all shadow-xs"

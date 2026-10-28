@@ -37,7 +37,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 }) => {
   const { 
     currentUser, 
-    withdrawals, 
+    adminWithdrawals: withdrawals, 
     processWithdrawalAdmin, 
     submissions, 
     reviewSubmissionAdmin,
@@ -122,7 +122,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     e.preventDefault();
     if (!taskTitle || !taskDesc) return;
 
-    createTaskAdmin({
+    const created = createTaskAdmin({
       title: taskTitle,
       category: taskCategory,
       description: taskDesc,
@@ -138,14 +138,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       verificationType: taskVerification,
       status: 'published'
     });
+    if (!created.success) {
+      alert(created.message);
+      return;
+    }
 
     setIsCreatingTask(false);
     setTaskTitle('');
     setTaskDesc('');
-    alert('Nouvelle mission publiée avec succès !');
+    
   };
 
-  const pendingWithdrawals = withdrawals.filter(w => w.status === 'pending_control' || w.status === 'approved');
+  const OPEN_STATUSES = ['reserved', 'approved', 'payout_initiated'];
+  const pendingWithdrawals = withdrawals.filter(w => OPEN_STATUSES.includes(w.status));
+
+  // Chaque action est exécutée par le serveur ; le résultat réel est affiché.
+  const runWithdrawalAction = async (
+    id: string,
+    action: 'approve' | 'payout_initiated' | 'paid' | 'failed' | 'reject' | 'reconcile',
+    reasonOrReference?: string
+  ) => {
+    const res = await processWithdrawalAdmin(id, action, reasonOrReference);
+    if (!res.success) alert(res.message);
+  };
   const pendingSubmissions = submissions.filter(s => s.status === 'pending');
 
   return (
@@ -296,21 +311,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
-                        w.status === 'payout_sent' ? 'bg-emerald-100 text-emerald-800' :
-                        w.status === 'approved' ? 'bg-blue-100 text-blue-800' :
-                        w.status === 'pending_control' ? 'bg-amber-100 text-amber-800' :
+                        w.status === 'paid' || w.status === 'reconciled' ? 'bg-emerald-100 text-emerald-800' :
+                        w.status === 'approved' || w.status === 'payout_initiated' ? 'bg-blue-100 text-blue-800' :
+                        w.status === 'reserved' ? 'bg-amber-100 text-amber-800' :
                         'bg-rose-100 text-rose-800'
                       }`}>
-                        {w.status === 'payout_sent' && 'Payé'}
+                        {w.status === 'paid' && 'Payé'}
+                        {w.status === 'reconciled' && 'Rapproché'}
                         {w.status === 'approved' && 'Approuvé'}
-                        {w.status === 'pending_control' && 'En contrôle'}
+                        {w.status === 'payout_initiated' && 'Virement lancé'}
+                        {w.status === 'reserved' && 'En contrôle'}
                         {w.status === 'rejected' && 'Rejeté'}
+                        {w.status === 'failed' && 'Échec'}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right space-x-1.5 whitespace-nowrap">
-                      {w.status === 'pending_control' && (
+                      {w.status === 'reserved' && (
                         <button
-                          onClick={() => processWithdrawalAdmin(w.id, 'approve')}
+                          onClick={() => runWithdrawalAction(w.id, 'approve')}
                           className="px-2.5 py-1 text-[11px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded"
                         >
                           Valider Contrôle
@@ -318,17 +336,47 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       )}
                       {w.status === 'approved' && (
                         <button
-                          onClick={() => processWithdrawalAdmin(w.id, 'payout')}
+                          onClick={() => runWithdrawalAction(w.id, 'payout_initiated')}
                           className="px-2.5 py-1 text-[11px] font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded"
                         >
-                          Simuler Virement {w.operator}
+                          Virement {w.operator} lancé
                         </button>
                       )}
-                      {(w.status === 'pending_control' || w.status === 'approved') && (
+                      {w.status === 'payout_initiated' && (
+                        <>
+                          <button
+                            onClick={() => {
+                              const ref = prompt(`Référence ${w.operator} du virement effectué (obligatoire) :`);
+                              if (ref && ref.trim()) runWithdrawalAction(w.id, 'paid', ref.trim());
+                            }}
+                            className="px-2.5 py-1 text-[11px] font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded"
+                          >
+                            Confirmer payé
+                          </button>
+                          <button
+                            onClick={() => {
+                              const reason = prompt("Motif de l'échec du virement :");
+                              if (reason && reason.trim()) runWithdrawalAction(w.id, 'failed', reason.trim());
+                            }}
+                            className="px-2 py-1 text-[11px] font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded"
+                          >
+                            Échec
+                          </button>
+                        </>
+                      )}
+                      {w.status === 'paid' && (
+                        <button
+                          onClick={() => runWithdrawalAction(w.id, 'reconcile')}
+                          className="px-2.5 py-1 text-[11px] font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded"
+                        >
+                          Rapprocher
+                        </button>
+                      )}
+                      {(w.status === 'reserved' || w.status === 'approved') && (
                         <button
                           onClick={() => {
-                            const reason = prompt("Motif du rejet du retrait :", "Justificatifs insuffisants");
-                            if (reason) processWithdrawalAdmin(w.id, 'reject', reason);
+                            const reason = prompt("Motif du rejet du retrait (obligatoire) :");
+                            if (reason && reason.trim()) runWithdrawalAction(w.id, 'reject', reason.trim());
                           }}
                           className="px-2 py-1 text-[11px] font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded"
                         >

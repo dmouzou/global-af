@@ -45,7 +45,7 @@ export interface User {
   role: UserRole;
   isActivated: boolean;
   activationDate?: string;
-  subscriptionPlan: 'free' | 'premium' | 'business';
+  subscriptionPlan: 'free' | 'standard' | 'premium' | 'business';
   referralCode: string;
   referredBy?: string; // ID or code
   level: UserLevel;
@@ -53,6 +53,8 @@ export interface User {
   isEmailVerified: boolean;
   spendingLimitMonthly: number;
   spentThisMonth: number;
+  /** Hausse de plafond demandée, effective après un délai de réflexion de 24 h. */
+  pendingSpendingLimit?: { amount: number; effectiveAtMs: number };
   createdAt: string;
   city?: string;
   defaultPayoutOperator?: 'Wave' | 'Orange Money' | 'MTN MoMo' | 'Moov Money';
@@ -213,7 +215,7 @@ export interface WithdrawalRequest {
   currency: string;
   operator: 'Wave' | 'Orange Money' | 'MTN MoMo' | 'Moov Money';
   operatorPhone: string;
-  status: 'pending_control' | 'reserved' | 'approved' | 'payout_sent' | 'rejected';
+  status: 'reserved' | 'approved' | 'payout_initiated' | 'paid' | 'reconciled' | 'rejected' | 'failed';
   requestedAt: string;
   processedAt?: string;
   transactionRef?: string;

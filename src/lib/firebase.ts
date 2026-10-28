@@ -62,10 +62,9 @@ export const requestWithdrawalCallable = httpsCallable<RequestWithdrawalInput, R
 
 export interface InitiatePaymentInput {
   operator: 'wave' | 'orange_money' | 'mtn_momo' | 'moov_money';
-  amount: number;
-  kind: 'pack_subscription' | 'course_purchase' | 'service_pack' | 'advertising_campaign';
-  plan?: 'starter' | 'premium' | 'business';
-  phone?: string;
+  /** Identifiant du produit du catalogue serveur : le prix est fixé côté serveur. */
+  productId: string;
+  phone: string;
 }
 
 export interface InitiatePaymentOutput {
@@ -84,7 +83,8 @@ export const initiateMobileMoneyPaymentCallable = httpsCallable<InitiatePaymentI
 );
 
 export interface RetractionInput {
-  paymentId: string;
+  /** Facultatif : sans identifiant, le dernier paiement confirmé rétractable est utilisé. */
+  paymentId?: string;
   reason?: string;
 }
 
@@ -101,7 +101,7 @@ export const requestPaymentRetractionCallable = httpsCallable<RetractionInput, R
 
 export interface AdminProcessWithdrawalInput {
   withdrawalId: string;
-  action: 'approve' | 'pay' | 'reject' | 'fail';
+  action: 'approve' | 'reject' | 'mark_payout_initiated' | 'confirm_paid' | 'mark_failed' | 'reconcile';
   reason?: string;
   providerReference?: string;
 }
@@ -122,3 +122,26 @@ export const adminSetUserRoleCallable = httpsCallable<AdminSetUserRoleInput, { u
 );
 
 
+
+export interface UpdateMyProfileInput {
+  firstName?: string;
+  lastName?: string;
+  city?: string;
+  bio?: string;
+  defaultPayoutOperator?: 'wave' | 'orange_money' | 'mtn_momo' | 'moov_money';
+}
+
+export const updateMyProfileCallable = httpsCallable<UpdateMyProfileInput, { updated: string[] }>(
+  functions,
+  'updateMyProfile'
+);
+
+export const setSpendingLimitCallable = httpsCallable<
+  { limit: number },
+  { spendingLimitMonthly: number; pendingSpendingLimit: { amount: number; effectiveAtMs: number } | null }
+>(functions, 'setSpendingLimit');
+
+export const adminProcessRefundCallable = httpsCallable<
+  { refundId: string; providerReference: string },
+  { refundId: string; status: string }
+>(functions, 'adminProcessRefund');

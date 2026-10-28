@@ -61,6 +61,17 @@ function AppContent() {
     }
   }, [isAdminUser, currentUser]);
 
+  // Lien de parrainage (?ref=CODE) : ouvre l'inscription (le code est prérempli par le formulaire).
+  useEffect(() => {
+    const ref = new URLSearchParams(window.location.search).get('ref');
+    if (ref && !currentUser) {
+      setAuthMode('signup');
+      setAuthModalOpen(true);
+    }
+    // une seule fois au chargement de la page
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleOpenAuth = (mode: 'login' | 'signup') => {
     setAuthMode(mode);
     setAuthModalOpen(true);

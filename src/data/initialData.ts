@@ -28,125 +28,6 @@ export const COUNTRIES_CONFIG: Record<string, CountryConfig> = {
   }
 };
 
-export const INITIAL_ETHICAL_INDICATORS: EthicalIndicators = {
-  medianMonthlyIncomeXOF: 28500,
-  percentUnwithdrawnMembers: 34.2,
-  averageDaysToFirstPayout: 11,
-  totalWithdrawnXOF: 18450000,
-  activeMembersCount: 4210,
-  lastUpdated: '12 Octobre 2026'
-};
-
-export const INITIAL_CURRENT_USER: User = {
-  id: 'usr_kouame_01',
-  memberNumber: 'CI-2026-9042',
-  firstName: 'Kouamé',
-  lastName: 'Diallo',
-  email: 'k.diallo@example.ci',
-  phone: '+225 07 48 92 11 05',
-  country: 'CI',
-  city: 'Abidjan (Cocody Angré)',
-  role: 'member',
-  isActivated: true,
-  activationDate: '2026-09-15',
-  subscriptionPlan: 'free',
-  referralCode: 'GAF-CI-9042',
-  referredBy: 'GAF-CI-1002',
-  defaultPayoutOperator: 'Orange Money',
-  bio: 'Micro-entrepreneur digital à Abidjan, actif sur les sondages et la création de fiches produits.',
-  level: 'Bronze',
-  points: 480,
-  isEmailVerified: true,
-  spendingLimitMonthly: 50000,
-  spentThisMonth: 0,
-  createdAt: '2026-09-15'
-};
-
-export const DEMO_PROFILES: User[] = [
-  {
-    ...INITIAL_CURRENT_USER,
-    role: 'member',
-    subscriptionPlan: 'free'
-  },
-  {
-    id: 'usr_aicha_premium',
-    memberNumber: 'CI-2026-7731',
-    firstName: 'Aïcha',
-    lastName: 'Ouattara',
-    email: 'aicha.ouattara@example.ci',
-    phone: '+225 05 64 22 98 10',
-    country: 'CI',
-    city: 'Abidjan (Plateau / Marcory)',
-    role: 'member_premium',
-    isActivated: true,
-    activationDate: '2026-09-20',
-    subscriptionPlan: 'premium',
-    referralCode: 'GAF-CI-7731',
-    defaultPayoutOperator: 'Wave',
-    bio: 'Consultante marketing e-commerce indépendante, certifiée Académie GLOBAL-AF.',
-    level: 'Silver',
-    points: 1250,
-    isEmailVerified: true,
-    spendingLimitMonthly: 100000,
-    spentThisMonth: 9900,
-    createdAt: '2026-09-20'
-  },
-  {
-    id: 'usr_koffi_mod',
-    firstName: 'Koffi',
-    lastName: 'Jean-Yves',
-    email: 'moderation@global-af.ci',
-    phone: '+225 07 01 23 45 67',
-    country: 'CI',
-    role: 'moderator',
-    isActivated: true,
-    subscriptionPlan: 'business',
-    referralCode: 'GAF-MOD-01',
-    level: 'Gold',
-    points: 3400,
-    isEmailVerified: true,
-    spendingLimitMonthly: 200000,
-    spentThisMonth: 0,
-    createdAt: '2026-08-01'
-  },
-  {
-    id: 'usr_sophie_fin',
-    firstName: 'Sophie',
-    lastName: 'Yao',
-    email: 'finances@global-af.ci',
-    phone: '+225 01 55 44 33 22',
-    country: 'CI',
-    role: 'financial_manager',
-    isActivated: true,
-    subscriptionPlan: 'business',
-    referralCode: 'GAF-FIN-01',
-    level: 'Gold',
-    points: 4200,
-    isEmailVerified: true,
-    spendingLimitMonthly: 500000,
-    spentThisMonth: 0,
-    createdAt: '2026-07-15'
-  },
-  {
-    id: 'usr_ibrahim_admin',
-    firstName: 'Ibrahim',
-    lastName: 'Traoré',
-    email: 'admin@global-af.ci',
-    phone: '+225 07 99 88 77 66',
-    country: 'CI',
-    role: 'admin',
-    isActivated: true,
-    subscriptionPlan: 'business',
-    referralCode: 'GAF-ADMIN-01',
-    level: 'Platinum',
-    points: 9800,
-    isEmailVerified: true,
-    spendingLimitMonthly: 1000000,
-    spentThisMonth: 0,
-    createdAt: '2026-06-01'
-  }
-];
-
 export const INITIAL_TASKS: Task[] = [
   {
     id: 'tsk-001',
@@ -270,61 +151,16 @@ export const INITIAL_TASKS: Task[] = [
   }
 ];
 
-export const INITIAL_SUBMISSIONS: TaskSubmission[] = [
-  {
-    id: 'sub-001',
-    taskId: 'tsk-001',
-    taskTitle: 'Étude d\'usage du Mobile Money en Côte d\'Ivoire',
-    userId: 'usr_kouame_01',
-    userName: 'Kouamé Diallo',
-    submittedAt: '2026-10-09 14:22',
-    proofType: 'text',
-    proofContent: 'Formulaire complété avec succès. Code unique de complétion : MM-CI-99482.',
-    status: 'approved',
-    feedback: 'Participation conforme. Récompense créditée.',
-    rewardAmount: 600,
-    verifiedAt: '2026-10-09 14:25',
-    verifiedBy: 'Système automatique'
-  },
-  {
-    id: 'sub-002',
-    taskId: 'tsk-003',
-    taskTitle: 'Découverte d\'un tutoriel sur la cybersécurité des comptes Mobile Money',
-    userId: 'usr_kouame_01',
-    userName: 'Kouamé Diallo',
-    submittedAt: '2026-10-10 10:15',
-    proofType: 'text',
-    proofContent: 'Règle 1 : Ne jamais divulguer son code secret même à un agent. Règle 2 : Vérifier le nom du destinataire avant confirmation.',
-    status: 'approved',
-    feedback: 'Excellentes réponses.',
-    rewardAmount: 400,
-    verifiedAt: '2026-10-10 10:18',
-    verifiedBy: 'Système automatique'
-  },
-  {
-    id: 'sub-003',
-    taskId: 'tsk-002',
-    taskTitle: 'Test UX & Ergonomie d\'une application de livraison abidjanaise',
-    userId: 'usr_aicha_premium',
-    userName: 'Aïcha Ouattara',
-    submittedAt: '2026-10-11 16:40',
-    proofType: 'url',
-    proofContent: 'Capture et rapport déposés sur https://drive.google.com/file/d/test-ux-livraison-ci',
-    status: 'pending',
-    rewardAmount: 1500
-  }
-];
-
 export const INITIAL_COURSES: Course[] = [
   {
     id: 'crs-001',
     title: 'Marketing Digital & Acquisition Client en Côte d\'Ivoire',
     category: 'Marketing Digital',
     description: 'Programme certifiant complet et pratique : maîtrisez les canaux d\'acquisition digitaux adaptés aux réalités ivoiriennes (WhatsApp Business, Meta Ads géociblé Abidjan/Intérieur, Mobile Money direct, logistique du dernier kilomètre).',
-    level: 'Débutant à Pro',
+    level: 'Débutant',
     durationHours: 22.0,
     isPremium: false,
-    enrolledUserIds: ['usr_kouame_01'],
+    enrolledUserIds: [],
     completedUserIds: [],
     modules: [
       {
@@ -608,11 +444,11 @@ Un client bien traité à Abidjan recommande immédiatement le service à sa fam
     title: 'Maîtrise Professionnelle de l\'IA Générative Commerciale',
     category: 'Intelligence Artificielle',
     description: 'Formation Premium avancée : devenez expert dans l\'utilisation des modèles d\'IA (Google Gemini, ChatGPT) pour automatiser la rédaction de propositions commerciales, le support client 24/7 et l\'analyse de marché en Afrique de l\'Ouest.',
-    level: 'Intermédiaire à Expert',
+    level: 'Intermédiaire',
     durationHours: 24.0,
     isPremium: true,
     priceXOF: 15000,
-    enrolledUserIds: ['usr_aicha_premium'],
+    enrolledUserIds: [],
     completedUserIds: [],
     modules: [
       {
@@ -819,7 +655,7 @@ Comment exploiter les capacités analytiques des modèles avancés pour :
     title: 'Lancer une Activité E-Commerce & Logistique Abidjan-Intérieur',
     category: 'E-Commerce',
     description: 'Programme certifiant d\'exécution : approvisionnement local (Adjamé, Treichville, San Pédro), partenariats transporteurs fiables et sécurisation des paiements Mobile Money.',
-    level: 'Intermédiaire à Avancé',
+    level: 'Intermédiaire',
     durationHours: 20.0,
     isPremium: false,
     enrolledUserIds: [],
@@ -1027,7 +863,7 @@ Appliquer la politique de rétractation de 7 jours de GLOBAL-AF : un client qui 
     title: 'Prospection B2B & Négociation Grands Comptes en Côte d\'Ivoire',
     category: 'Entrepreneuriat',
     description: 'Formation Premium certifiante : maîtrisez les techniques de prospection auprès des PME, multinationales et institutions basées au Plateau et en Zone Industrielle d\'Abidjan.',
-    level: 'Avancé & Direction Commerciale',
+    level: 'Avancé',
     durationHours: 26.0,
     isPremium: true,
     priceXOF: 25000,
@@ -1278,257 +1114,5 @@ export const INITIAL_VCF_RESOURCES: VCFResource[] = [
     verifiedDate: '05 Octobre 2026',
     requiredPlan: 'free',
     fileFormat: 'VCF'
-  }
-];
-
-export const INITIAL_LEDGER: LedgerEntry[] = [
-  {
-    id: 'ldg-1001',
-    userId: 'usr_kouame_01',
-    amount: 1000,
-    currency: 'XOF',
-    type: 'bonus',
-    origin: 'Bonus de bienvenue à l\'activation conforme',
-    status: 'completed',
-    date: '2026-09-15 10:00',
-    reference: 'GLB-INIT-001',
-    notes: 'Bonus déterministe crédité après vérification de compte'
-  },
-  {
-    id: 'ldg-1002',
-    userId: 'usr_kouame_01',
-    amount: 600,
-    currency: 'XOF',
-    type: 'reward',
-    origin: 'Mission #tsk-001 : Étude Mobile Money',
-    status: 'completed',
-    date: '2026-10-09 14:25',
-    reference: 'GLB-TSK-99482',
-    notes: 'Validation automatique de la participation'
-  },
-  {
-    id: 'ldg-1003',
-    userId: 'usr_kouame_01',
-    amount: 400,
-    currency: 'XOF',
-    type: 'reward',
-    origin: 'Mission #tsk-003 : Tutoriel Cybersécurité',
-    status: 'completed',
-    date: '2026-10-10 10:18',
-    reference: 'GLB-TSK-88123',
-    notes: 'Validation automatique'
-  },
-  {
-    id: 'ldg-1004',
-    userId: 'usr_kouame_01',
-    amount: 1500,
-    currency: 'XOF',
-    type: 'commission',
-    origin: 'Affiliation Vente Réelle : Abonnement Premium Filleul Niveau 1 (Aïcha O.)',
-    status: 'completed',
-    date: '2026-10-11 12:30',
-    reference: 'GLB-COM-77189',
-    notes: 'Commission éthique sur vente réelle d\'un produit utile'
-  }
-];
-
-export const INITIAL_WITHDRAWALS: WithdrawalRequest[] = [
-  {
-    id: 'wth-001',
-    userId: 'usr_aicha_premium',
-    userName: 'Aïcha Ouattara',
-    userPhone: '+225 05 64 22 98 10',
-    amount: 5000,
-    fees: 75,
-    netAmount: 4925,
-    currency: 'XOF',
-    operator: 'Wave',
-    operatorPhone: '+225 05 64 22 98 10',
-    status: 'payout_sent',
-    requestedAt: '2026-10-08 09:30',
-    processedAt: '2026-10-08 10:15',
-    transactionRef: 'WAVE-CI-TX-883492'
-  },
-  {
-    id: 'wth-002',
-    userId: 'usr_kouame_01',
-    userName: 'Kouamé Diallo',
-    userPhone: '+225 07 48 92 11 05',
-    amount: 2500,
-    fees: 38,
-    netAmount: 2462,
-    currency: 'XOF',
-    operator: 'Orange Money',
-    operatorPhone: '+225 07 48 92 11 05',
-    status: 'approved',
-    requestedAt: '2026-10-11 18:20',
-    processedAt: '2026-10-11 19:00',
-    transactionRef: 'OM-CI-20261011-449'
-  }
-];
-
-export const INITIAL_POSTS: CommunityPost[] = [
-  {
-    id: 'post-001',
-    authorId: 'usr_ibrahim_admin',
-    authorName: 'Ibrahim Traoré (Admin)',
-    authorRole: 'admin',
-    authorLevel: 'Platinum',
-    content: 'Bienvenue sur GLOBAL-AF ! Rappel essentiel : notre plateforme fonctionne selon une Charte Éthique stricte. Aucune tombola, aucun jeu de hasard, et aucune commission sur le recrutement simple. Toutes les récompenses sont garanties et prévisibles.',
-    category: 'Annonce Officielle',
-    createdAt: '2026-10-01 08:00',
-    likes: 84,
-    commentsCount: 12,
-    isOfficial: true,
-    reportsCount: 0
-  },
-  {
-    id: 'post-002',
-    authorId: 'usr_aicha_premium',
-    authorName: 'Aïcha Ouattara',
-    authorRole: 'member_premium',
-    authorLevel: 'Silver',
-    content: 'Premier retrait de 5 000 FCFA reçu ce matin sur mon compte Wave en moins de 45 minutes ! Très rassurant. La formation sur l\'IA pour créer des fiches produits m\'a déjà fait gagner 2 clients à Abidjan.',
-    category: 'Témoignage',
-    createdAt: '2026-10-08 11:30',
-    likes: 38,
-    commentsCount: 5,
-    reportsCount: 0
-  },
-  {
-    id: 'post-003',
-    authorId: 'usr_kouame_01',
-    authorName: 'Kouamé Diallo',
-    authorRole: 'member',
-    authorLevel: 'Bronze',
-    content: 'Astuce pour la mission sondage Mobile Money : prenez le temps de bien détailler les questions ouvertes, la validation automatique passe tout de suite.',
-    category: 'Conseils & Astuces',
-    createdAt: '2026-10-10 15:20',
-    likes: 19,
-    commentsCount: 3,
-    reportsCount: 0
-  }
-];
-
-export const INITIAL_TICKETS: SupportTicket[] = [
-  {
-    id: 'tkt-001',
-    userId: 'usr_kouame_01',
-    userName: 'Kouamé Diallo',
-    userEmail: 'k.diallo@example.ci',
-    subject: 'Confirmation de délai pour retrait Orange Money',
-    category: 'Retrait',
-    priority: 'Moyenne',
-    message: 'Bonjour, j\'ai soumis une demande de retrait de 2 500 FCFA vers mon numéro Orange Money. Quel est le délai moyen de confirmation ? Merci d\'avance.',
-    status: 'resolu',
-    createdAt: '2026-10-11 18:25',
-    updatedAt: '2026-10-11 19:05',
-    responses: [
-      {
-        sender: 'support',
-        senderName: 'Équipe Support GLOBAL-AF',
-        message: 'Bonjour Kouamé. Votre retrait a été validé par notre équipe financière et transféré avec la référence OM-CI-20261011-449. Le délai est habituellement de 15 à 60 minutes.',
-        timestamp: '2026-10-11 19:05'
-      }
-    ]
-  }
-];
-
-export const INITIAL_NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: 'notif-001',
-    userId: 'usr_kouame_01',
-    title: 'Commission d\'affiliation (+990 XOF)',
-    message: 'Votre filleul Actif #1 a souscrit au VIP Premium (9 900 XOF). Conformément à nos règles éthiques, votre commission de 10% (990 XOF) sera définitivement libérée après le délai de rétractation légal de 7 jours.',
-    type: 'commission',
-    timestamp: '2026-10-27 15:45',
-    read: false
-  },
-  {
-    id: 'notif-002',
-    userId: 'usr_kouame_01',
-    title: 'Mission rémunérée validée (+850 XOF)',
-    message: 'Votre test d\'application partenaire "Wave Côte d\'Ivoire - Parcours Transfert" a été validé avec succès. Gains crédités sur votre solde.',
-    type: 'reward',
-    timestamp: '2026-10-27 11:20',
-    read: false
-  },
-  {
-    id: 'notif-003',
-    userId: 'usr_kouame_01',
-    title: 'Certification Académie Réussie (92.5%)',
-    message: 'Félicitations ! Vous avez réussi l\'examen officiel de 40 questions sur "Marketing Digital & Prospection B2B". Votre attestation avec QR Code est disponible.',
-    type: 'system',
-    timestamp: '2026-10-26 17:30',
-    read: true
-  },
-  {
-    id: 'notif-004',
-    userId: 'usr_kouame_01',
-    title: 'Retrait Mobile Money Réussi (5 000 XOF)',
-    message: 'Votre virement vers Wave (+225 07 56 77 12 10) a été traité et complété avec succès (Réf. #WTH-8821).',
-    type: 'system',
-    timestamp: '2026-10-25 09:15',
-    read: true
-  },
-  {
-    id: 'notif-005',
-    userId: 'usr_kouame_01',
-    title: 'Pass Membre Standard Confirmé (3 000 FCFA)',
-    message: 'Votre accès aux formations certifiantes (18h-26h), aux micro-jobs et aux retraits Mobile Money est activé à vie.',
-    type: 'system',
-    timestamp: '2026-10-24 14:00',
-    read: true
-  }
-];
-
-export const INITIAL_AUDIT_LOGS: AuditLogItem[] = [
-  {
-    id: 'aud-001',
-    timestamp: '2026-10-11 19:00',
-    actorName: 'Sophie Yao',
-    actorRole: 'financial_manager',
-    action: 'Validation Retrait Mobile Money',
-    details: 'Approbation retrait #wth-002 pour Kouamé Diallo (2 500 XOF Orange Money). Vérification plafond et solde conforme.',
-    complianceRule: 'Section 20 - Workflow de retrait & rapprochement'
-  },
-  {
-    id: 'aud-002',
-    timestamp: '2026-10-11 12:30',
-    actorName: 'Système Affiliation',
-    actorRole: 'admin',
-    action: 'Attribution Commission Éthique Vente Réelle',
-    details: 'Attribution 990 XOF au parrain Kouamé Diallo sur achat pack formation 9 900 XOF par Aïcha Ouattara. Plafond 10% respecté.',
-    complianceRule: 'Charte Éthique : Ventes réelles uniquement'
-  },
-  {
-    id: 'aud-003',
-    timestamp: '2026-10-10 14:10',
-    actorName: 'Ibrahim Traoré',
-    actorRole: 'admin',
-    action: 'Contrôle Éthique des Campagnes',
-    details: 'Revue de la campagne #tsk-005. Confirmation de l\'absence totale de mécanisme aléatoire ou de jeu de hasard.',
-    complianceRule: 'Charte Éthique : Interdiction absolue des jeux de hasard'
-  }
-];
-
-export const INITIAL_RISK_ALERTS: RiskAlert[] = [
-  {
-    id: 'risk-001',
-    timestamp: '2026-10-11 04:12',
-    userId: 'usr_anon_882',
-    type: 'self_referral_attempt',
-    severity: 'medium',
-    details: 'Tentative d\'auto-parrainage détectée avec la même adresse IP et un numéro de téléphone similaire (+225 07 ** ** 05). Requête bloquée automatiquement.',
-    resolved: true
-  },
-  {
-    id: 'risk-002',
-    timestamp: '2026-10-10 22:50',
-    userId: 'usr_test_102',
-    type: 'multi_account_suspected',
-    severity: 'low',
-    details: '2 comptes créés depuis le même navigateur en 5 minutes. Vérification e-mail stricte exigée.',
-    resolved: true
   }
 ];

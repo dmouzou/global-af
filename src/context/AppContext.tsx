@@ -1,61 +1,65 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { 
-  User, 
-  CountryConfig, 
-  EthicalIndicators, 
-  Task, 
-  TaskSubmission, 
-  Course, 
-  VCFResource, 
-  LedgerEntry, 
-  WithdrawalRequest, 
-  CommunityPost, 
-  SupportTicket, 
-  NotificationItem, 
-  AuditLogItem, 
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import {
+  User,
+  CountryConfig,
+  EthicalIndicators,
+  Task,
+  TaskSubmission,
+  Course,
+  VCFResource,
+  LedgerEntry,
+  WithdrawalRequest,
+  CommunityPost,
+  SupportTicket,
+  NotificationItem,
+  AuditLogItem,
   RiskAlert,
   Wallet,
   CountryCode,
   UserRole
 } from '../types';
-import { 
-  COUNTRIES_CONFIG, 
-  INITIAL_ETHICAL_INDICATORS, 
-  INITIAL_TASKS, 
-  INITIAL_SUBMISSIONS, 
-  INITIAL_COURSES, 
-  INITIAL_VCF_RESOURCES, 
-  INITIAL_LEDGER, 
-  INITIAL_WITHDRAWALS, 
-  INITIAL_POSTS, 
-  INITIAL_TICKETS, 
-  INITIAL_NOTIFICATIONS, 
-  INITIAL_AUDIT_LOGS, 
-  INITIAL_RISK_ALERTS 
+import {
+  COUNTRIES_CONFIG,
+  INITIAL_TASKS,
+  INITIAL_COURSES,
+  INITIAL_VCF_RESOURCES
 } from '../data/initialData';
-import { GoogleGenAI } from '@google/genai';
-import { 
-  signInWithEmailAndPassword, 
-  signOut, 
+import {
+  signInWithEmailAndPassword,
+  signOut,
+  sendEmailVerification,
   onAuthStateChanged,
   User as FirebaseUser
 } from 'firebase/auth';
-import { 
-  doc, 
-  onSnapshot, 
-  setDoc, 
-  updateDoc 
+import {
+  doc,
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+  onSnapshot,
+  writeBatch,
+  Timestamp
 } from 'firebase/firestore';
-import { 
-  auth, 
-  db, 
-  registerUserCallable, 
-  requestWithdrawalCallable, 
-  initiateMobileMoneyPaymentCallable, 
-  requestPaymentRetractionCallable, 
+import {
+  auth,
+  db,
+  registerUserCallable,
+  requestWithdrawalCallable,
+  initiateMobileMoneyPaymentCallable,
+  requestPaymentRetractionCallable,
   adminProcessWithdrawalCallable,
+  updateMyProfileCallable,
+  setSpendingLimitCallable,
   RegisterUserInput
 } from '../lib/firebase';
+
+type OperatorLabel = 'Wave' | 'Orange Money' | 'MTN MoMo' | 'Moov Money';
+type ServerOperator = 'wave' | 'orange_money' | 'mtn_momo' | 'moov_money';
+type ActionResult = { success: boolean; message: string };
+
+const FINANCE_ROLES: UserRole[] = ['financial_manager', 'admin', 'super_admin'];
 
 interface AppContextType {
   currentUser: User | null;
@@ -63,7 +67,10 @@ interface AppContextType {
   login: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
   signup: (input: RegisterUserInput) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
-  updateProfile: (updatedData: Partial<User>) => void;
+  resendEmailVerification: () => Promise<ActionResult>;
+  /** Recharge l'état de vérification (après clic sur le lien reçu par e-mail). */
+  refreshEmailVerification: () => Promise<boolean>;
+  updateProfile: (updatedData: Partial<Pick<User, 'firstName' | 'lastName' | 'city' | 'bio' | 'defaultPayoutOperator'>>) => Promise<ActionResult>;
   selectedCountry: CountryConfig;
   setCountryCode: (code: CountryCode) => void;
   
@@ -71,6 +78,8 @@ interface AppContextType {
   wallet: Wallet;
   ledger: LedgerEntry[];
   withdrawals: WithdrawalRequest[];
+  /** Tous les retraits (réservé à la finance : back-office). */
+  adminWithdrawals: WithdrawalRequest[];
   requestWithdrawal: (
     operator: 'Wave' | 'Orange Money' | 'MTN MoMo' | 'Moov Money', 
     phone: string, 
@@ -78,23 +87,23 @@ interface AppContextType {
   ) => Promise<{ success: boolean; message: string }>;
   processWithdrawalAdmin: (
     withdrawalId: string, 
-    action: 'approve' | 'payout' | 'reject', 
-    reason?: string
-  ) => Promise<void>;
+    action: 'approve' | 'payout_initiated' | 'paid' | 'failed' | 'reject' | 'reconcile',
+    reasonOrReference?: string
+  ) => Promise<ActionResult>;
   activateAccountWithMobileMoney: (
     plan: 'standard' | 'premium' | 'business', 
     operator: 'Wave' | 'Orange Money' | 'MTN MoMo' | 'Moov Money', 
     phone: string
   ) => Promise<{ success: boolean; message: string; checkoutUrl?: string }>;
   requestRetractionRefund: (reason: string) => Promise<{ success: boolean; message: string }>;
-  updateMonthlySpendingLimit: (amount: number) => void;
+  updateMonthlySpendingLimit: (amount: number) => Promise<ActionResult>;
 
   // Tasks & Micro-jobs
   tasks: Task[];
   submissions: TaskSubmission[];
-  submitTaskProof: (taskId: string, proofType: 'url' | 'text' | 'screenshot', content: string) => { success: boolean; message: string };
-  reviewSubmissionAdmin: (submissionId: string, status: 'approved' | 'rejected', feedback?: string) => void;
-  createTaskAdmin: (newTask: Omit<Task, 'id' | 'quotaCurrent'>) => void;
+  submitTaskProof: (taskId: string, proofType: 'url' | 'text' | 'screenshot', content: string) => ActionResult;
+  reviewSubmissionAdmin: (submissionId: string, status: 'approved' | 'rejected', feedback?: string) => ActionResult;
+  createTaskAdmin: (newTask: Omit<Task, 'id' | 'quotaCurrent'>) => ActionResult;
 
   // Academy & Quiz
   courses: Course[];
@@ -108,45 +117,118 @@ interface AppContextType {
 
   // VCF Resources
   vcfResources: VCFResource[];
-  downloadVCFResource: (resourceId: string) => { success: boolean; message: string };
+  downloadVCFResource: (resourceId: string) => ActionResult;
 
   // Community
   posts: CommunityPost[];
-  createPost: (content: string, category: CommunityPost['category']) => void;
-  likePost: (postId: string) => void;
-  reportPost: (postId: string) => void;
+  createPost: (content: string, category: CommunityPost['category']) => ActionResult;
+  likePost: (postId: string) => ActionResult;
+  reportPost: (postId: string) => ActionResult;
 
   // Support
   tickets: SupportTicket[];
-  createTicket: (subject: string, category: SupportTicket['category'], priority: SupportTicket['priority'], message: string) => void;
-  replyTicket: (ticketId: string, message: string) => void;
-  resolveTicketAdmin: (ticketId: string) => void;
+  createTicket: (subject: string, category: SupportTicket['category'], priority: SupportTicket['priority'], message: string) => ActionResult;
+  replyTicket: (ticketId: string, message: string) => ActionResult;
+  resolveTicketAdmin: (ticketId: string) => ActionResult;
 
   // Notifications
   notifications: NotificationItem[];
-  markNotificationAsRead: (id: string) => void;
-  markAllNotificationsRead: () => void;
+  markNotificationAsRead: (id: string) => Promise<void>;
+  markAllNotificationsRead: () => Promise<void>;
 
   // Audit & Ethics & Risk
   auditLogs: AuditLogItem[];
   riskAlerts: RiskAlert[];
-  ethicalIndicators: EthicalIndicators;
-
-  // Reset helper
-  resetDataToDefault: () => void;
+  /** null tant qu'aucun indicateur réel n'est calculé (condition 3). */
+  ethicalIndicators: EthicalIndicators | null;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const OPERATOR_MAP: Record<
-  'Wave' | 'Orange Money' | 'MTN MoMo' | 'Moov Money', 
-  'wave' | 'orange_money' | 'mtn_momo' | 'moov_money'
-> = {
+const OPERATOR_MAP: Record<OperatorLabel, ServerOperator> = {
   'Wave': 'wave',
   'Orange Money': 'orange_money',
   'MTN MoMo': 'mtn_momo',
   'Moov Money': 'moov_money',
 };
+const OPERATOR_LABEL: Record<string, OperatorLabel> = {
+  wave: 'Wave',
+  orange_money: 'Orange Money',
+  mtn_momo: 'MTN MoMo',
+  moov_money: 'Moov Money',
+};
+
+const NOT_AVAILABLE = (what: string): ActionResult => ({
+  success: false,
+  message: `${what} n'est pas encore disponible. Aucune donnée n'a été enregistrée.`
+});
+
+/** Date lisible AAAA-MM-JJ HH:mm depuis un Timestamp Firestore. */
+const fmtDate = (v: unknown): string => {
+  const t = v as { toDate?: () => Date } | null | undefined;
+  const d = t && typeof t.toDate === 'function' ? t.toDate() : null;
+  return d ? d.toISOString().replace('T', ' ').slice(0, 16) : '';
+};
+
+/** Message d'erreur lisible d'une Cloud Function (messages métier en français). */
+const fnError = (err: unknown, fallback: string): string => {
+  const e = err as { message?: string; code?: string };
+  if (e?.code === 'functions/unauthenticated') return 'Connexion requise.';
+  if (e?.code === 'functions/resource-exhausted') return 'Trop de demandes. Réessayez plus tard.';
+  if (e?.message && e.message !== 'internal' && e.message !== 'INTERNAL') return e.message;
+  return fallback;
+};
+
+/**
+ * Document ledger serveur → ligne du grand livre.
+ * Phases des retraits : reserve (demande), rejected/failed (libération du
+ * montant = remboursement), paid (versement).
+ */
+const mapLedger = (id: string, d: any): LedgerEntry => {
+  const phase: string = d.phase ?? '';
+  const released = d.type === 'withdrawal' && (phase === 'rejected' || phase === 'failed');
+  return {
+    id,
+    userId: d.userId,
+    amount: Number(d.posting?.amount ?? 0),
+    currency: d.currency || 'XOF',
+    type: released ? 'refund' : d.type,
+    origin: released ? `Retrait non abouti — montant rendu à votre solde (${phase === 'failed' ? 'échec' : 'rejet'})` : (d.origin || ''),
+    status: d.type === 'withdrawal' && phase === 'reserve' ? 'pending' : 'completed',
+    date: fmtDate(d.createdAt),
+    reference: id,
+    operatorReference: d.meta?.providerReference || undefined,
+  };
+};
+
+const mapWithdrawal = (id: string, d: any, userName: string): WithdrawalRequest => ({
+  id,
+  userId: d.userId,
+  userName,
+  userPhone: d.payoutPhone || '',
+  amount: Number(d.amount ?? 0),
+  fees: Number(d.fee ?? 0),
+  netAmount: Number(d.net ?? 0),
+  currency: d.currency || 'XOF',
+  operator: OPERATOR_LABEL[d.operator] || 'Wave',
+  operatorPhone: d.payoutPhone || '',
+  status: d.status,
+  requestedAt: fmtDate(d.requestedAt),
+  processedAt: d.processedAt ? fmtDate(d.processedAt) : undefined,
+  transactionRef: d.providerReference || undefined,
+  rejectReason: d.rejectReason || undefined,
+});
+
+const mapNotification = (id: string, d: any): NotificationItem => ({
+  id,
+  userId: d.userId,
+  title: d.title || '',
+  message: d.message || '',
+  type: d.type || 'system',
+  timestamp: fmtDate(d.createdAt),
+  read: Boolean(d.read),
+  link: d.link,
+});
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Firebase Auth & Live Profile State
@@ -162,110 +244,115 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [selectedCountryCode, setSelectedCountryCode] = useState<CountryCode>('CI');
   const selectedCountry = COUNTRIES_CONFIG[selectedCountryCode] || COUNTRIES_CONFIG.CI;
 
-  const [ledger, setLedger] = useState<LedgerEntry[]>(INITIAL_LEDGER);
-  const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>(INITIAL_WITHDRAWALS);
-  const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
-  const [submissions, setSubmissions] = useState<TaskSubmission[]>(INITIAL_SUBMISSIONS);
-  const [courses, setCourses] = useState<Course[]>(INITIAL_COURSES);
-  const [userCertificates, setUserCertificates] = useState<Array<{ courseId: string; courseTitle: string; issueDate: string; score: number }>>([]);
+  // Données personnelles : lues UNIQUEMENT depuis Firestore pour l'utilisateur connecté.
+  const [ledger, setLedger] = useState<LedgerEntry[]>([]);
+  const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
+  const [adminWithdrawals, setAdminWithdrawals] = useState<WithdrawalRequest[]>([]);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+
+  // Catalogues non personnels (démonstration, en attente des modules serveur).
+  const [tasks] = useState<Task[]>(INITIAL_TASKS);
+  const [courses, setCourses] = useState<Course[]>(
+    INITIAL_COURSES.map(c => ({ ...c, enrolledUserIds: [] }))
+  );
   const [vcfResources] = useState<VCFResource[]>(INITIAL_VCF_RESOURCES);
-  const [posts, setPosts] = useState<CommunityPost[]>(INITIAL_POSTS);
-  const [tickets, setTickets] = useState<SupportTicket[]>(INITIAL_TICKETS);
-  const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
-  const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>(INITIAL_AUDIT_LOGS);
-  const [riskAlerts, setRiskAlerts] = useState<RiskAlert[]>(INITIAL_RISK_ALERTS);
-  const [ethicalIndicators] = useState<EthicalIndicators>(INITIAL_ETHICAL_INDICATORS);
+
+  // Modules sans stockage serveur : aucune donnée n'est inventée ni simulée.
+  const submissions: TaskSubmission[] = [];
+  const posts: CommunityPost[] = [];
+  const tickets: SupportTicket[] = [];
+  const auditLogs: AuditLogItem[] = [];
+  const riskAlerts: RiskAlert[] = [];
+  const userCertificates: Array<{ courseId: string; courseTitle: string; issueDate: string; score: number }> = [];
+  const ethicalIndicators: EthicalIndicators | null = null;
   const [isAILoading, setIsAILoading] = useState<boolean>(false);
 
-  // Real-time Firebase Authentication listener
+  const authGeneration = useRef(0);
+
+  // Écoute temps réel : un seul abonnement par session, TOUS résiliés à chaque
+  // changement d'utilisateur (sinon le profil d'un ancien compte pourrait
+  // réapparaître après une reconnexion).
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
+    let unsubs: Array<() => void> = [];
+    const clearListeners = () => {
+      unsubs.forEach(u => u());
+      unsubs = [];
+    };
+    const resetPersonalState = () => {
+      setCurrentUser(null);
+      setFirestoreBalances(null);
+      setLedger([]);
+      setWithdrawals([]);
+      setAdminWithdrawals([]);
+      setNotifications([]);
+      setCourses(INITIAL_COURSES.map(c => ({ ...c, enrolledUserIds: [] })));
+    };
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+      const generation = ++authGeneration.current;
+      clearListeners();
+      resetPersonalState();
+
       if (!firebaseUser) {
-        setCurrentUser(null);
-        setFirestoreBalances(null);
         setIsLoadingAuth(false);
         return;
       }
 
-      // Live Firestore profile listener
-      const userDocRef = doc(db, 'users', firebaseUser.uid);
-      const unsubUserDoc = onSnapshot(userDocRef, (snap) => {
-        if (snap.exists()) {
-          const d = snap.data();
-          
-          let formattedCreatedAt = new Date().toLocaleDateString('fr-FR');
-          try {
-            if (d.createdAt && typeof d.createdAt.toDate === 'function') {
-              formattedCreatedAt = d.createdAt.toDate().toLocaleDateString('fr-FR');
-            } else if (typeof d.createdAt === 'string') {
-              formattedCreatedAt = d.createdAt.slice(0, 10);
-            } else if (d.createdAt && typeof d.createdAt.seconds === 'number') {
-              formattedCreatedAt = new Date(d.createdAt.seconds * 1000).toLocaleDateString('fr-FR');
-            }
-          } catch {
-            formattedCreatedAt = new Date().toLocaleDateString('fr-FR');
-          }
+      const token = await firebaseUser.getIdTokenResult();
+      if (generation !== authGeneration.current) return; // utilisateur changé entre-temps
+      const claimRole = (token.claims.role as UserRole | undefined) || 'member';
+      const uid = firebaseUser.uid;
 
-          setCurrentUser({
-            id: firebaseUser.uid,
-            firstName: d.firstName || firebaseUser.displayName?.split(' ')[0] || 'Membre',
-            lastName: d.lastName || firebaseUser.displayName?.split(' ').slice(1).join(' ') || '',
-            email: firebaseUser.email || d.email || '',
-            phone: d.phone || '',
-            country: (d.country as CountryCode) || 'CI',
-            role: (d.role as UserRole) || 'member',
-            isActivated: Boolean(d.isActivated || d.activatedAt || d.planId),
-            activationDate: d.activationDate || (d.activatedAt ? 'Récemment' : undefined),
-            subscriptionPlan: d.subscriptionPlan || (d.planId === 'premium' ? 'premium' : 'free'),
-            referralCode: d.referralCode || `GAF-CI-${firebaseUser.uid.slice(0, 4).toUpperCase()}`,
-            referredBy: d.referredBy || d.referredByUid,
-            level: d.level || 'Starter',
-            points: Number(d.points ?? 0),
-            isEmailVerified: Boolean(firebaseUser.emailVerified),
-            spendingLimitMonthly: Number(d.spendingLimitMonthly ?? 100000),
-            spentThisMonth: Number(d.spentThisMonth ?? 0),
-            createdAt: formattedCreatedAt,
-            city: d.city || 'Abidjan',
-            defaultPayoutOperator: d.defaultPayoutOperator || 'Wave',
-            bio: d.bio || '',
-            memberNumber: d.memberNumber || `GAF-CI-${firebaseUser.uid.slice(0, 6).toUpperCase()}`
-          });
-          if (d.country && COUNTRIES_CONFIG[d.country as CountryCode]) {
-            setSelectedCountryCode(d.country as CountryCode);
-          }
-        } else {
-          // Default profile if Firestore sync is pending
-          setCurrentUser({
-            id: firebaseUser.uid,
-            firstName: firebaseUser.displayName?.split(' ')[0] || 'Nouveau',
-            lastName: firebaseUser.displayName?.split(' ').slice(1).join(' ') || 'Membre',
-            email: firebaseUser.email || '',
-            phone: '',
-            country: 'CI',
-            role: 'member',
-            isActivated: false,
-            subscriptionPlan: 'free',
-            referralCode: `GAF-CI-${firebaseUser.uid.slice(0, 4).toUpperCase()}`,
-            level: 'Starter',
-            points: 0,
-            isEmailVerified: Boolean(firebaseUser.emailVerified),
-            spendingLimitMonthly: 100000,
-            spentThisMonth: 0,
-            createdAt: new Date().toLocaleDateString('fr-FR'),
-            city: 'Abidjan',
-            defaultPayoutOperator: 'Wave',
-            memberNumber: `GAF-CI-${firebaseUser.uid.slice(0, 6).toUpperCase()}`
-          });
+      unsubs.push(onSnapshot(doc(db, 'users', uid), (snap) => {
+        if (generation !== authGeneration.current) return;
+        if (!snap.exists()) {
+          // Profil serveur pas encore créé : aucun espace n'est affiché.
+          setCurrentUser(null);
+          setIsLoadingAuth(false);
+          return;
+        }
+        const d = snap.data();
+        const created = d.createdAt && typeof d.createdAt.toDate === 'function'
+          ? d.createdAt.toDate().toLocaleDateString('fr-FR')
+          : '';
+        const pending = d.pendingSpendingLimit as { amount: number; effectiveAtMs: number } | null | undefined;
+        setCurrentUser({
+          id: uid,
+          firstName: d.firstName || '',
+          lastName: d.lastName || '',
+          email: firebaseUser.email || d.email || '',
+          phone: d.phone || '',
+          country: (d.country as CountryCode) || 'CI',
+          // Le rôle de référence est le claim signé, pas le document.
+          role: claimRole,
+          isActivated: Boolean(d.isActivated || d.activatedAt),
+          activationDate: d.activationDate ? String(d.activationDate).slice(0, 10) : undefined,
+          subscriptionPlan: d.subscriptionPlan || 'free',
+          referralCode: d.referralCode || '',
+          referredBy: d.referredBy || d.referredByUid,
+          level: d.level || 'Starter',
+          points: Number(d.points ?? 0),
+          isEmailVerified: Boolean(firebaseUser.emailVerified),
+          spendingLimitMonthly: Number(d.spendingLimitMonthly ?? 50000),
+          pendingSpendingLimit: pending ?? undefined,
+          spentThisMonth: d.spentMonth === new Date().toISOString().slice(0, 7) ? Number(d.spentThisMonth ?? 0) : 0,
+          createdAt: created,
+          city: d.city || '',
+          defaultPayoutOperator: d.defaultPayoutOperator ? (OPERATOR_LABEL[d.defaultPayoutOperator] || d.defaultPayoutOperator) : undefined,
+          bio: d.bio || '',
+          memberNumber: d.memberNumber || undefined
+        });
+        if (d.country && COUNTRIES_CONFIG[d.country as CountryCode]) {
+          setSelectedCountryCode(d.country as CountryCode);
         }
         setIsLoadingAuth(false);
       }, (error) => {
-        console.warn('Firestore user doc snapshot error:', error);
+        console.warn('Lecture du profil refusée:', error.code);
         setIsLoadingAuth(false);
-      });
+      }));
 
-      // Live Firestore wallet listener
-      const walletDocRef = doc(db, 'wallets', firebaseUser.uid);
-      const unsubWallet = onSnapshot(walletDocRef, (snap) => {
+      unsubs.push(onSnapshot(doc(db, 'wallets', uid), (snap) => {
+        if (generation !== authGeneration.current) return;
         if (snap.exists()) {
           const w = snap.data();
           setFirestoreBalances({
@@ -274,18 +361,54 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             reserved: w.reserved ?? 0,
             currency: w.currency || 'XOF'
           });
+        } else {
+          setFirestoreBalances({ available: 0, pending: 0, reserved: 0, currency: 'XOF' });
         }
-      }, (err) => {
-        console.warn('Firestore wallet snapshot error:', err);
-      });
+      }, (err) => console.warn('Lecture du wallet refusée:', err.code)));
 
-      return () => {
-        unsubUserDoc();
-        unsubWallet();
-      };
+      unsubs.push(onSnapshot(
+        query(collection(db, 'ledger'), where('userId', '==', uid), orderBy('createdAt', 'desc'), limit(200)),
+        (snap) => {
+          if (generation !== authGeneration.current) return;
+          setLedger(snap.docs.map(x => mapLedger(x.id, x.data())));
+        },
+        (err) => console.warn('Lecture du ledger refusée:', err.code)
+      ));
+
+      unsubs.push(onSnapshot(
+        query(collection(db, 'withdrawals'), where('userId', '==', uid), orderBy('requestedAt', 'desc'), limit(100)),
+        (snap) => {
+          if (generation !== authGeneration.current) return;
+          setWithdrawals(snap.docs.map(x => mapWithdrawal(x.id, x.data(), '')));
+        },
+        (err) => console.warn('Lecture des retraits refusée:', err.code)
+      ));
+
+      unsubs.push(onSnapshot(
+        query(collection(db, 'notifications'), where('userId', '==', uid), orderBy('createdAt', 'desc'), limit(100)),
+        (snap) => {
+          if (generation !== authGeneration.current) return;
+          setNotifications(snap.docs.map(x => mapNotification(x.id, x.data())));
+        },
+        (err) => console.warn('Lecture des notifications refusée:', err.code)
+      ));
+
+      if (FINANCE_ROLES.includes(claimRole)) {
+        unsubs.push(onSnapshot(
+          query(collection(db, 'withdrawals'), orderBy('requestedAt', 'desc'), limit(200)),
+          (snap) => {
+            if (generation !== authGeneration.current) return;
+            setAdminWithdrawals(snap.docs.map(x => mapWithdrawal(x.id, x.data(), `Membre …${String(x.data().userId).slice(-6)}`)));
+          },
+          (err) => console.warn('Lecture admin des retraits refusée:', err.code)
+        ));
+      }
     });
 
-    return () => unsubscribeAuth();
+    return () => {
+      clearListeners();
+      unsubscribeAuth();
+    };
   }, []);
 
   // Auth actions
@@ -294,8 +417,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       await signInWithEmailAndPassword(auth, email.trim(), pass);
       return { success: true };
     } catch (err: any) {
-      const msg = err.code === 'auth/invalid-credential' 
-        ? 'Adresse e-mail ou mot de passe incorrect.' 
+      const msg = err.code === 'auth/invalid-credential'
+        ? 'Adresse e-mail ou mot de passe incorrect.'
         : (err.message || 'Échec de connexion.');
       return { success: false, error: msg };
     }
@@ -303,658 +426,261 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const signup = async (input: RegisterUserInput): Promise<{ success: boolean; error?: string }> => {
     try {
-      const res = await registerUserCallable(input);
+      await registerUserCallable(input);
       if (input.password) {
-        await signInWithEmailAndPassword(auth, input.email.trim(), input.password);
+        const cred = await signInWithEmailAndPassword(auth, input.email.trim(), input.password);
+        // Sans cet envoi, personne ne recevrait jamais le lien de confirmation,
+        // et les retraits/paiements (e-mail vérifié exigé) resteraient bloqués.
+        try { await sendEmailVerification(cred.user); } catch (e) { console.warn('Envoi du lien de confirmation impossible:', e); }
       }
       return { success: true };
     } catch (err: any) {
-      return { success: false, error: err.message || 'Échec de création du compte.' };
+      return { success: false, error: fnError(err, 'Échec de création du compte.') };
     }
   };
 
   const logout = async (): Promise<void> => {
     try {
-      await signOut(auth);
-      setCurrentUser(null);
-      setFirestoreBalances(null);
+      await signOut(auth); // l'écouteur d'authentification vide toutes les données
     } catch (e) {
       console.error('Logout error:', e);
     }
   };
 
-  // Derived wallet calculations for current authenticated user
-  const userLedger = currentUser ? ledger.filter(l => l.userId === currentUser.id) : [];
-  const userWithdrawals = currentUser ? withdrawals.filter(w => w.userId === currentUser.id) : [];
+  const resendEmailVerification = async (): Promise<ActionResult> => {
+    const u = auth.currentUser;
+    if (!u) return { success: false, message: 'Connexion requise.' };
+    try {
+      await sendEmailVerification(u);
+      return { success: true, message: `Un e-mail de confirmation vient d'être envoyé à ${u.email}.` };
+    } catch (err: any) {
+      return {
+        success: false,
+        message: err?.code === 'auth/too-many-requests'
+          ? 'Trop de demandes. Réessayez dans quelques minutes.'
+          : "L'e-mail n'a pas pu être envoyé. Réessayez."
+      };
+    }
+  };
 
-  const availableBalance = userLedger
-    .filter(l => l.status === 'completed')
-    .reduce((acc, entry) => {
-      if (entry.type === 'reward' || entry.type === 'bonus' || entry.type === 'commission' || entry.type === 'refund') {
-        return acc + entry.amount;
-      }
-      if (entry.type === 'withdrawal' || entry.type === 'activation_payment' || entry.type === 'subscription_payment') {
-        return acc - entry.amount;
-      }
-      return acc;
-    }, 0);
+  const refreshEmailVerification = async (): Promise<boolean> => {
+    const u = auth.currentUser;
+    if (!u) return false;
+    await u.reload();
+    await u.getIdToken(true); // le jeton porte email_verified, exigé côté serveur
+    setCurrentUser(prev => prev ? { ...prev, isEmailVerified: u.emailVerified } : prev);
+    return u.emailVerified;
+  };
 
-  const pendingSubmissionsRewards = currentUser 
-    ? submissions
-        .filter(s => s.userId === currentUser.id && s.status === 'pending')
-        .reduce((acc, s) => acc + s.rewardAmount, 0)
-    : 0;
-
-  const reservedWithdrawalsAmount = userWithdrawals
-    .filter(w => w.status === 'pending_control' || w.status === 'reserved' || w.status === 'approved')
-    .reduce((acc, w) => acc + w.amount, 0);
-
-  const bonusBalance = userLedger
-    .filter(l => l.type === 'bonus' && l.status === 'completed')
-    .reduce((acc, l) => acc + l.amount, 0);
-
-  const commissionBalance = userLedger
-    .filter(l => l.type === 'commission' && l.status === 'completed')
-    .reduce((acc, l) => acc + l.amount, 0);
-
+  // Solde : valeurs du serveur uniquement (jamais recalculées dans le navigateur).
   const wallet: Wallet = {
     userId: currentUser?.id || '',
-    availableBalance: firestoreBalances?.available ?? Math.max(0, availableBalance),
-    pendingBalance: firestoreBalances?.pending ?? pendingSubmissionsRewards,
-    bonusBalance,
-    commissionBalance,
-    reservedBalance: firestoreBalances?.reserved ?? reservedWithdrawalsAmount,
+    availableBalance: firestoreBalances?.available ?? 0,
+    pendingBalance: firestoreBalances?.pending ?? 0,
+    bonusBalance: ledger.filter(l => l.type === 'bonus' && l.status === 'completed').reduce((a, l) => a + l.amount, 0),
+    commissionBalance: ledger.filter(l => l.type === 'commission' && l.status === 'completed').reduce((a, l) => a + l.amount, 0),
+    reservedBalance: firestoreBalances?.reserved ?? 0,
     points: currentUser?.points || 0,
     currency: selectedCountry.currency
   };
 
-  const addAuditLog = (action: string, details: string, rule?: string) => {
-    const actorName = currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : 'Visiteur / Système';
-    const actorRole = currentUser ? currentUser.role : 'member';
-    const newLog: AuditLogItem = {
-      id: `aud-${Date.now()}`,
-      timestamp: new Date().toISOString().replace('T', ' ').slice(0, 16),
-      actorName,
-      actorRole,
-      action,
-      details,
-      complianceRule: rule || 'Section 26 - Audit & Traçabilité'
-    };
-    setAuditLogs(prev => [newLog, ...prev]);
+  const updateProfile: AppContextType['updateProfile'] = async (updatedData) => {
+    if (!currentUser) return { success: false, message: 'Connexion requise.' };
+    try {
+      await updateMyProfileCallable({
+        ...updatedData,
+        defaultPayoutOperator: updatedData.defaultPayoutOperator
+          ? OPERATOR_MAP[updatedData.defaultPayoutOperator]
+          : undefined
+      });
+      return { success: true, message: 'Profil mis à jour.' };
+    } catch (err) {
+      return { success: false, message: fnError(err, 'La mise à jour du profil a échoué.') };
+    }
   };
 
-  const updateProfile = (updatedData: Partial<User>) => {
-    if (!currentUser) return;
-    setCurrentUser(prev => prev ? ({ ...prev, ...updatedData }) : null);
-    addAuditLog('Mise à jour du profil membre', `Données du profil mises à jour pour ${currentUser.firstName} ${currentUser.lastName}`);
-  };
-
+  // Le pays d'un compte est fixé à l'inscription ; ce réglage ne change que l'affichage.
   const setCountryCode = (code: CountryCode) => {
     setSelectedCountryCode(code);
-    if (currentUser) {
-      setCurrentUser(prev => prev ? ({ ...prev, country: code }) : null);
-    }
   };
 
-  // Withdrawals workflow with real Cloud Functions Callable
+  // Retrait : toute la logique (solde, minimum, frais, réservation) est côté serveur.
   const requestWithdrawal = async (
-    operator: 'Wave' | 'Orange Money' | 'MTN MoMo' | 'Moov Money', 
-    phone: string, 
+    operator: OperatorLabel,
+    _phone: string,
     amount: number
-  ): Promise<{ success: boolean; message: string }> => {
-    if (!currentUser) {
-      return { success: false, message: 'Connexion requise pour effectuer un retrait.' };
+  ): Promise<ActionResult> => {
+    if (!currentUser) return { success: false, message: 'Connexion requise pour effectuer un retrait.' };
+    if (!currentUser.isEmailVerified) {
+      return { success: false, message: 'Confirmez votre adresse e-mail avant de demander un retrait.' };
     }
-
-    if (amount < selectedCountry.minWithdrawal) {
-      return { 
-        success: false, 
-        message: `Le montant minimum de retrait pour ${selectedCountry.name} est de ${selectedCountry.minWithdrawal.toLocaleString()} ${selectedCountry.currency}.` 
-      };
+    if (!Number.isInteger(amount) || amount <= 0) {
+      return { success: false, message: 'Montant invalide.' };
     }
-
-    if (amount > wallet.availableBalance) {
-      return { 
-        success: false, 
-        message: `Solde insuffisant. Vous disposez de ${wallet.availableBalance.toLocaleString()} ${selectedCountry.currency}.` 
-      };
-    }
-
-    const mappedOp = OPERATOR_MAP[operator] || 'wave';
-
     try {
+      // Un identifiant unique par ouverture du formulaire rend l'appel idempotent.
       const res = await requestWithdrawalCallable({
         amount,
-        operator: mappedOp,
-        requestId: `wd_req_${currentUser.id}_${Date.now()}`
+        operator: OPERATOR_MAP[operator] || 'wave',
+        requestId: `wd_${currentUser.id.slice(0, 8)}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
       });
-
-      const fee = Math.round(amount * (selectedCountry.withdrawalFeePercent / 100));
-      const netAmount = amount - fee;
-
-      const newWithdrawal: WithdrawalRequest = {
-        id: res.data.withdrawalId || `wth-${Date.now().toString().slice(-4)}`,
-        userId: currentUser.id,
-        userName: `${currentUser.firstName} ${currentUser.lastName}`,
-        userPhone: currentUser.phone,
-        amount,
-        fees: fee,
-        netAmount,
-        currency: selectedCountry.currency,
-        operator,
-        operatorPhone: phone,
-        status: 'pending_control',
-        requestedAt: new Date().toISOString().replace('T', ' ').slice(0, 16)
-      };
-
-      setWithdrawals(prev => [newWithdrawal, ...prev]);
-
-      const notif: NotificationItem = {
-        id: `notif-${Date.now()}`,
-        userId: currentUser.id,
-        title: 'Demande de retrait initiée',
-        message: `Votre demande de ${amount.toLocaleString()} ${selectedCountry.currency} via ${operator} est en cours de contrôle financier sécurisé.`,
-        type: 'withdrawal',
-        timestamp: new Date().toISOString().replace('T', ' ').slice(0, 16),
-        read: false
-      };
-      setNotifications(prev => [notif, ...prev]);
-
-      addAuditLog(
-        'Demande de retrait Mobile Money',
-        `Retrait de ${amount} ${selectedCountry.currency} via ${operator} vers ${phone}`,
-        'Section 20 - Workflow de retrait'
-      );
-
-      return { 
-        success: true, 
-        message: `Votre demande de retrait de ${amount.toLocaleString()} ${selectedCountry.currency} vers ${operator} a été enregistrée avec succès.` 
-      };
-    } catch (err: any) {
-      return { success: false, message: err.message || 'Erreur lors de la demande de retrait.' };
-    }
-  };
-
-  const processWithdrawalAdmin = async (withdrawalId: string, action: 'approve' | 'payout' | 'reject', reason?: string) => {
-    try {
-      const actionMap: Record<string, 'approve' | 'pay' | 'reject'> = {
-        approve: 'approve',
-        payout: 'pay',
-        reject: 'reject'
-      };
-      await adminProcessWithdrawalCallable({
-        withdrawalId,
-        action: actionMap[action] || 'approve',
-        reason
-      });
-    } catch (err) {
-      console.warn('Admin process withdrawal server call:', err);
-    }
-
-    setWithdrawals(prev => prev.map(w => {
-      if (w.id !== withdrawalId) return w;
-      if (action === 'approve') return { ...w, status: 'approved' };
-      if (action === 'payout') return { 
-        ...w, 
-        status: 'payout_sent', 
-        processedAt: new Date().toISOString().replace('T', ' ').slice(0, 16),
-        transactionRef: `${w.operator.toUpperCase().slice(0, 3)}-CI-${Date.now().toString().slice(-6)}`
-      };
-      if (action === 'reject') return { 
-        ...w, 
-        status: 'rejected', 
-        rejectReason: reason || 'Non conformité des justificatifs' 
-      };
-      return w;
-    }));
-
-    addAuditLog(
-      `Traitement Retrait (${action.toUpperCase()})`,
-      `Retrait #${withdrawalId} traité : ${action}. Raison : ${reason || 'Contrôle validé'}`,
-      'Section 25 & 20 - Contrôle financier'
-    );
-  };
-
-  // Mobile Money Activation with real Provider Integration
-  const activateAccountWithMobileMoney = async (
-    plan: 'standard' | 'premium' | 'business', 
-    operator: 'Wave' | 'Orange Money' | 'MTN MoMo' | 'Moov Money', 
-    phone: string
-  ): Promise<{ success: boolean; message: string; checkoutUrl?: string }> => {
-    if (!currentUser) {
-      return { success: false, message: 'Veuillez vous connecter pour activer un pack.' };
-    }
-
-    const cost = plan === 'standard' ? 3000 : plan === 'premium' ? 9900 : 25000;
-    
-    // Check spending limit (Financial Protection)
-    if (currentUser.spentThisMonth + cost > currentUser.spendingLimitMonthly) {
-      return {
-        success: false,
-        message: `Plafond de dépense mensuel dépassé (${currentUser.spendingLimitMonthly.toLocaleString()} XOF max). Vous pouvez l'ajuster dans vos paramètres éthiques.`
-      };
-    }
-
-    const mappedOp = OPERATOR_MAP[operator] || 'wave';
-
-    try {
-      const res = await initiateMobileMoneyPaymentCallable({
-        operator: mappedOp,
-        amount: cost,
-        kind: 'pack_subscription',
-        plan,
-        phone
-      });
-
-      const { checkoutUrl, instructions } = res.data;
-
-      // Update local state smoothly
-      setCurrentUser(prev => prev ? ({
-        ...prev,
-        role: plan === 'premium' ? 'member_premium' : 'member',
-        subscriptionPlan: plan === 'premium' ? 'premium' : plan === 'business' ? 'business' : 'free',
-        isActivated: true,
-        activationDate: new Date().toISOString().replace('T', ' ').slice(0, 10),
-        spentThisMonth: prev.spentThisMonth + cost,
-        level: prev.level === 'Starter' ? 'Bronze' : prev.level
-      }) : null);
-
-      const entry: LedgerEntry = {
-        id: `ldg-${Date.now()}`,
-        userId: currentUser.id,
-        amount: cost,
-        currency: selectedCountry.currency,
-        type: 'activation_payment',
-        origin: `Activation Pack ${plan.toUpperCase()} via ${operator} (${phone})`,
-        status: 'completed',
-        date: new Date().toISOString().replace('T', ' ').slice(0, 16),
-        reference: `ACT-${Date.now().toString().slice(-6)}`,
-        operator,
-        operatorReference: res.data.paymentId,
-        notes: 'Accès immédiat aux outils IA, Académie et missions. Droit de rétractation 7 jours actif.'
-      };
-      setLedger(prev => [entry, ...prev]);
-
-      addAuditLog(
-        'Paiement Activation Mobile Money',
-        `Activation réussie du compte ${currentUser.id} au pack ${plan} (${cost} XOF via ${operator})`,
-        'Activation & Mobile Money'
-      );
-
       return {
         success: true,
-        message: instructions || "Paiement Mobile Money initié avec succès.",
-        checkoutUrl
+        message: res.data.duplicate
+          ? 'Cette demande a déjà été enregistrée.'
+          : `Votre demande de retrait de ${amount.toLocaleString('fr-FR')} ${selectedCountry.currency} vers ${operator} est enregistrée. Elle sera contrôlée avant paiement, sur le numéro Mobile Money de votre inscription.`
       };
-    } catch (err: any) {
-      return {
-        success: false,
-        message: err.message || "Erreur lors de l'initiation du paiement Mobile Money."
-      };
+    } catch (err) {
+      return { success: false, message: fnError(err, 'Erreur lors de la demande de retrait.') };
     }
   };
 
-  const requestRetractionRefund = async (reason: string): Promise<{ success: boolean; message: string }> => {
+  // Traitement finance : aucune mise à jour locale, l'écoute Firestore reflète l'état réel.
+  const processWithdrawalAdmin: AppContextType['processWithdrawalAdmin'] = async (withdrawalId, action, reasonOrReference) => {
+    if (!currentUser || !FINANCE_ROLES.includes(currentUser.role)) {
+      return { success: false, message: 'Action non autorisée.' };
+    }
+    const serverAction = ({
+      approve: 'approve',
+      payout_initiated: 'mark_payout_initiated',
+      paid: 'confirm_paid',
+      failed: 'mark_failed',
+      reject: 'reject',
+      reconcile: 'reconcile'
+    } as const)[action];
+    try {
+      await adminProcessWithdrawalCallable({
+        withdrawalId,
+        action: serverAction,
+        reason: action === 'reject' || action === 'failed' ? reasonOrReference : undefined,
+        providerReference: action === 'paid' ? reasonOrReference : undefined
+      });
+      return { success: true, message: 'Statut du retrait mis à jour.' };
+    } catch (err) {
+      return { success: false, message: fnError(err, 'Le traitement du retrait a échoué.') };
+    }
+  };
+
+  // Activation : le compte n'est activé QUE par la confirmation du prestataire (webhook).
+  const activateAccountWithMobileMoney = async (
+    plan: 'standard' | 'premium' | 'business',
+    operator: OperatorLabel,
+    phone: string
+  ): Promise<{ success: boolean; message: string; checkoutUrl?: string }> => {
+    if (!currentUser) return { success: false, message: 'Veuillez vous connecter pour activer un pack.' };
+    try {
+      // Le prix est fixé par le serveur : seul l'identifiant du pack est envoyé.
+      const res = await initiateMobileMoneyPaymentCallable({
+        operator: OPERATOR_MAP[operator] || 'wave',
+        productId: plan,
+        phone
+      });
+      return {
+        success: true,
+        message: res.data.instructions || 'Paiement initié. Votre compte sera activé dès la confirmation de l\'opérateur.',
+        checkoutUrl: res.data.checkoutUrl
+      };
+    } catch (err) {
+      return { success: false, message: fnError(err, "Erreur lors de l'initiation du paiement Mobile Money.") };
+    }
+  };
+
+  const requestRetractionRefund = async (reason: string): Promise<ActionResult> => {
     if (!currentUser || !currentUser.isActivated || currentUser.subscriptionPlan === 'free') {
       return { success: false, message: "Vous n'avez aucun abonnement payant actif éligible au remboursement." };
     }
-
-    const refundAmount = currentUser.subscriptionPlan === 'premium' ? 9900 : 25000;
-
     try {
-      await requestPaymentRetractionCallable({
-        paymentId: `sub_${currentUser.id}`,
-        reason
-      });
+      const res = await requestPaymentRetractionCallable({ reason });
+      return { success: res.data.success, message: res.data.message };
     } catch (err) {
-      console.warn('Server retraction call warning:', err);
+      return { success: false, message: fnError(err, 'La demande de rétractation a échoué.') };
     }
-
-    setCurrentUser(prev => prev ? ({
-      ...prev,
-      role: 'member',
-      subscriptionPlan: 'free',
-      spentThisMonth: Math.max(0, prev.spentThisMonth - refundAmount)
-    }) : null);
-
-    const refundEntry: LedgerEntry = {
-      id: `ldg-ref-${Date.now()}`,
-      userId: currentUser.id,
-      amount: refundAmount,
-      currency: selectedCountry.currency,
-      type: 'refund',
-      origin: `Rétractation légale 7 jours : Remboursement Mobile Money`,
-      status: 'completed',
-      date: new Date().toISOString().replace('T', ' ').slice(0, 16),
-      reference: `REF-${Date.now().toString().slice(-6)}`,
-      operator: 'Wave',
-      operatorReference: `WAVE-REFUND-${Date.now().toString().slice(-4)}`,
-      notes: `Motif fourni : ${reason}`
-    };
-
-    setLedger(prev => [refundEntry, ...prev]);
-
-    addAuditLog(
-      'Rétractation & Remboursement Mobile Money',
-      `Remboursement de ${refundAmount} XOF accordé pour ${currentUser.email}. Motif: ${reason}`,
-      'Charte Éthique : Droit de rétractation 7 jours'
-    );
-
-    return { 
-      success: true, 
-      message: `Votre rétractation a été validée conformément à nos engagements éthiques. Le montant de ${refundAmount.toLocaleString()} ${selectedCountry.currency} a été re-crédité et transféré par Mobile Money.` 
-    };
   };
 
-  const updateMonthlySpendingLimit = (amount: number) => {
-    if (!currentUser) return;
-    setCurrentUser(prev => prev ? ({ ...prev, spendingLimitMonthly: amount }) : null);
-    addAuditLog('Ajustement plafond de dépense', `Plafond mensuel fixé à ${amount} XOF pour protection financière`, 'Charte Éthique : Protection financière');
-  };
-
-  // Tasks & Submissions
-  const submitTaskProof = (taskId: string, proofType: 'url' | 'text' | 'screenshot', content: string) => {
-    if (!currentUser) return { success: false, message: 'Connexion requise pour soumettre une mission.' };
-    const task = tasks.find(t => t.id === taskId);
-    if (!task) return { success: false, message: 'Mission introuvable.' };
-
-    const newSubmission: TaskSubmission = {
-      id: `sub-${Date.now().toString().slice(-4)}`,
-      taskId,
-      taskTitle: task.title,
-      userId: currentUser.id,
-      userName: `${currentUser.firstName} ${currentUser.lastName}`,
-      submittedAt: new Date().toISOString().replace('T', ' ').slice(0, 16),
-      proofType,
-      proofContent: content,
-      status: task.verificationType === 'automatic' ? 'approved' : 'pending',
-      rewardAmount: task.rewardAmount,
-      feedback: task.verificationType === 'automatic' ? 'Validation automatique instantanée.' : undefined,
-      verifiedAt: task.verificationType === 'automatic' ? new Date().toISOString().replace('T', ' ').slice(0, 16) : undefined,
-      verifiedBy: task.verificationType === 'automatic' ? 'Algorithme vérificateur' : undefined
-    };
-
-    setSubmissions(prev => [newSubmission, ...prev]);
-    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, quotaCurrent: t.quotaCurrent + 1 } : t));
-
-    if (task.verificationType === 'automatic') {
-      const entry: LedgerEntry = {
-        id: `ldg-${Date.now()}`,
-        userId: currentUser.id,
-        amount: task.rewardAmount,
-        currency: task.currency,
-        type: 'reward',
-        origin: `Mission #${task.id} : ${task.title}`,
-        status: 'completed',
-        date: new Date().toISOString().replace('T', ' ').slice(0, 16),
-        reference: `TSK-${Date.now().toString().slice(-6)}`,
-        notes: 'Récompense déterministe créditée (Zéro hasard, Section 15)'
-      };
-      setLedger(prev => [entry, ...prev]);
-
-      setCurrentUser(prev => prev ? ({
-        ...prev,
-        points: prev.points + Math.round(task.rewardAmount / 10),
-        level: prev.points > 1000 ? 'Silver' : (prev.points > 300 ? 'Bronze' : 'Starter')
-      }) : null);
-
-      return { 
-        success: true, 
-        message: `Félicitations ! Mission validée automatiquement. Vous recevez ${task.rewardAmount.toLocaleString()} ${task.currency}.` 
-      };
-    }
-
-    return { 
-      success: true, 
-      message: `Votre participation a été soumise. Elle sera vérifiée sous 24h par l'équipe de modération.` 
-    };
-  };
-
-  const reviewSubmissionAdmin = (submissionId: string, status: 'approved' | 'rejected', feedback?: string) => {
-    const sub = submissions.find(s => s.id === submissionId);
-    if (!sub) return;
-
-    setSubmissions(prev => prev.map(s => {
-      if (s.id !== submissionId) return s;
+  // Plafond : le serveur applique une baisse immédiatement et une hausse après 24 h.
+  const updateMonthlySpendingLimit = async (amount: number): Promise<ActionResult> => {
+    if (!currentUser) return { success: false, message: 'Connexion requise.' };
+    try {
+      const res = await setSpendingLimitCallable({ limit: amount });
       return {
-        ...s,
-        status,
-        feedback: feedback || (status === 'approved' ? 'Preuve vérifiée et conforme.' : 'Preuve incomplète ou non vérifiable.'),
-        verifiedAt: new Date().toISOString().replace('T', ' ').slice(0, 16),
-        verifiedBy: currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : 'Admin'
+        success: true,
+        message: res.data.pendingSpendingLimit
+          ? 'Hausse enregistrée : elle prendra effet dans 24 h (délai de réflexion).'
+          : 'Plafond de dépense mensuel mis à jour.'
       };
-    }));
-
-    if (status === 'approved') {
-      const entry: LedgerEntry = {
-        id: `ldg-${Date.now()}`,
-        userId: sub.userId,
-        amount: sub.rewardAmount,
-        currency: selectedCountry.currency,
-        type: 'reward',
-        origin: `Validation manuelle Mission : ${sub.taskTitle}`,
-        status: 'completed',
-        date: new Date().toISOString().replace('T', ' ').slice(0, 16),
-        reference: `TSK-VAL-${submissionId}`,
-        notes: 'Validé par modérateur'
-      };
-      setLedger(prev => [entry, ...prev]);
+    } catch (err) {
+      return { success: false, message: fnError(err, 'Le plafond n\'a pas pu être modifié.') };
     }
-
-    addAuditLog(
-      `Revue Mission (${status.toUpperCase()})`,
-      `Soumission #${submissionId} traitée pour ${sub.userName}. Montant: ${sub.rewardAmount} XOF`,
-      'Section 10 & 25 - Gestion des micro-jobs'
-    );
   };
 
-  const createTaskAdmin = (newTaskData: Omit<Task, 'id' | 'quotaCurrent'>) => {
-    const created: Task = {
-      ...newTaskData,
-      id: `tsk-${(tasks.length + 1).toString().padStart(3, '0')}`,
-      quotaCurrent: 0
-    };
-    setTasks(prev => [created, ...prev]);
-    addAuditLog('Création Mission', `Nouvelle mission créée : ${created.title} (${created.rewardAmount} ${created.currency})`, 'Section 10');
-  };
+  // ---- Modules sans serveur : aucune récompense, aucun point, aucun message simulé ----
+  const submitTaskProof = (_taskId: string, _proofType: 'url' | 'text' | 'screenshot', _content: string): ActionResult =>
+    NOT_AVAILABLE("L'envoi de missions rémunérées");
+  const reviewSubmissionAdmin = (): ActionResult => NOT_AVAILABLE('La validation des missions');
+  const createTaskAdmin = (): ActionResult => NOT_AVAILABLE('La création de missions');
 
-  // Courses & Quiz
   const enrollInCourse = (courseId: string) => {
     if (!currentUser) return;
     setCourses(prev => prev.map(c => {
-      if (c.id !== courseId) return c;
-      if (c.enrolledUserIds.includes(currentUser.id)) return c;
+      if (c.id !== courseId || c.enrolledUserIds.includes(currentUser.id)) return c;
       return { ...c, enrolledUserIds: [...c.enrolledUserIds, currentUser.id] };
     }));
   };
 
+  // Correction pédagogique seulement : ni points, ni certificat tant que le serveur ne les délivre pas.
   const submitCourseQuiz = (courseId: string, userAnswers: Record<string, number>) => {
     const course = courses.find(c => c.id === courseId);
     if (!course || !course.quiz || !currentUser) return { passed: false, score: 0, pointsEarned: 0 };
-
     let correctCount = 0;
     course.quiz.questions.forEach((q) => {
-      if (userAnswers[q.id] === q.correctAnswerIndex) {
-        correctCount++;
-      }
+      if (userAnswers[q.id] === q.correctAnswerIndex) correctCount++;
     });
-
     const score = Math.round((correctCount / course.quiz.questions.length) * 100);
-    const passed = score >= course.quiz.passingScore;
-    const pointsEarned = passed ? course.quiz.rewardPoints : 0;
-
-    if (passed) {
-      setUserCertificates(prev => [
-        ...prev,
-        {
-          courseId,
-          courseTitle: course.title,
-          issueDate: new Date().toLocaleDateString('fr-FR'),
-          score
-        }
-      ]);
-
-      setCurrentUser(prev => prev ? ({
-        ...prev,
-        points: prev.points + pointsEarned,
-        level: prev.points + pointsEarned > 1000 ? 'Silver' : 'Bronze'
-      }) : null);
-
-      const notif: NotificationItem = {
-        id: `notif-${Date.now()}`,
-        userId: currentUser.id,
-        title: 'Certificat Académie obtenu !',
-        message: `Félicitations pour votre réussite au cours "${course.title}" avec un score de ${score}%. +${pointsEarned} points !`,
-        type: 'reward',
-        timestamp: new Date().toISOString().replace('T', ' ').slice(0, 16),
-        read: false
-      };
-      setNotifications(prev => [notif, ...prev]);
-    }
-
-    return { passed, score, pointsEarned };
+    return { passed: score >= course.quiz.passingScore, score, pointsEarned: 0 };
   };
 
-  // VCF Download
-  const downloadVCFResource = (resourceId: string) => {
+  const downloadVCFResource = (resourceId: string): ActionResult => {
     if (!currentUser) return { success: false, message: 'Connexion requise pour télécharger les ressources VCF.' };
     const res = vcfResources.find(r => r.id === resourceId);
     if (!res) return { success: false, message: 'Ressource introuvable.' };
-
     if (res.requiredPlan === 'premium' && currentUser.subscriptionPlan === 'free') {
-      return { success: false, message: 'Cette ressource VCF vérifiée nécessite un compte Premium actif.' };
+      return { success: false, message: 'Cette ressource nécessite un compte Premium actif.' };
     }
-
-    addAuditLog('Téléchargement VCF', `Téléchargement du répertoire "${res.title}" par ${currentUser.email}`, 'Section 17 - VCF et ressources Premium');
-    return { success: true, message: `Fichier "${res.title}.vcf" téléchargé avec succès.` };
+    return NOT_AVAILABLE('Le téléchargement des ressources VCF (droits d\'usage à valider)');
   };
 
-  // Community Posts
-  const createPost = (content: string, category: CommunityPost['category']) => {
-    if (!currentUser) return;
-    const newPost: CommunityPost = {
-      id: `post-${Date.now()}`,
-      authorId: currentUser.id,
-      authorName: `${currentUser.firstName} ${currentUser.lastName}`,
-      authorRole: currentUser.role,
-      authorLevel: currentUser.level,
-      content,
-      category,
-      createdAt: new Date().toISOString().replace('T', ' ').slice(0, 16),
-      likes: 0,
-      commentsCount: 0,
-      reportsCount: 0,
-      isOfficial: currentUser.role === 'admin' || currentUser.role === 'super_admin'
-    };
-    setPosts(prev => [newPost, ...prev]);
+  const createPost = (): ActionResult => NOT_AVAILABLE('La communauté');
+  const likePost = (): ActionResult => NOT_AVAILABLE('La communauté');
+  const reportPost = (): ActionResult => NOT_AVAILABLE('Le signalement de publications');
+  const createTicket = (): ActionResult => NOT_AVAILABLE('Le support par tickets');
+  const replyTicket = (): ActionResult => NOT_AVAILABLE('Le support par tickets');
+  const resolveTicketAdmin = (): ActionResult => NOT_AVAILABLE('Le support par tickets');
+
+  // Notifications : le titulaire ne peut modifier que le champ « read » (règles Firestore).
+  const markNotificationAsRead = async (id: string) => {
+    const target = notifications.find(n => n.id === id);
+    if (!target || target.read) return;
+    const batch = writeBatch(db);
+    batch.update(doc(db, 'notifications', id), { read: true });
+    try { await batch.commit(); } catch (e) { console.warn('Notification non marquée lue:', e); }
   };
 
-  const likePost = (postId: string) => {
-    setPosts(prev => prev.map(p => p.id === postId ? { ...p, likes: p.likes + 1 } : p));
+  const markAllNotificationsRead = async () => {
+    const unread = notifications.filter(n => !n.read).slice(0, 400);
+    if (unread.length === 0) return;
+    const batch = writeBatch(db);
+    unread.forEach(n => batch.update(doc(db, 'notifications', n.id), { read: true }));
+    try { await batch.commit(); } catch (e) { console.warn('Notifications non marquées lues:', e); }
   };
 
-  const reportPost = (postId: string) => {
-    setPosts(prev => prev.map(p => p.id === postId ? { ...p, reportsCount: p.reportsCount + 1 } : p));
-    addAuditLog('Signalement Communauté', `Publication #${postId} signalée pour modération`, 'Section 23 - Communauté & Modération');
-  };
-
-  // Support Tickets
-  const createTicket = (
-    subject: string, 
-    category: SupportTicket['category'], 
-    priority: SupportTicket['priority'], 
-    message: string
-  ) => {
-    if (!currentUser) return;
-    const newTicket: SupportTicket = {
-      id: `tkt-${Date.now().toString().slice(-4)}`,
-      userId: currentUser.id,
-      userName: `${currentUser.firstName} ${currentUser.lastName}`,
-      userEmail: currentUser.email,
-      subject,
-      category,
-      priority,
-      message,
-      status: 'nouveau',
-      createdAt: new Date().toISOString().replace('T', ' ').slice(0, 16),
-      updatedAt: new Date().toISOString().replace('T', ' ').slice(0, 16),
-      responses: []
-    };
-    setTickets(prev => [newTicket, ...prev]);
-  };
-
-  const replyTicket = (ticketId: string, message: string) => {
-    if (!currentUser) return;
-    setTickets(prev => prev.map(t => {
-      if (t.id !== ticketId) return t;
-      return {
-        ...t,
-        updatedAt: new Date().toISOString().replace('T', ' ').slice(0, 16),
-        responses: [
-          ...t.responses,
-          {
-            sender: currentUser.role === 'support' || currentUser.role === 'admin' ? 'support' : 'user',
-            senderName: `${currentUser.firstName} ${currentUser.lastName}`,
-            message,
-            timestamp: new Date().toISOString().replace('T', ' ').slice(0, 16)
-          }
-        ]
-      };
-    }));
-  };
-
-  const resolveTicketAdmin = (ticketId: string) => {
-    setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, status: 'resolu' } : t));
-    addAuditLog('Ticket Résolu', `Ticket #${ticketId} clôturé par le support`, 'Section 24 - Support et centre d\'aide');
-  };
-
-  // Notifications
-  const markNotificationAsRead = (id: string) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-  };
-
-  const markAllNotificationsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  };
-
-  // AI Tool Runner
+  // Outils IA : modèles de texte locaux. Aucun appel direct à une API d'IA depuis le
+  // navigateur (une clé embarquée dans le bundle serait publique).
   const runAITool = async (
     toolType: 'copywriter' | 'marketing_ideas' | 'summarizer' | 'prompts',
     input: string,
-    tone: string = 'professionnel et engageant'
+    _tone: string = 'professionnel et engageant'
   ): Promise<string> => {
     setIsAILoading(true);
-
-    const apiKey = (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) || (import.meta as any).env?.VITE_GEMINI_API_KEY;
-
-    try {
-      if (apiKey) {
-        const ai = new GoogleGenAI({ apiKey });
-        let promptText = '';
-        if (toolType === 'copywriter') {
-          promptText = `Tu es l'assistant de rédaction marketing de GLOBAL-AF pour l'Afrique de l'Ouest (Côte d'Ivoire). Rédige une publication captivante sur le ton ${tone} basée sur cette idée : "${input}". Inclus des accroches puissantes, une structure fluide et un appel à l'action orienté WhatsApp/Mobile Money sans fausse promesse.`;
-        } else if (toolType === 'marketing_ideas') {
-          promptText = `Tu es un consultant en stratégie marketing à Abidjan. Propose 5 idées concrètes, adaptées au marché ivoirien et UEMOA, pour développer cette activité : "${input}". Utilise le Mobile Money (Wave/Orange Money) et WhatsApp Business.`;
-        } else if (toolType === 'summarizer') {
-          promptText = `Résume de manière synthétique, claire et professionnelle le texte suivant sous forme de 4 points clés majeurs : "${input}".`;
-        } else {
-          promptText = `Génère 3 prompts avancés et ultra-précis pour une IA générative permettant d'obtenir le meilleur résultat sur le sujet : "${input}".`;
-        }
-
-        const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: promptText
-        });
-
-        if (response.text) {
-          setIsAILoading(false);
-          return response.text;
-        }
-      }
-    } catch (err) {
-      console.warn('Gemini API call bypassed or quota limit, using domain engine generator:', err);
-    }
-
     await new Promise(r => setTimeout(r, 600));
     setIsAILoading(false);
 
@@ -1002,22 +728,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       `« Crée un tableau comparatif sous forme de matrice reprenant les forces, faiblesses, opportunités et coûts estimés pour déployer "${input}". »`;
   };
 
-  const resetDataToDefault = () => {
-    localStorage.clear();
-    setLedger(INITIAL_LEDGER);
-    setWithdrawals(INITIAL_WITHDRAWALS);
-    setTasks(INITIAL_TASKS);
-    setSubmissions(INITIAL_SUBMISSIONS);
-    setCourses(INITIAL_COURSES);
-    setPosts(INITIAL_POSTS);
-    setTickets(INITIAL_TICKETS);
-    setNotifications(INITIAL_NOTIFICATIONS);
-    setUserCertificates([]);
-    setAuditLogs(INITIAL_AUDIT_LOGS);
-    setRiskAlerts(INITIAL_RISK_ALERTS);
-    alert('Données réinitialisées.');
-  };
-
   return (
     <AppContext.Provider value={{
       currentUser,
@@ -1025,12 +735,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       login,
       signup,
       logout,
+      resendEmailVerification,
+      refreshEmailVerification,
       updateProfile,
       selectedCountry,
       setCountryCode,
       wallet,
       ledger,
       withdrawals,
+      adminWithdrawals,
       requestWithdrawal,
       processWithdrawalAdmin,
       activateAccountWithMobileMoney,
@@ -1062,8 +775,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       markAllNotificationsRead,
       auditLogs,
       riskAlerts,
-      ethicalIndicators,
-      resetDataToDefault
+      ethicalIndicators
     }}>
       {children}
     </AppContext.Provider>

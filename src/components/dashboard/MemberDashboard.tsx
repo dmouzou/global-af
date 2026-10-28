@@ -79,7 +79,8 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
     notifications,
     markNotificationAsRead,
     markAllNotificationsRead,
-    ethicalIndicators
+    resendEmailVerification,
+    refreshEmailVerification
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<
@@ -98,11 +99,6 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
   const [withdrawalPhone, setWithdrawalPhone] = useState(currentUser?.phone || '');
   const [withdrawalAmount, setWithdrawalAmount] = useState<number>(selectedCountry.minWithdrawal);
 
-  // First withdrawal email security verification state
-  const isFirstWithdrawal = currentUser ? withdrawals.filter(w => w.userId === currentUser.id).length === 0 : false;
-  const [emailOtpSent, setEmailOtpSent] = useState(false);
-  const [emailOtpCode, setEmailOtpCode] = useState('');
-  const [emailOtpVerified, setEmailOtpVerified] = useState(false);
 
   // Activation modal state (Standard: 3 000 FCFA single, VIP Premium: 9 900 FCFA/m)
   const [isActivationModalOpen, setIsActivationModalOpen] = useState(false);
@@ -113,11 +109,11 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
   // Profile Edit State
   const [editFirstName, setEditFirstName] = useState(currentUser?.firstName || '');
   const [editLastName, setEditLastName] = useState(currentUser?.lastName || '');
-  const [editPhone, setEditPhone] = useState(currentUser?.phone || '');
-  const [editCity, setEditCity] = useState(currentUser?.city || 'Abidjan (Cocody)');
+  const [editCity, setEditCity] = useState(currentUser?.city || '');
   const [editDefaultOperator, setEditDefaultOperator] = useState<'Wave' | 'Orange Money' | 'MTN MoMo' | 'Moov Money'>(currentUser?.defaultPayoutOperator || 'Orange Money');
   const [editBio, setEditBio] = useState(currentUser?.bio || '');
   const [profileSaveSuccess, setProfileSaveSuccess] = useState(false);
+  const [profileSaveError, setProfileSaveError] = useState<string | null>(null);
 
   // Sync state if currentUser loads from Firebase Auth
   useEffect(() => {
@@ -127,8 +123,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
       setActivationPhone(currentUser.phone);
       setEditFirstName(currentUser.firstName);
       setEditLastName(currentUser.lastName);
-      setEditPhone(currentUser.phone);
-      setEditCity(currentUser.city || 'Abidjan (Cocody)');
+      setEditCity(currentUser.city || '');
       setEditDefaultOperator(currentUser.defaultPayoutOperator || 'Orange Money');
       setEditBio(currentUser.bio || '');
     }
@@ -170,7 +165,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
 
   const handleCopyReferral = () => {
     if (!currentUser) return;
-    navigator.clipboard.writeText(`https://global-af.ci/ref/${currentUser.referralCode}`);
+    navigator.clipboard.writeText(`${window.location.origin}/?ref=${currentUser.referralCode}`);
     setCopiedReferral(true);
     setTimeout(() => setCopiedReferral(false), 2000);
   };
@@ -228,42 +223,30 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
     );
   }
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateProfile({
+    setProfileSaveError(null);
+    const res = await updateProfile({
       firstName: editFirstName,
       lastName: editLastName,
-      phone: editPhone,
       city: editCity,
       defaultPayoutOperator: editDefaultOperator,
       bio: editBio
     });
-    setProfileSaveSuccess(true);
-    setTimeout(() => setProfileSaveSuccess(false), 3000);
-  };
-
-  const handleSendEmailOtp = () => {
-    setEmailOtpSent(true);
-    alert(`Code de sécurité envoyé à votre adresse email : ${currentUser?.email}. Code de vérification : 248690`);
+    if (res.success) {
+      setProfileSaveSuccess(true);
+      setTimeout(() => setProfileSaveSuccess(false), 3000);
+    } else {
+      setProfileSaveError(res.message);
+    }
   };
 
   const handleWithdrawalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isFirstWithdrawal && !emailOtpVerified) {
-      if (emailOtpCode.trim() !== '248690' && emailOtpCode.trim() !== '123456') {
-        alert("Code de vérification email invalide. Veuillez saisir le code reçu par email à " + (currentUser?.email || 'votre adresse email') + ".");
-        return;
-      }
-      setEmailOtpVerified(true);
-    }
-
     const res = await requestWithdrawal(withdrawalOperator, withdrawalPhone, Number(withdrawalAmount));
     alert(res.message);
     if (res.success) {
       setIsWithdrawalModalOpen(false);
-      setEmailOtpSent(false);
-      setEmailOtpCode('');
-      setEmailOtpVerified(false);
     }
   };
 
@@ -274,11 +257,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
       if (res.checkoutUrl) {
         window.location.href = res.checkoutUrl;
       } else {
-        alert(
-          activationPlan === 'premium'
-            ? "Activation VIP Premium réussie (9 900 FCFA/m) ! Vos rémunérations sont majorées de +40% et vos outils IA sont illimités."
-            : "Activation du Pass Membre Standard réussie (3 000 FCFA) ! Tous les micro-jobs, cours complets et retraits Mobile Money vous sont désormais ouverts."
-        );
+        alert(res.message);
       }
       setIsActivationModalOpen(false);
     } else {
@@ -348,7 +327,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                     {currentUser.firstName} {currentUser.lastName}
                   </div>
                   <div className="text-[10px] text-slate-500 font-notable tracking-wider">
-                    {currentUser.memberNumber || 'GA-CI-2024-8891'}
+                    {currentUser.memberNumber || '—'}
                   </div>
                 </div>
               </div>
@@ -598,7 +577,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                 <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" title="Compte Actif"></span>
               </div>
               <p className="text-xs text-slate-500">
-                Matricule Officiel : <span className="font-notable text-slate-900 tracking-wider">{currentUser.memberNumber || 'GA-CI-2026-0001'}</span> · {currentUser.city || 'Abidjan'} · Marché Côte d'Ivoire (XOF)
+                Matricule Officiel : <span className="font-notable text-slate-900 tracking-wider">{currentUser.memberNumber || '—'}</span> · {currentUser.city || '—'} · Marché Côte d'Ivoire (XOF)
               </p>
             </div>
           </div>
@@ -620,6 +599,34 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
             </button>
           </div>
         </div>
+
+        {/* E-MAIL À CONFIRMER : requis pour les paiements et les retraits */}
+        {!currentUser.isEmailVerified && (
+          <div role="status" className="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-300 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+            <div className="text-amber-900 leading-relaxed">
+              <strong>Confirmez votre adresse e-mail ({currentUser.email}).</strong> Tant qu'elle n'est pas confirmée, les paiements et les retraits sont bloqués. Cliquez sur le lien reçu par e-mail (pensez aux courriers indésirables).
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={async () => {
+                  const ok = await refreshEmailVerification();
+                  if (!ok) alert("Adresse non encore confirmée. Cliquez sur le lien reçu par e-mail, puis réessayez.");
+                }}
+                className="px-3 py-1.5 font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-lg"
+              >
+                J'ai confirmé
+              </button>
+              <button
+                type="button"
+                onClick={async () => { const r = await resendEmailVerification(); alert(r.message); }}
+                className="px-3 py-1.5 font-semibold text-amber-800 bg-white hover:bg-amber-100 border border-amber-300 rounded-lg"
+              >
+                Renvoyer l'e-mail
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* GATING BANNER (Demande 2 & 10: Standard User without activation) */}
         {!currentUser.isActivated && (
@@ -670,7 +677,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                 </h3>
                 <p className="text-xs text-slate-600 leading-relaxed max-w-xl">
                   {currentUser.subscriptionPlan === 'premium' 
-                    ? '★ Vous bénéficiez du statut VIP Premium avec +40% de gains majores sur chaque mission et retraits express.'
+                    ? '★ Votre offre Premium est active.'
                     : currentUser.isActivated
                     ? '✓ Votre Pass Membre Standard est actif. Réalisez vos micro-jobs et validez vos certifications.'
                     : 'Activez votre ticket d\'entrée (3 000 FCFA) pour commencer à réaliser des missions rémunérées et retirer vos gains.'}
@@ -681,7 +688,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                   variant="waving" 
                   size="md" 
                   speechBubble="N'golo ! Ravi de vous voir !" 
-                  speechPosition="left" 
+                  
                 />
               </div>
             </div>
@@ -695,7 +702,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                   {wallet.availableBalance.toLocaleString()} {wallet.currency}
                 </div>
                 <div className="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
-                  <Check className="w-3 h-3 text-emerald-600" /> Prêt pour virement Wave / MoMo
+                  <Check className="w-3 h-3 text-emerald-600" /> Disponible pour retrait Mobile Money
                 </div>
               </div>
 
@@ -755,7 +762,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                       {currentUser.firstName} {currentUser.lastName}
                     </div>
                     <div className="text-xs text-orange-300 font-notable tracking-wider mt-0.5">
-                      {currentUser.memberNumber || 'GA-CI-2024-8891'}
+                      {currentUser.memberNumber || '—'}
                     </div>
                   </div>
 
@@ -766,7 +773,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                     </div>
                     <div>
                       <span className="text-slate-400 block text-[10px]">Résidence</span>
-                      <strong className="text-white truncate block">{currentUser.city || 'Abidjan'}</strong>
+                      <strong className="text-white truncate block">{currentUser.city || '—'}</strong>
                     </div>
                   </div>
                 </div>
@@ -774,7 +781,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                 <div className="pt-6 mt-4 border-t border-slate-800 flex items-center justify-between">
                   <div className="text-[10px] text-slate-400">
                     <div>Inscrit le {currentUser.createdAt}</div>
-                    <div className="text-emerald-400 font-semibold">● Compte Membre Vérifié</div>
+                    <div className={currentUser.isEmailVerified ? 'text-emerald-400 font-semibold' : 'text-amber-300 font-semibold'}>{currentUser.isEmailVerified ? '● E-mail vérifié' : '● E-mail à confirmer'}</div>
                   </div>
                   <button 
                     onClick={() => setActiveTab('profile')}
@@ -791,7 +798,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <div>
                     <h3 className="font-display font-bold text-slate-900 text-sm">Missions recommandées du jour</h3>
-                    <p className="text-[11px] text-slate-500">Gains garantis crédités instantanément sur votre ledger</p>
+                    <p className="text-[11px] text-slate-500">La récompense de chaque mission est indiquée à l'avance</p>
                   </div>
                   <button 
                     onClick={() => setActiveTab('tasks')}
@@ -850,9 +857,9 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                       <div className="text-[10px] text-slate-400 font-mono">Réf: {entry.reference} · {entry.date} · {entry.operator || 'Système'}</div>
                     </div>
                     <div className={`font-mono font-bold tabular-nums ${
-                      entry.type === 'withdrawal' || entry.type === 'activation_payment' ? 'text-slate-900' : 'text-emerald-700'
+                      entry.type === 'withdrawal' || entry.type === 'activation_payment' || entry.type === 'subscription_payment' ? 'text-slate-900' : 'text-emerald-700'
                     }`}>
-                      {entry.type === 'withdrawal' || entry.type === 'activation_payment' ? '-' : '+'}
+                      {entry.type === 'withdrawal' || entry.type === 'activation_payment' || entry.type === 'subscription_payment' ? '-' : '+'}
                       {entry.amount.toLocaleString()} {entry.currency}
                     </div>
                   </div>
@@ -877,6 +884,9 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                 </p>
               </div>
 
+              {profileSaveError && (
+                <div role="alert" className="mb-2 p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700">{profileSaveError}</div>
+              )}
               {profileSaveSuccess && (
                 <div className="px-3 py-1.5 bg-emerald-100 text-emerald-900 rounded-lg text-xs font-semibold flex items-center gap-1.5 animate-fadeIn">
                   <Check className="w-4 h-4 text-emerald-700" />
@@ -890,31 +900,22 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="space-y-1">
                   <div className="text-[10px] uppercase font-mono tracking-widest text-orange-100 font-bold">
-                    ATTESTATION OFFICIELLE DE MEMBRE ACTIF
+                    CARTE DE MEMBRE GLOBAL-AF
                   </div>
                   <h3 className="text-2xl font-display font-extrabold text-white">
                     {currentUser.firstName} {currentUser.lastName}
                   </h3>
                   <p className="text-xs text-white/90 font-mono">
-                    Matricule Permanent : {currentUser.memberNumber || 'CI-2026-9042'} · {currentUser.country}
+                    Matricule : {currentUser.memberNumber || '—'} · {currentUser.country}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => alert(`Téléchargement de l'attestation officielle de ${currentUser.firstName} ${currentUser.lastName} générée avec succès.`)}
-                    className="px-4 py-2 text-xs font-bold text-slate-900 bg-white hover:bg-slate-100 rounded-xl transition-colors shadow-sm flex items-center gap-1.5"
-                  >
-                    <Download className="w-3.5 h-3.5 text-orange-600" />
-                    <span>Télécharger l'Attestation (PDF)</span>
-                  </button>
-                </div>
               </div>
 
               <div className="pt-3 border-t border-white/20 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                 <div>
                   <span className="text-white/70 block text-[10px]">Statut Adhésion</span>
-                  <strong className="text-white">{currentUser.subscriptionPlan === 'premium' ? 'Pack Premium VIP' : 'Membre Standard'}</strong>
+                  <strong className="text-white">{({ free: 'Palier gratuit', standard: 'Pass Standard', premium: 'Pack Premium', business: 'Pack Business' } as Record<string, string>)[currentUser.subscriptionPlan] || 'Palier gratuit'}</strong>
                 </div>
                 <div>
                   <span className="text-white/70 block text-[10px]">N° Mobile Money</span>
@@ -922,12 +923,12 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                 </div>
                 <div>
                   <span className="text-white/70 block text-[10px]">Résidence</span>
-                  <strong className="text-white truncate block">{currentUser.city || 'Abidjan'}</strong>
+                  <strong className="text-white truncate block">{currentUser.city || '—'}</strong>
                 </div>
                 <div>
                   <span className="text-white/70 block text-[10px]">Statut Compte</span>
                   <strong className="text-white flex items-center gap-1">
-                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400" /> Profil Certifié
+                    <CheckCircle className={`w-3.5 h-3.5 ${currentUser.isEmailVerified ? 'text-emerald-400' : 'text-amber-300'}`} /> {currentUser.isEmailVerified ? 'E-mail vérifié' : 'E-mail à confirmer'}
                   </strong>
                 </div>
               </div>
@@ -967,9 +968,8 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                   <label className="block font-semibold text-slate-700 mb-1">Numéro Mobile Money (Wave / Orange / MTN)</label>
                   <input
                     type="tel"
-                    required
-                    value={editPhone}
-                    onChange={(e) => setEditPhone(e.target.value)}
+                    readOnly
+                    value={currentUser.phone}
                     className="w-full p-2.5 border border-slate-300 rounded-lg font-mono focus:outline-none focus:ring-1 focus:ring-orange-500"
                   />
                 </div>
@@ -1026,29 +1026,29 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
 
             {/* Security and KYC Check Status */}
             <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-3 text-xs">
-              <h3 className="font-display font-bold text-slate-900 text-sm">Vérifications de Sécurité (Conformité ARTCI)</h3>
+              <h3 className="font-display font-bold text-slate-900 text-sm">État de votre compte</h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
+                <div className={`p-3 rounded-xl border flex items-center gap-2 ${currentUser.isEmailVerified ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
+                  <CheckCircle className={`w-5 h-5 shrink-0 ${currentUser.isEmailVerified ? 'text-emerald-600' : 'text-amber-500'}`} />
                   <div>
-                    <div className="font-bold text-emerald-950">E-mail Vérifié</div>
-                    <div className="text-[11px] text-emerald-800">{currentUser.email}</div>
+                    <div className="font-bold text-slate-900">{currentUser.isEmailVerified ? 'E-mail vérifié' : 'E-mail à confirmer'}</div>
+                    <div className="text-[11px] text-slate-600">{currentUser.email}</div>
                   </div>
                 </div>
 
                 <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center gap-2">
                   <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
                   <div>
-                    <div className="font-bold text-emerald-950">Capacité Juridique & CGU</div>
-                    <div className="text-[11px] text-emerald-800">Conformité et approbation validées</div>
+                    <div className="font-bold text-slate-900">Âge minimum & CGU</div>
+                    <div className="text-[11px] text-slate-600">18 ans vérifiés et conditions acceptées à l'inscription</div>
                   </div>
                 </div>
 
-                <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-slate-400 shrink-0" />
                   <div>
-                    <div className="font-bold text-emerald-950">Mobile Money Certifié</div>
-                    <div className="text-[11px] text-emerald-800">Protection anti-fraude active</div>
+                    <div className="font-bold text-slate-900">Numéro Mobile Money</div>
+                    <div className="text-[11px] text-slate-600">{currentUser.phone} · utilisé pour vos retraits, non modifiable en ligne</div>
                   </div>
                 </div>
               </div>
@@ -1336,6 +1336,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                           {entry.type === 'bonus' && 'Bonus Déterministe'}
                           {entry.type === 'withdrawal' && 'Retrait'}
                           {entry.type === 'activation_payment' && 'Activation'}
+                          {entry.type === 'subscription_payment' && 'Abonnement'}
                           {entry.type === 'refund' && 'Remboursement'}
                           {entry.type === 'adjustment' && 'Ajustement'}
                         </td>
@@ -1350,7 +1351,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                             ? 'text-slate-900' 
                             : 'text-emerald-700'
                         }`}>
-                          {entry.type === 'withdrawal' || entry.type === 'activation_payment' ? '-' : '+'}
+                          {entry.type === 'withdrawal' || entry.type === 'activation_payment' || entry.type === 'subscription_payment' ? '-' : '+'}
                           {entry.amount.toLocaleString()} {entry.currency}
                         </td>
                         <td className="px-4 py-3 text-right whitespace-nowrap">
@@ -1408,7 +1409,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                     }}
                     className="w-full sm:w-auto px-6 py-3 text-xs font-bold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 rounded-xl transition-all"
                   >
-                    <span>VIP Premium (Retraits Express &lt; 2h)</span>
+                    <span>Voir l'offre Premium</span>
                   </button>
                 </div>
               </div>
@@ -1424,7 +1425,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                         </h1>
                         {currentUser.subscriptionPlan === 'premium' && (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">
-                            ⚡ Traitement Express &lt; 2h
+                            Offre Premium
                           </span>
                         )}
                       </div>
@@ -1493,17 +1494,27 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                         </div>
 
                         <div>
-                          {w.status === 'payout_sent' && (
+                          {(w.status === 'paid' || w.status === 'reconciled') && (
                             <span className="px-2.5 py-1 text-[11px] font-bold text-emerald-800 bg-emerald-100 rounded-lg">
-                              Payé & Reçu
+                              Payé
+                            </span>
+                          )}
+                          {w.status === 'payout_initiated' && (
+                            <span className="px-2.5 py-1 text-[11px] font-bold text-emerald-800 bg-emerald-100 rounded-lg">
+                              Virement en cours
+                            </span>
+                          )}
+                          {w.status === 'failed' && (
+                            <span className="px-2.5 py-1 text-[11px] font-bold text-emerald-800 bg-emerald-100 rounded-lg">
+                              Échec du virement — montant rendu à votre solde
                             </span>
                           )}
                           {w.status === 'approved' && (
                             <span className="px-2.5 py-1 text-[11px] font-bold text-blue-800 bg-blue-100 rounded-lg">
-                              Validé en attente envoi
+                              Validé, virement à venir
                             </span>
                           )}
-                          {w.status === 'pending_control' && (
+                          {w.status === 'reserved' && (
                             <span className="px-2.5 py-1 text-[11px] font-bold text-amber-800 bg-amber-100 rounded-lg">
                               Contrôle financier
                             </span>
@@ -1581,7 +1592,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
                   <span className="text-[11px] text-slate-500 font-semibold">Lien Direct Partageable :</span>
                   <div className="flex items-center justify-between font-mono text-xs text-slate-800 truncate">
-                    <span className="truncate">https://global-af.ci/ref/{currentUser.referralCode}</span>
+                    <span className="truncate">{window.location.origin}/?ref={currentUser.referralCode}</span>
                     <button 
                       onClick={handleCopyReferral}
                       className="px-2.5 py-1 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg border border-emerald-200 transition-colors shrink-0 ml-2"
@@ -1731,7 +1742,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                   </div>
 
                   <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                    {course.isPremium && currentUser.subscriptionPlan === 'free' ? (
+                    {course.isPremium && currentUser.subscriptionPlan !== 'premium' && currentUser.subscriptionPlan !== 'business' ? (
                       <span className="text-xs font-bold text-amber-700">Réservé Premium</span>
                     ) : (
                       <button
@@ -2173,7 +2184,22 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                         )}
                         {notif.type === 'system' && (
                           <span className="px-2 py-0.5 text-[10px] rounded-md font-bold bg-blue-100 text-blue-900">
-                            Système & Certificat
+                            Information
+                          </span>
+                        )}
+                        {notif.type === 'withdrawal' && (
+                          <span className="px-2 py-0.5 text-[10px] rounded-md font-bold bg-blue-100 text-blue-900">
+                            Retrait
+                          </span>
+                        )}
+                        {notif.type === 'mission' && (
+                          <span className="px-2 py-0.5 text-[10px] rounded-md font-bold bg-blue-100 text-blue-900">
+                            Mission
+                          </span>
+                        )}
+                        {notif.type === 'security' && (
+                          <span className="px-2 py-0.5 text-[10px] rounded-md font-bold bg-blue-100 text-blue-900">
+                            Sécurité
                           </span>
                         )}
                       </div>
@@ -2229,7 +2255,8 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                 <button
                   onClick={() => {
                     if (!newPostContent.trim()) return;
-                    createPost(newPostContent, newPostCategory);
+                    const res = createPost(newPostContent, newPostCategory);
+                    if (!res.success) { alert(res.message); return; }
                     setNewPostContent('');
                   }}
                   className="px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 rounded-xl transition-all shadow-xs"
@@ -2262,7 +2289,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                     </div>
 
                     <button
-                      onClick={() => { reportPost(post.id); alert('Publication signalée à la modération.'); }}
+                      onClick={() => { const r = reportPost(post.id); alert(r.message); }}
                       className="text-[11px] text-slate-400 hover:text-rose-600"
                     >
                       Signaler
@@ -2275,7 +2302,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
 
                   <div className="pt-2 border-t border-slate-100 flex items-center gap-4 text-xs text-slate-500">
                     <button 
-                      onClick={() => likePost(post.id)}
+                      onClick={() => { const r = likePost(post.id); if (!r.success) alert(r.message); }}
                       className="hover:text-orange-600 font-semibold flex items-center gap-1"
                     >
                       <span>👍 {post.likes}</span>
@@ -2365,10 +2392,11 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                 <button
                   onClick={() => {
                     if (!newTicketSubject.trim() || !newTicketMessage.trim()) return;
-                    createTicket(newTicketSubject, newTicketCategory, newTicketPriority, newTicketMessage);
+                    const res = createTicket(newTicketSubject, newTicketCategory, newTicketPriority, newTicketMessage);
+                    if (!res.success) { alert(res.message); return; }
                     setNewTicketSubject('');
                     setNewTicketMessage('');
-                    alert('Ticket créé avec succès !');
+                    alert('Ticket créé.');
                   }}
                   className="px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 rounded-xl transition-all shadow-xs"
                 >
@@ -2431,7 +2459,8 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                       <button
                         onClick={() => {
                           if (!ticketReplyText.trim()) return;
-                          replyTicket(ticket.id, ticketReplyText);
+                          const res = replyTicket(ticket.id, ticketReplyText);
+                          if (!res.success) { alert(res.message); return; }
                           setTicketReplyText('');
                         }}
                         className="px-3.5 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors"
@@ -2483,6 +2512,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                   </div>
                   <div className="text-[11px] text-slate-400 mt-0.5">
                     Dépensé ce mois-ci : {currentUser.spentThisMonth.toLocaleString()} {selectedCountry.currency}
+                    {currentUser.pendingSpendingLimit && ` · Hausse à ${currentUser.pendingSpendingLimit.amount.toLocaleString()} en attente (effective le ${new Date(currentUser.pendingSpendingLimit.effectiveAtMs).toLocaleString('fr-FR')})`}
                   </div>
                 </div>
 
@@ -2497,9 +2527,9 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                     className="w-32 p-2 text-xs border border-slate-300 rounded-lg font-mono font-bold"
                   />
                   <button
-                    onClick={() => {
-                      updateMonthlySpendingLimit(spendingLimitInput);
-                      alert('Plafond de dépense mensuel mis à jour.');
+                    onClick={async () => {
+                      const res = await updateMonthlySpendingLimit(spendingLimitInput);
+                      alert(res.message);
                     }}
                     className="px-3.5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors"
                   >
@@ -2580,7 +2610,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
               <div className="p-2.5 bg-gradient-to-r from-amber-500/15 to-orange-500/10 border border-amber-300 rounded-xl flex items-center gap-2 text-xs">
                 <Zap className="w-4 h-4 text-amber-600 shrink-0" />
                 <span className="font-bold text-amber-900">
-                  ⚡ Avantage VIP : Retrait express prioritaire traité en moins de 2 heures !
+                  Le virement est effectué sur le numéro Mobile Money de votre inscription, après contrôle.
                 </span>
               </div>
             )}
@@ -2603,7 +2633,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                       <OperatorLogo operator={op} variant="icon" size="sm" />
                       <div className="leading-tight truncate">
                         <div className="font-bold text-slate-900 text-xs truncate">{op}</div>
-                        <div className="text-[10px] text-slate-500">Validation instantanée</div>
+                        <div className="text-[10px] text-slate-500">Contrôle avant paiement</div>
                       </div>
                     </button>
                   ))}
@@ -2614,9 +2644,8 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                 <label className="block font-semibold text-slate-700 mb-1">Numéro Mobile Money du bénéficiaire</label>
                 <input
                   type="tel"
-                  required
-                  value={withdrawalPhone}
-                  onChange={(e) => setWithdrawalPhone(e.target.value)}
+                  readOnly
+                  value={currentUser.phone}
                   className="w-full p-2.5 border border-slate-300 rounded-lg font-mono text-xs"
                 />
               </div>
@@ -2655,61 +2684,12 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                 </div>
               </div>
 
-              {/* FIRST WITHDRAWAL EMAIL OTP VERIFICATION (Demande 8: Email au lieu de SMS) */}
-              {isFirstWithdrawal && (
-                <div className="p-3.5 bg-amber-50/90 border border-amber-300 rounded-xl space-y-2.5 text-xs">
-                  <div className="flex items-start gap-2">
-                    <Mail className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
-                    <div>
-                      <div className="font-bold text-amber-950">Vérification de sécurité par Email (Premier Retrait)</div>
-                      <p className="text-[11px] text-amber-800 leading-snug mt-0.5">
-                        Conformément à la sécurité financière, le premier retrait requiert une validation par email (sans frais de SMS) à destination de : <strong>{currentUser.email}</strong>.
-                      </p>
-                    </div>
-                  </div>
-
-                  {!emailOtpSent ? (
-                    <button
-                      type="button"
-                      onClick={handleSendEmailOtp}
-                      className="w-full py-2 px-3 text-xs font-bold text-amber-950 bg-amber-200 hover:bg-amber-300 rounded-lg transition-colors flex items-center justify-center gap-1.5"
-                    >
-                      <Mail className="w-3.5 h-3.5" />
-                      <span>Envoyer le code par Email</span>
-                    </button>
-                  ) : (
-                    <div className="space-y-1.5">
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          maxLength={6}
-                          placeholder="Code à 6 chiffres (248690)"
-                          value={emailOtpCode}
-                          onChange={(e) => setEmailOtpCode(e.target.value)}
-                          className="flex-1 p-2 border border-amber-400 rounded-lg font-mono text-center tracking-widest text-sm bg-white font-bold"
-                        />
-                        <button
-                          type="button"
-                          onClick={handleSendEmailOtp}
-                          className="text-[10px] text-amber-800 underline shrink-0 hover:text-amber-950"
-                        >
-                          Renvoyer
-                        </button>
-                      </div>
-                      <div className="text-[10px] text-emerald-700 font-semibold flex items-center gap-1">
-                        <CheckCircle className="w-3 h-3" /> Code envoyé à {currentUser.email}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
               <button
                 type="submit"
                 disabled={
                   withdrawalAmount < selectedCountry.minWithdrawal || 
                   withdrawalAmount > wallet.availableBalance ||
-                  (isFirstWithdrawal && (!emailOtpSent || emailOtpCode.trim().length < 6))
+                  !currentUser.isEmailVerified
                 }
                 className="w-full py-2.5 px-4 text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 disabled:opacity-50 rounded-xl transition-all shadow-xs"
               >
@@ -2764,7 +2744,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                   <div className="text-[10px] text-slate-500 mt-1 space-y-0.5">
                     <div>✓ Accès illimité aux micro-jobs</div>
                     <div>✓ Formations 18h-26h & Certificats</div>
-                    <div>✓ Retraits Mobile Money débloqués</div>
+                    <div>✓ Accès aux services du pack</div>
                   </div>
                 </button>
 
@@ -2787,8 +2767,8 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                     9 900 FCFA <span className="text-[10px] text-slate-500 font-normal">/ mois</span>
                   </div>
                   <div className="text-[10px] text-slate-500 mt-1 space-y-0.5">
-                    <div>★ <strong>Rémunération +40%</strong> sur chaque job</div>
-                    <div>★ Retrait express prioritaire (&lt; 2h)</div>
+                    <div>★ <strong>Offre Premium</strong> (contenu détaillé avant paiement)</div>
+                    <div>★ Formations et outils réservés Premium</div>
                     <div>★ Outils IA & Fichiers VCF illimités</div>
                   </div>
                 </button>

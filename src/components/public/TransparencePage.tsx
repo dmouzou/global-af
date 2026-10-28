@@ -53,11 +53,12 @@ export const TransparencePage: React.FC<TransparencePageProps> = ({ onGoToDashbo
               </h2>
               <p className="text-xs text-slate-500">Mises à jour consolidées sur les 30 derniers jours d'activité en Côte d'Ivoire</p>
             </div>
-            <span className="text-[11px] font-mono text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 font-semibold self-start sm:self-auto">
-              100% Données Réelles Audités
+            <span className="text-[11px] font-mono text-slate-700 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200 font-semibold self-start sm:self-auto">
+              {ethicalIndicators ? `Mis à jour le ${ethicalIndicators.lastUpdated}` : 'En cours de collecte'}
             </span>
           </div>
 
+          {ethicalIndicators ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             
             <div className="bg-gradient-to-br from-orange-50/50 to-white p-5 rounded-2xl border border-orange-200/80 shadow-xs relative overflow-hidden">
@@ -101,6 +102,11 @@ export const TransparencePage: React.FC<TransparencePageProps> = ({ onGoToDashbo
             </div>
 
           </div>
+          ) : (
+            <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50/60 text-xs text-slate-700 leading-relaxed">
+              <strong className="text-slate-900">Indicateurs en cours de collecte.</strong> Le revenu médian des membres actifs, la part des membres n'ayant encore rien retiré et le délai moyen avant un premier retrait seront publiés ici, calculés à partir des retraits réellement effectués. Tant que ces données n'existent pas, aucun chiffre n'est affiché : nous ne publions pas d'estimations.
+            </div>
+          )}
         </div>
 
         {/* Ethical Architecture 3D Visual Banner */}

@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { Lock, Mail, KeyRound, ShieldAlert, CheckCircle2, ArrowLeft, Building2, Sparkles } from 'lucide-react';
 import { BrandLogo } from '../common/BrandLogo';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth, db } from '../../lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { auth } from '../../lib/firebase';
 
 interface AdvertiserAdminLoginProps {
   onLoginSuccess: (advertiserData: { email: string; companyName: string; role: 'admin' | 'advertiser' }) => void;
@@ -38,11 +37,12 @@ export const AdvertiserAdminLogin: React.FC<AdvertiserAdminLoginProps> = ({
 
     try {
       const cred = await signInWithEmailAndPassword(auth, email.trim(), password);
-      const userDocRef = doc(db, 'users', cred.user.uid);
-      const userSnap = await getDoc(userDocRef);
-
-      const role = userSnap.exists() ? userSnap.data().role : null;
+      // Le rôle de référence est le claim signé posé par le serveur (celui que
+      // les règles Firestore et les Cloud Functions vérifient), pas un champ du profil.
+      const token = await cred.user.getIdTokenResult(true);
+      const role = token.claims.role as string | undefined;
       if (role !== 'admin' && role !== 'super_admin' && role !== 'financial_manager') {
+        await auth.signOut();
         setError("Accès refusé. Ce compte ne possède pas de privilèges administratifs (Section 25).");
         setIsLoading(false);
         return;
