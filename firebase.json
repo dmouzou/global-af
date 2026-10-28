@@ -41,6 +41,17 @@
         "**/.*",
         "**/node_modules/**"
       ],
+      "headers": [
+        {
+          "source": "**/*.@(jpg|jpeg|png|gif|webp|svg)",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "max-age=0, must-revalidate"
+            }
+          ]
+        }
+      ],
       "rewrites": [
         {
           "source": "**",
@@ -58,6 +69,17 @@
         "firebase.json",
         "**/.*",
         "**/node_modules/**"
+      ],
+      "headers": [
+        {
+          "source": "**/*.@(jpg|jpeg|png|gif|webp|svg)",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "max-age=0, must-revalidate"
+            }
+          ]
+        }
       ],
       "rewrites": [
         {

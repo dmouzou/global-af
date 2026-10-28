@@ -100,11 +100,7 @@ export const MissionsPage: React.FC<MissionsPageProps> = ({
 
         {/* Babi l'Éléphant Conseil Pratique */}
         <div className="bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-emerald-500/10 rounded-2xl p-4 sm:p-5 border border-orange-200/80 shadow-xs flex flex-col sm:flex-row items-center gap-4">
-          <img
-            src="/images/mascot-wallet.jpg"
-            alt="Babi l'Éléphant - Encaissements Mobile Money"
-            className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-orange-400 shadow-md shrink-0"
-          />
+          <BabiMascot variant="wallet" size="md" />
           <div className="space-y-1 text-center sm:text-left flex-1">
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
               <span className="font-extrabold text-orange-950 text-sm">Le Conseil Rémunération de Babi 🇨🇮</span>

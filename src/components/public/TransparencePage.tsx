@@ -147,7 +147,9 @@ export const TransparencePage: React.FC<TransparencePageProps> = ({ onGoToDashbo
             
             <div className="p-6 bg-white rounded-2xl border border-slate-200 space-y-3 shadow-xs">
               <div className="flex items-center justify-between">
-                <BabiMascot variant="number" number="1" size="sm" />
+                <div className="w-8 h-8 rounded-xl bg-orange-500/10 border border-orange-500/25 text-orange-600 font-extrabold text-xs flex items-center justify-center font-mono">
+                  01
+                </div>
                 <span className="text-[10px] font-bold uppercase text-orange-700 bg-orange-50 px-2 py-0.5 rounded-full">Anti-Pyramide</span>
               </div>
               <h3 className="font-bold text-slate-900 text-sm">Commissions sur Ventes Réelles Uniquement</h3>
@@ -158,7 +160,9 @@ export const TransparencePage: React.FC<TransparencePageProps> = ({ onGoToDashbo
 
             <div className="p-6 bg-white rounded-2xl border border-slate-200 space-y-3 shadow-xs">
               <div className="flex items-center justify-between">
-                <BabiMascot variant="number" number="2" size="sm" />
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-600 font-extrabold text-xs flex items-center justify-center font-mono">
+                  02
+                </div>
                 <span className="text-[10px] font-bold uppercase text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Rétractation VIP</span>
               </div>
               <h3 className="font-bold text-slate-900 text-sm">Droit de Rétractation VIP & Délais d'Affiliation</h3>
@@ -169,7 +173,9 @@ export const TransparencePage: React.FC<TransparencePageProps> = ({ onGoToDashbo
 
             <div className="p-6 bg-white rounded-2xl border border-slate-200 space-y-3 shadow-xs">
               <div className="flex items-center justify-between">
-                <BabiMascot variant="number" number="3" size="sm" />
+                <div className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/25 text-blue-600 font-extrabold text-xs flex items-center justify-center font-mono">
+                  03
+                </div>
                 <span className="text-[10px] font-bold uppercase text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">Vérité des Gains</span>
               </div>
               <h3 className="font-bold text-slate-900 text-sm">Statistiques Publiques & Vérifiables</h3>
@@ -180,7 +186,9 @@ export const TransparencePage: React.FC<TransparencePageProps> = ({ onGoToDashbo
 
             <div className="p-6 bg-white rounded-2xl border border-slate-200 space-y-3 shadow-xs">
               <div className="flex items-center justify-between">
-                <BabiMascot variant="number" number="4" size="sm" />
+                <div className="w-8 h-8 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-600 font-extrabold text-xs flex items-center justify-center font-mono">
+                  04
+                </div>
                 <span className="text-[10px] font-bold uppercase text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full">Zéro Hasard</span>
               </div>
               <h3 className="font-bold text-slate-900 text-sm">Interdiction Absolue des Jeux de Hasard</h3>
@@ -191,7 +199,9 @@ export const TransparencePage: React.FC<TransparencePageProps> = ({ onGoToDashbo
 
             <div className="p-6 bg-white rounded-2xl border border-slate-200 space-y-3 shadow-xs">
               <div className="flex items-center justify-between">
-                <BabiMascot variant="number" number="5" size="sm" />
+                <div className="w-8 h-8 rounded-xl bg-purple-500/10 border border-purple-500/25 text-purple-600 font-extrabold text-xs flex items-center justify-center font-mono">
+                  05
+                </div>
                 <span className="text-[10px] font-bold uppercase text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full">Garde-fou</span>
               </div>
               <h3 className="font-bold text-slate-900 text-sm">Protection des Membres & Plafonds Éthiques</h3>
@@ -202,7 +212,9 @@ export const TransparencePage: React.FC<TransparencePageProps> = ({ onGoToDashbo
 
             <div className="p-6 bg-white rounded-2xl border border-slate-200 space-y-3 shadow-xs">
               <div className="flex items-center justify-between">
-                <BabiMascot variant="number" number="6" size="sm" />
+                <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-700 font-extrabold text-xs flex items-center justify-center font-mono">
+                  06
+                </div>
                 <span className="text-[10px] font-bold uppercase text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">Légalité</span>
               </div>
               <h3 className="font-bold text-slate-900 text-sm">Conformité ARTCI & Traçabilité Financière</h3>

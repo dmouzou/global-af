@@ -114,22 +114,6 @@ export const ToolsPage: React.FC<ToolsPageProps> = ({ onGoToDashboard, onOpenAut
                 </span>
               </div>
 
-              {/* 3D Mascot Greeting */}
-              <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-center gap-3">
-                <img 
-                  src="/images/mascot-ai-tools.jpg" 
-                  alt="Babi l'Éléphant Mascotte IA" 
-                  className="w-14 h-14 rounded-xl object-cover shrink-0 shadow-md border border-orange-500/40"
-                />
-                <div className="text-xs text-slate-300 leading-snug">
-                  <div className="font-bold text-white text-[13px] flex items-center gap-1.5">
-                    <span>Babi l'Éléphant</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-500/30 text-orange-300 font-semibold">Mascotte Officielle</span>
-                  </div>
-                  « Donnez-moi votre produit et je vous génère une accroche qui cartonne sur WhatsApp et Facebook avec les codes de vente locaux ! »
-                </div>
-              </div>
-
               <h2 className="text-xl sm:text-2xl font-bold text-white">
                 Générateur d'Accroches WhatsApp & Réseaux Sociaux
               </h2>

@@ -1064,8 +1064,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
               <div className="bg-white rounded-3xl border-2 border-orange-300 p-8 sm:p-12 text-center space-y-6 shadow-lg max-w-2xl mx-auto my-6">
                 <div className="flex justify-center">
                   <BabiMascot 
-                    variant="number" 
-                    number="01" 
+                    variant="wallet" 
                     size="xl" 
                     speechBubble="Activez votre ticket d'entrée pour postuler à nos micro-jobs !" 
                   />
@@ -1108,11 +1107,11 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
               <>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <BabiMascot variant="number" number="01" size="sm" />
+                    <BabiMascot variant="welcome" size="sm" />
                     <div>
                       <div className="flex items-center gap-2">
-                        <h1 className="text-xl sm:text-2xl font-anton text-slate-900 tracking-wide">
-                          01. Catalogue des Micro-jobs & Missions Rémunérées
+                        <h1 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900 tracking-tight">
+                          Catalogue des Micro-jobs & Missions Rémunérées
                         </h1>
                         {currentUser.subscriptionPlan === 'premium' && (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">

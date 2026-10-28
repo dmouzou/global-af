@@ -12,8 +12,7 @@ export class OrangeMoneyAdapter implements MobileMoneyAdapter {
   }
 
   async initiatePayment(
-    payment: PaymentRecord,
-    _callbackUrl?: string
+    payment: PaymentRecord
   ): Promise<PaymentInitiationResult> {
     return {
       paymentId: payment.id,

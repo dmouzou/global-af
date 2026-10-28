@@ -12,8 +12,7 @@ export class WaveAdapter implements MobileMoneyAdapter {
   }
 
   async initiatePayment(
-    payment: PaymentRecord,
-    _callbackUrl?: string
+    payment: PaymentRecord
   ): Promise<PaymentInitiationResult> {
     const checkoutUrl = `https://pay.wave.com/c/ci_${payment.id}`;
     return {

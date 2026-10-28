@@ -271,7 +271,7 @@ export const paymentWebhook = onRequest(
       }]);
       notify(tx, pmt.userId, "Paiement confirmé",
         `Votre paiement de ${pmt.amount.toLocaleString("fr-FR")} XOF est ` +
-        `confirmé. Vous pouvez vous rétracter pendant ` +
+        "confirmé. Vous pouvez vous rétracter pendant " +
         `${platform.retractionDays} jours.`);
 
       // Commissions : seulement sur ventes réelles, comptes actifs.
