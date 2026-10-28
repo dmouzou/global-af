@@ -12,5 +12,8 @@ export {
   paymentWebhook,
   requestPaymentRetraction,
   validateMaturedCommissions,
+  creditMaturedCommissionsDaily,
+  adminProcessRefund,
 } from "./handlers/payments";
 
+export {updateMyProfile, setSpendingLimit} from "./handlers/account";

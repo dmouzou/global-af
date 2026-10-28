@@ -7,11 +7,14 @@ export class MoovMoneyAdapter implements MobileMoneyAdapter {
   readonly operator = "moov_money" as const;
   private readonly webhookSecret: string;
 
-  constructor(webhookSecret = process.env.MOOV_WEBHOOK_SECRET ?? "dev_moov_secret") {
+  constructor(webhookSecret = process.env.MOOV_WEBHOOK_SECRET ?? "") {
     this.webhookSecret = webhookSecret;
   }
 
-  async initiatePayment(payment: PaymentRecord): Promise<PaymentInitiationResult> {
+  async initiatePayment(
+    payment: PaymentRecord,
+    _callbackUrl?: string
+  ): Promise<PaymentInitiationResult> {
     return {
       paymentId: payment.id,
       providerReference: `moov_push_${payment.id}`,
@@ -25,6 +28,10 @@ export class MoovMoneyAdapter implements MobileMoneyAdapter {
     rawBody: string | Buffer,
     headers: Record<string, string | string[] | undefined>
   ): Promise<WebhookVerificationResult> {
+    if (!this.webhookSecret) {
+      // Secret non configuré : on refuse tout webhook (jamais de secret par défaut).
+      return {isValid: false, status: "failed", rawPayload: null};
+    }
     const rawString = typeof rawBody === "string" ? rawBody : rawBody.toString("utf8");
     const sigHeader = (headers["x-moov-signature"] ||
       headers["x-flooz-signature"]) as string | undefined;

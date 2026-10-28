@@ -7,11 +7,14 @@ export class MtnMomoAdapter implements MobileMoneyAdapter {
   readonly operator = "mtn_momo" as const;
   private readonly webhookSecret: string;
 
-  constructor(webhookSecret = process.env.MTN_WEBHOOK_SECRET ?? "dev_mtn_secret") {
+  constructor(webhookSecret = process.env.MTN_WEBHOOK_SECRET ?? "") {
     this.webhookSecret = webhookSecret;
   }
 
-  async initiatePayment(payment: PaymentRecord): Promise<PaymentInitiationResult> {
+  async initiatePayment(
+    payment: PaymentRecord,
+    _callbackUrl?: string
+  ): Promise<PaymentInitiationResult> {
     return {
       paymentId: payment.id,
       providerReference: `mtn_req_${payment.id}`,
@@ -25,6 +28,10 @@ export class MtnMomoAdapter implements MobileMoneyAdapter {
     rawBody: string | Buffer,
     headers: Record<string, string | string[] | undefined>
   ): Promise<WebhookVerificationResult> {
+    if (!this.webhookSecret) {
+      // Secret non configuré : on refuse tout webhook (jamais de secret par défaut).
+      return {isValid: false, status: "failed", rawPayload: null};
+    }
     const rawString = typeof rawBody === "string" ? rawBody : rawBody.toString("utf8");
     const sigHeader = (headers["x-momo-signature"] ||
       headers["x-callback-signature"]) as string | undefined;

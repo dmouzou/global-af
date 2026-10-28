@@ -7,12 +7,13 @@ export class OrangeMoneyAdapter implements MobileMoneyAdapter {
   readonly operator = "orange_money" as const;
   private readonly webhookSecret: string;
 
-  constructor(webhookSecret = process.env.ORANGE_WEBHOOK_SECRET ?? "dev_om_secret") {
+  constructor(webhookSecret = process.env.ORANGE_WEBHOOK_SECRET ?? "") {
     this.webhookSecret = webhookSecret;
   }
 
   async initiatePayment(
-    payment: PaymentRecord
+    payment: PaymentRecord,
+    _callbackUrl?: string
   ): Promise<PaymentInitiationResult> {
     return {
       paymentId: payment.id,
@@ -27,6 +28,10 @@ export class OrangeMoneyAdapter implements MobileMoneyAdapter {
     rawBody: string | Buffer,
     headers: Record<string, string | string[] | undefined>
   ): Promise<WebhookVerificationResult> {
+    if (!this.webhookSecret) {
+      // Secret non configuré : on refuse tout webhook (jamais de secret par défaut).
+      return {isValid: false, status: "failed", rawPayload: null};
+    }
     const rawString = typeof rawBody === "string" ? rawBody : rawBody.toString("utf8");
     const sigHeader = (headers["x-orange-signature"] ||
       headers["authorization"]) as string | undefined;

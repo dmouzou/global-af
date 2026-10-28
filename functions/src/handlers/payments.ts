@@ -1,407 +1,574 @@
 import {FieldValue, Timestamp} from "firebase-admin/firestore";
 import {CallableRequest, HttpsError, onCall, onRequest} from "firebase-functions/v2/https";
+import {onSchedule} from "firebase-functions/v2/scheduler";
 import {Request, Response} from "express";
 import {db} from "../lib/db";
 import {guard} from "../lib/errors";
 import {writeAudit} from "../lib/audit";
 import {enforceRateLimit} from "../lib/rateLimit";
-import {asObject, reqNumber, reqString} from "../lib/validate";
+import {asObject, optString, reqString} from "../lib/validate";
 import {DomainError} from "../domain/errors";
-import {PaymentRecord, validatePaymentInitiation} from "../domain/payment";
-import {Operator, OPERATORS, Posting, SaleKind} from "../domain/types";
+import {
+  amountMatches, assertSellableProduct, PaymentRecord, toDate,
+  validatePaymentInitiation,
+} from "../domain/payment";
+import {Balances, Operator, OPERATORS, Posting, Role} from "../domain/types";
 import {getPaymentAdapter} from "../services/payments/paymentRegistry";
-import {assertWithinSpendingLimit} from "../domain/spending";
+import {
+  assertWithinSpendingLimit, effectiveLimit, monthKey, spentInCurrentMonth,
+} from "../domain/spending";
 import {computeCommissions, SponsorChain} from "../domain/commission";
 import {checkRetraction} from "../domain/retraction";
-import {getPlatformConfig} from "../lib/config";
+import {getCountryConfig, getPlatformConfig} from "../lib/config";
 import {readBalances, writeWalletAndLedger} from "../lib/walletStore";
 import {applyPosting} from "../domain/ledger";
+import {normalizePhone} from "../domain/phone";
+
+const FINANCE_ROLES: Role[] = ["financial_manager", "admin", "super_admin"];
 
 /**
- * Initialise un paiement Mobile Money pour un abonnement ou un achat utile.
+ * Les adaptateurs actuels SIMULENT les prestataires (aucun appel réel à
+ * Wave, Orange, MTN ou Moov). Tant que les vraies API ne sont pas branchées,
+ * le paiement reste fermé en production : on n'envoie jamais un membre vers
+ * une page de paiement fictive. En développement/émulateur, définir
+ * PAYMENTS_SIMULATION=true.
+ * @return {boolean} true si la simulation est explicitement autorisée.
  */
-export const initiateMobileMoneyPayment = onCall(async (request: CallableRequest) => {
-  return guard(async () => {
-    if (!request.auth) {
-      throw new HttpsError("unauthenticated", "Connexion requise pour effectuer un paiement.");
-    }
-    const uid = request.auth.uid;
-    await enforceRateLimit("initiate_payment", uid, 10, 3600);
-
-    const data = asObject(request.data);
-    const rawAmount = reqNumber(data, "amount", 500, 500000);
-    const rawOperator = reqString(data, "operator", 20);
-    const rawPhone = reqString(data, "phone", 30);
-    const plan = data.plan as "premium" | "business" | undefined;
-    const kind: SaleKind = (data.kind as SaleKind) || "subscription";
-
-    const {operator, amount} = validatePaymentInitiation(rawAmount, rawOperator, rawPhone);
-
-    const userRef = db.collection("users").doc(uid);
-    const userSnap = await userRef.get();
-    if (!userSnap.exists) {
-      throw new DomainError("user_not_found", "Profil utilisateur introuvable.");
-    }
-    const userData = userSnap.data() as {
-      spentThisMonth?: number;
-      spendingLimitMonthly?: number;
-      phone: string;
-    };
-
-    assertWithinSpendingLimit({
-      amount,
-      spentThisMonth: userData.spentThisMonth ?? 0,
-      limit: userData.spendingLimitMonthly ?? 100000,
-    });
-
-    const paymentId = `pmt_${uid}_${Date.now()}`;
-    const paymentRecord: PaymentRecord = {
-      id: paymentId,
-      userId: uid,
-      amount,
-      currency: "XOF",
-      operator,
-      phone: rawPhone || userData.phone,
-      kind,
-      plan,
-      status: "pending",
-      transactionReference: `TX-${Date.now()}`,
-      createdAt: new Date(),
-    };
-
-    const adapter = getPaymentAdapter(operator);
-    const projectId = process.env.GCLOUD_PROJECT ?? "global-af-dev";
-    const callbackUrl =
-      `https://europe-west1-${projectId}.cloudfunctions.net/paymentWebhook?operator=${operator}`;
-    const initResult = await adapter.initiatePayment(paymentRecord, callbackUrl);
-
-    paymentRecord.providerReference = initResult.providerReference;
-
-    await db.collection("payments").doc(paymentId).set({
-      ...paymentRecord,
-      createdAt: FieldValue.serverTimestamp(),
-    });
-
-    await writeAudit({
-      actorUid: uid,
-      actorRole: "member",
-      action: "payment.initiated",
-      target: paymentId,
-      rule: "section 6",
-      details: {amount, operator, plan, kind},
-    });
-
-    return {
-      success: true,
-      paymentId,
-      checkoutUrl: initResult.checkoutUrl,
-      instructions: initResult.instructions,
-      status: initResult.status,
-    };
-  });
-});
+function simulationAllowed(): boolean {
+  return process.env.PAYMENTS_SIMULATION === "true";
+}
 
 /**
- * Webhook unifié de confirmation de paiement Mobile Money avec signature cryptographique.
+ * Crée une notification interne pour un membre (écriture serveur : les
+ * règles Firestore interdisent au client d'en créer).
+ * @param {FirebaseFirestore.Transaction} tx Transaction en cours.
+ * @param {string} userId Destinataire.
+ * @param {string} title Titre.
+ * @param {string} message Message.
  */
-export const paymentWebhook = onRequest(async (req: Request, res: Response): Promise<void> => {
-  const operatorParam = (req.query.operator as string)?.toLowerCase();
-  if (!operatorParam || !OPERATORS.includes(operatorParam as Operator)) {
-    res.status(400).json({error: "Opérateur manquant ou invalide"});
-    return;
-  }
-
-  const operator = operatorParam as Operator;
-  const adapter = getPaymentAdapter(operator);
-
-  const rawBody = (req as unknown as { rawBody?: Buffer }).rawBody ?? JSON.stringify(req.body);
-  const headers = req.headers as Record<string, string | string[] | undefined>;
-  const result = await adapter.verifyWebhook(rawBody, headers);
-
-  const auditRef = db.collection("payment_webhooks").doc();
-  await auditRef.set({
-    operator,
-    isValid: result.isValid,
-    status: result.status,
-    paymentId: result.paymentId ?? null,
-    providerReference: result.providerReference ?? null,
-    receivedAt: FieldValue.serverTimestamp(),
-    payload: result.rawPayload,
+function notify(tx: FirebaseFirestore.Transaction, userId: string,
+  title: string, message: string): void {
+  tx.set(db.collection("notifications").doc(), {
+    userId, title, message, type: "system", read: false,
+    createdAt: FieldValue.serverTimestamp(),
   });
+}
 
-  if (!result.isValid || !result.paymentId) {
-    res.status(401).json({error: "Signature de webhook invalide"});
-    return;
-  }
+/**
+ * Initialise un paiement Mobile Money pour un produit du catalogue.
+ * Le PRIX et le TYPE de vente viennent du catalogue serveur (products/{id}),
+ * jamais du navigateur.
+ */
+export const initiateMobileMoneyPayment = onCall(
+  async (request: CallableRequest) => {
+    return guard(async () => {
+      if (!request.auth) {
+        throw new HttpsError("unauthenticated",
+          "Connexion requise pour effectuer un paiement.");
+      }
+      if (request.auth.token.email_verified !== true) {
+        throw new DomainError("email_not_verified",
+          "Vérifiez votre adresse e-mail avant de payer.");
+      }
+      const uid = request.auth.uid;
+      await enforceRateLimit("initiate_payment", uid, 10, 3600);
 
-  if (result.status !== "succeeded") {
-    await db.collection("payments").doc(result.paymentId).update({
-      status: "failed",
-      failedAt: FieldValue.serverTimestamp(),
-    });
-    res.status(200).json({status: "marked_failed"});
-    return;
-  }
+      const data = asObject(request.data);
+      const rawOperator = reqString(data, "operator", 20);
+      const rawPhone = reqString(data, "phone", 30);
+      // `plan` : ancien nom du champ, conservé pour compatibilité.
+      const productId = reqString(
+        data.productId !== undefined ? data : {productId: data.plan},
+        "productId", 40);
+      if (!/^[a-z0-9_-]+$/.test(productId)) {
+        throw new DomainError("product_unavailable",
+          "Ce produit n'est pas disponible.");
+      }
 
-  const paymentRef = db.collection("payments").doc(result.paymentId);
-  const platform = await getPlatformConfig();
-
-  await db.runTransaction(async (tx) => {
-    const pmtSnap = await tx.get(paymentRef);
-    if (!pmtSnap.exists) return;
-    const pmt = pmtSnap.data() as PaymentRecord;
-    if (pmt.status === "succeeded") return;
-
-    const now = new Date();
-    const retractionUntil = new Date(now.getTime() + platform.retractionDays * 24 * 60 * 60 * 1000);
-
-    tx.update(paymentRef, {
-      status: "succeeded",
-      paidAt: FieldValue.serverTimestamp(),
-      retractionUntil: Timestamp.fromDate(retractionUntil),
-      providerReference: result.providerReference ?? pmt.providerReference ?? null,
-    });
-
-    const userRef = db.collection("users").doc(pmt.userId);
-    const userSnap = await tx.get(userRef);
-    if (userSnap.exists) {
+      const [productSnap, userSnap, platform] = await Promise.all([
+        db.collection("products").doc(productId).get(),
+        db.collection("users").doc(uid).get(),
+        getPlatformConfig(),
+      ]);
+      const product = assertSellableProduct(
+        productSnap.exists ? {...productSnap.data(), id: productSnap.id} :
+          undefined);
+      if (!userSnap.exists) {
+        throw new DomainError("user_not_found", "Profil introuvable.");
+      }
       const user = userSnap.data() as {
-        referredBy?: string;
-        referredByUid?: string;
-        status?: string;
-        spentThisMonth?: number;
+        country: string; status?: string; spentThisMonth?: number;
+        spentMonth?: string; spendingLimitMonthly?: number;
+        pendingSpendingLimit?: {amount: number; effectiveAtMs: number} | null;
       };
+      if (user.status !== undefined && user.status !== "active") {
+        throw new DomainError("account_not_active",
+          "Votre compte ne permet pas de paiement pour le moment.");
+      }
+      const country = await getCountryConfig(user.country);
+      const phone = normalizePhone(rawPhone, country);
+      const {operator, amount} = validatePaymentInitiation(
+        product.priceXOF, rawOperator, phone);
+      if (!country.withdrawal.operators.includes(operator)) {
+        throw new DomainError("operator_not_allowed",
+          "Cet opérateur n'est pas disponible dans votre pays.");
+      }
 
-      // Si le compte de l'utilisateur n'est pas actif (désactivé ou supprimé), pas de parrainage
-      const isUserActive = user.status === "active" || user.status === undefined;
-
-      tx.update(userRef, {
-        isActivated: true,
-        subscriptionPlan: pmt.plan ?? (pmt.kind === "subscription" ? "premium" : "free"),
-        activationDate: now.toISOString(),
-        spentThisMonth: (user.spentThisMonth ?? 0) + pmt.amount,
+      const now = new Date();
+      assertWithinSpendingLimit({
+        amount,
+        spentThisMonth: spentInCurrentMonth(user, now),
+        limit: effectiveLimit(user, platform.defaultMonthlyLimit, now),
       });
 
-      // Le parrainage continue pour chaque dépense (abonnement mensuel récurrent, etc.)
-      // mais prend fin si l'une des parties est désactivée ou supprimée.
+      if (!simulationAllowed()) {
+        throw new DomainError("provider_not_configured",
+          "Le paiement Mobile Money n'est pas encore ouvert.");
+      }
+
+      const paymentId = `pmt_${uid}_${Date.now()}`;
+      const paymentRef = db.collection("payments").doc(paymentId);
+      const record: PaymentRecord = {
+        id: paymentId, userId: uid, amount, currency: "XOF", operator,
+        phone, kind: product.kind, plan: product.id, status: "initiated",
+        transactionReference: `TX-${Date.now()}`, createdAt: now,
+      };
+      // Le paiement est enregistré AVANT l'appel au prestataire : un webhook
+      // qui arriverait très vite trouve toujours son enregistrement.
+      await paymentRef.set({...record, createdAt: FieldValue.serverTimestamp()});
+
+      const projectId = process.env.GCLOUD_PROJECT ?? "global-af-dev";
+      const callbackUrl = `https://europe-west1-${projectId}.cloudfunctions` +
+        `.net/paymentWebhook?operator=${operator}`;
+      let init;
+      try {
+        init = await getPaymentAdapter(operator)
+          .initiatePayment(record, callbackUrl);
+      } catch (err) {
+        await paymentRef.update({status: "failed",
+          failedAt: FieldValue.serverTimestamp()});
+        throw err;
+      }
+      await paymentRef.update({
+        status: "pending", providerReference: init.providerReference ?? null,
+      });
+      await writeAudit({
+        actorUid: uid, actorRole: "member", action: "payment.initiated",
+        target: paymentId, rule: "section 6",
+        details: {amount, operator, productId: product.id, kind: product.kind},
+      });
+      return {
+        success: true, paymentId, checkoutUrl: init.checkoutUrl,
+        instructions: init.instructions, status: init.status, amount,
+        currency: "XOF",
+      };
+    });
+  });
+
+/**
+ * Webhook unifié de confirmation Mobile Money (signature vérifiée,
+ * idempotent). Un paiement déjà confirmé ou remboursé n'est JAMAIS modifié
+ * par un webhook tardif ou rejoué.
+ */
+export const paymentWebhook = onRequest(
+  async (req: Request, res: Response): Promise<void> => {
+    if (req.method !== "POST") {
+      res.status(405).json({error: "Méthode non autorisée"});
+      return;
+    }
+    const operatorParam = String(req.query.operator ?? "").toLowerCase();
+    if (!OPERATORS.includes(operatorParam as Operator)) {
+      res.status(400).json({error: "Opérateur manquant ou invalide"});
+      return;
+    }
+    const operator = operatorParam as Operator;
+    const rawBody = (req as unknown as {rawBody?: Buffer}).rawBody ??
+      JSON.stringify(req.body);
+    const headers = req.headers as Record<string, string | string[] |
+      undefined>;
+    const result = await getPaymentAdapter(operator)
+      .verifyWebhook(rawBody, headers);
+
+    // Journal brut de tout appel reçu (valide ou non) pour l'enquête.
+    await db.collection("payment_webhooks").doc().set({
+      operator, isValid: result.isValid, status: result.status,
+      paymentId: result.paymentId ?? null,
+      providerReference: result.providerReference ?? null,
+      receivedAt: FieldValue.serverTimestamp(), payload: result.rawPayload,
+    });
+    if (!result.isValid || !result.paymentId) {
+      res.status(401).json({error: "Signature de webhook invalide"});
+      return;
+    }
+
+    const paymentRef = db.collection("payments").doc(result.paymentId);
+    const platform = await getPlatformConfig();
+    const outcome = await db.runTransaction(async (tx) => {
+      const pmtSnap = await tx.get(paymentRef);
+      if (!pmtSnap.exists) return "unknown_payment";
+      const pmt = pmtSnap.data() as PaymentRecord;
+      // Idempotence : seul un paiement en attente peut changer d'état.
+      if (pmt.status !== "pending" && pmt.status !== "initiated") {
+        return "ignored_" + pmt.status;
+      }
+      if (pmt.operator !== operator) return "operator_mismatch";
+
+      if (result.status !== "succeeded") {
+        tx.update(paymentRef, {status: "failed",
+          failedAt: FieldValue.serverTimestamp()});
+        return "marked_failed";
+      }
+      if (!amountMatches(pmt.amount, result.amountPaid)) {
+        tx.update(paymentRef, {status: "failed", failureReason:
+          "amount_mismatch", failedAt: FieldValue.serverTimestamp()});
+        return "amount_mismatch";
+      }
+
+      const now = new Date();
+      const retractionUntil = new Date(
+        now.getTime() + platform.retractionDays * 24 * 60 * 60 * 1000);
+      const userRef = db.collection("users").doc(pmt.userId);
+      const userSnap = await tx.get(userRef);
+      const balances: Balances = await readBalances(tx, pmt.userId);
+
+      tx.update(paymentRef, {
+        status: "succeeded", paidAt: FieldValue.serverTimestamp(),
+        retractionUntil: Timestamp.fromDate(retractionUntil),
+        providerReference: result.providerReference ?? pmt.providerReference ??
+          null,
+      });
+      if (!userSnap.exists) return "succeeded_no_user";
+
+      const user = userSnap.data() as {
+        referredBy?: string; referredByUid?: string; status?: string;
+        spentThisMonth?: number; spentMonth?: string;
+      };
+      const grantsAccess = pmt.kind === "activation" ||
+        pmt.kind === "subscription";
+      const userUpdate: Record<string, unknown> = {
+        spentThisMonth: spentInCurrentMonth(user, now) + pmt.amount,
+        spentMonth: monthKey(now),
+      };
+      // Un achat sans accès (ex. un cours) ne doit JAMAIS modifier l'offre.
+      if (grantsAccess) {
+        userUpdate.isActivated = true;
+        userUpdate.planId = pmt.plan ?? null;
+        userUpdate.subscriptionPlan = pmt.plan ?? "premium";
+        userUpdate.activatedAt = FieldValue.serverTimestamp();
+        userUpdate.activationDate = now.toISOString();
+      }
+      tx.update(userRef, userUpdate);
+
+      // Historique du ledger : mouvement externe (Mobile Money → plateforme).
+      const posting: Posting = {from: "external", to: "external",
+        amount: pmt.amount};
+      writeWalletAndLedger(tx, pmt.userId, "XOF", balances, [{
+        entryId: `pay_${pmt.id}`, userId: pmt.userId,
+        type: grantsAccess ? "activation_payment" : "subscription_payment",
+        phase: "paid", posting, currency: "XOF",
+        origin: `Paiement ${pmt.plan ?? pmt.kind} via ${pmt.operator}`,
+        ref: {kind: "payment", id: pmt.id},
+      }]);
+      notify(tx, pmt.userId, "Paiement confirmé",
+        `Votre paiement de ${pmt.amount.toLocaleString("fr-FR")} XOF est ` +
+        `confirmé. Vous pouvez vous rétracter pendant ` +
+        `${platform.retractionDays} jours.`);
+
+      // Commissions : seulement sur ventes réelles, comptes actifs.
+      const isUserActive = user.status === "active" ||
+        user.status === undefined;
       const sponsorIdentifier = user.referredByUid || user.referredBy;
       if (isUserActive && sponsorIdentifier) {
-        let level1Uid: string | null = null;
-        let level2Uid: string | null = null;
-
-        // Résolution Sponsor Niveau 1
-        let l1Doc = null;
-        if (user.referredByUid) {
-          const directSnap = await tx.get(db.collection("users").doc(user.referredByUid));
-          if (directSnap.exists) l1Doc = directSnap;
-        }
-        if (!l1Doc && user.referredBy) {
-          const l1Query = await db.collection("users")
-            .where("referralCode", "==", user.referredBy)
-            .limit(1)
-            .get();
-          if (!l1Query.empty) l1Doc = l1Query.docs[0];
-        }
-
-        if (l1Doc) {
-          const l1Data = l1Doc.data() as {
-            referredBy?: string;
-            referredByUid?: string;
-            status?: string;
-          };
-          // Le parrain niveau 1 doit être actif
-          if (l1Data.status === "active" || l1Data.status === undefined) {
-            level1Uid = l1Doc.id;
-
-            // Résolution Sponsor Niveau 2
-            let l2Doc = null;
-            if (l1Data.referredByUid) {
-              const directL2Snap = await tx.get(db.collection("users").doc(l1Data.referredByUid));
-              if (directL2Snap.exists) l2Doc = directL2Snap;
-            }
-            if (!l2Doc && l1Data.referredBy) {
-              const l2Query = await db.collection("users")
-                .where("referralCode", "==", l1Data.referredBy)
-                .limit(1)
-                .get();
-              if (!l2Query.empty) l2Doc = l2Query.docs[0];
-            }
-
-            if (l2Doc) {
-              const l2Data = l2Doc.data() as { status?: string };
-              // Le parrain niveau 2 doit également être actif
-              if (l2Data.status === "active" || l2Data.status === undefined) {
-                level2Uid = l2Doc.id;
-              }
-            }
-          }
-        }
-
-        const chain: SponsorChain = {level1Uid, level2Uid};
+        const chain = await resolveSponsorChain(tx, user);
         const drafts = computeCommissions(
           {buyerUid: pmt.userId, amount: pmt.amount, kind: pmt.kind},
-          chain,
-          platform.affiliation
-        );
-
+          chain, platform.affiliation);
         for (const draft of drafts) {
           const commRef = db.collection("commissions").doc();
           tx.set(commRef, {
-            id: commRef.id,
-            paymentId: pmt.id,
-            beneficiaryUid: draft.beneficiaryUid,
-            buyerUid: pmt.userId,
-            level: draft.level,
-            amount: draft.amount,
-            rateBps: draft.rateBps,
+            id: commRef.id, paymentId: pmt.id,
+            beneficiaryUid: draft.beneficiaryUid, buyerUid: pmt.userId,
+            level: draft.level, amount: draft.amount, rateBps: draft.rateBps,
             status: "pending_retraction",
             matureAt: Timestamp.fromDate(retractionUntil),
             createdAt: FieldValue.serverTimestamp(),
           });
         }
       }
-    }
+      return "processed";
+    });
+    res.status(200).json({status: outcome});
   });
 
-  res.status(200).json({status: "processed"});
-});
+/**
+ * Résout les parrains de niveau 1 et 2 d'un acheteur (comptes actifs
+ * seulement). Les lectures passent par la transaction.
+ * @param {FirebaseFirestore.Transaction} tx Transaction en cours.
+ * @param {object} user Profil de l'acheteur.
+ * @return {Promise<SponsorChain>} Chaîne de parrainage.
+ */
+async function resolveSponsorChain(tx: FirebaseFirestore.Transaction,
+  user: {referredBy?: string; referredByUid?: string}): Promise<SponsorChain> {
+  type Doc = FirebaseFirestore.DocumentSnapshot;
+  const isActive = (d: Doc) => {
+    const s = (d.data() as {status?: string}).status;
+    return s === "active" || s === undefined;
+  };
+  const byUidOrCode = async (uid?: string, code?: string):
+    Promise<Doc | null> => {
+    if (uid) {
+      const snap = await tx.get(db.collection("users").doc(uid));
+      if (snap.exists) return snap;
+    }
+    if (code) {
+      const q = await tx.get(db.collection("users")
+        .where("referralCode", "==", code).limit(1));
+      if (!q.empty) return q.docs[0];
+    }
+    return null;
+  };
+  const l1 = await byUidOrCode(user.referredByUid, user.referredBy);
+  if (!l1 || !isActive(l1)) return {level1Uid: null, level2Uid: null};
+  const l1Data = l1.data() as {referredBy?: string; referredByUid?: string};
+  const l2 = await byUidOrCode(l1Data.referredByUid, l1Data.referredBy);
+  return {
+    level1Uid: l1.id,
+    level2Uid: l2 && isActive(l2) ? l2.id : null,
+  };
+}
 
 /**
- * Demande d'exercice du droit de rétractation de 7 jours (section 6).
+ * Droit de rétractation (section 6) : annule l'accès, annule les
+ * commissions en attente et ouvre une demande de remboursement Mobile Money
+ * que la finance exécute et confirme. Aucun argent n'est annoncé comme
+ * rendu tant que le remboursement n'est pas confirmé.
  */
-export const requestPaymentRetraction = onCall(async (request: CallableRequest) => {
+export const requestPaymentRetraction = onCall(
+  async (request: CallableRequest) => {
+    return guard(async () => {
+      if (!request.auth) {
+        throw new HttpsError("unauthenticated", "Connexion requise.");
+      }
+      const uid = request.auth.uid;
+      await enforceRateLimit("retraction", uid, 5, 3600);
+      const data = asObject(request.data);
+      const reason = optString(data, "reason", 500) ?? "";
+      const requestedId = optString(data, "paymentId", 80);
+      const platform = await getPlatformConfig();
+
+      // Sans identifiant : le dernier paiement confirmé encore rétractable.
+      let paymentId = requestedId;
+      if (!paymentId) {
+        const q = await db.collection("payments")
+          .where("userId", "==", uid).where("status", "==", "succeeded")
+          .orderBy("createdAt", "desc").limit(1).get();
+        if (q.empty) {
+          throw new DomainError("payment_not_found",
+            "Aucun paiement confirmé à rembourser.");
+        }
+        paymentId = q.docs[0].id;
+      }
+      const paymentRef = db.collection("payments").doc(paymentId);
+      const refundRef = db.collection("refunds").doc(paymentId);
+
+      const amount = await db.runTransaction(async (tx) => {
+        const snap = await tx.get(paymentRef);
+        if (!snap.exists) {
+          throw new DomainError("payment_not_found", "Paiement introuvable.");
+        }
+        const pmt = snap.data() as PaymentRecord & {paidAt?: unknown};
+        if (pmt.userId !== uid) {
+          throw new HttpsError("permission-denied",
+            "Ce paiement ne vous appartient pas.");
+        }
+        // Le contrôle du statut est DANS la transaction : deux demandes
+        // simultanées ne peuvent pas ouvrir deux remboursements.
+        if (pmt.status !== "succeeded") {
+          throw new DomainError("invalid_status",
+            "Seul un paiement confirmé peut être remboursé.");
+        }
+        const verdict = checkRetraction({
+          purchasedAt: toDate(pmt.paidAt ?? pmt.createdAt), now: new Date(),
+        }, platform);
+        if (!verdict.eligible) {
+          throw new DomainError("retraction_expired",
+            `Le délai de rétractation de ${platform.retractionDays} jours ` +
+            "est expiré.");
+        }
+        const userRef = db.collection("users").doc(uid);
+        const userSnap = await tx.get(userRef);
+        const now = new Date();
+        tx.update(paymentRef, {
+          status: "refund_pending", retractedAt: FieldValue.serverTimestamp(),
+          refundReason: reason,
+        });
+        tx.set(refundRef, {
+          userId: uid, paymentId, amount: pmt.amount, currency: "XOF",
+          operator: pmt.operator, phone: pmt.phone, status: "pending",
+          reason, createdAt: FieldValue.serverTimestamp(),
+        });
+        if (userSnap.exists) {
+          const user = userSnap.data() as {
+            spentThisMonth?: number; spentMonth?: string;
+          };
+          const update: Record<string, unknown> = {
+            isActivated: false, planId: null, subscriptionPlan: "free",
+          };
+          if (user.spentMonth === monthKey(now)) {
+            update.spentThisMonth = Math.max(0,
+              (user.spentThisMonth ?? 0) - pmt.amount);
+          }
+          tx.update(userRef, update);
+        }
+        notify(tx, uid, "Rétractation enregistrée",
+          `Votre remboursement de ${pmt.amount.toLocaleString("fr-FR")} XOF ` +
+          `vers ${pmt.operator} est en cours de traitement.`);
+        return pmt.amount;
+      });
+
+      // Commissions de cette vente : annulées (le crédit n'a lieu qu'après le
+      // délai de rétractation, donc rien n'a encore été versé).
+      const comms = await db.collection("commissions")
+        .where("paymentId", "==", paymentId)
+        .where("status", "==", "pending_retraction").get();
+      await Promise.all(comms.docs.map((c) => c.ref.update({
+        status: "cancelled_retraction",
+        cancelledAt: FieldValue.serverTimestamp(),
+      })));
+
+      await writeAudit({
+        actorUid: uid, actorRole: "member",
+        action: "payment.retraction_requested", target: paymentId,
+        rule: "section 6", details: {amount, reason},
+      });
+      return {
+        success: true, refundAmount: amount,
+        message: "Rétractation enregistrée. Le remboursement vers votre " +
+          "compte Mobile Money est en cours de traitement.",
+      };
+    });
+  });
+
+/**
+ * Exécution d'un remboursement par la finance (section 25) : confirme que
+ * l'argent a bien été renvoyé par Mobile Money (référence obligatoire).
+ */
+export const adminProcessRefund = onCall(async (request: CallableRequest) => {
   return guard(async () => {
     if (!request.auth) {
       throw new HttpsError("unauthenticated", "Connexion requise.");
     }
-    const uid = request.auth.uid;
+    const role = request.auth.token.role as Role | undefined;
+    if (!role || !FINANCE_ROLES.includes(role)) {
+      throw new HttpsError("permission-denied", "Action non autorisée.");
+    }
     const data = asObject(request.data);
-    const paymentId = reqString(data, "paymentId", 64);
-    const reason = reqString(data, "reason", 500);
-
-    const paymentRef = db.collection("payments").doc(paymentId);
-    const pmtSnap = await paymentRef.get();
-    if (!pmtSnap.exists) {
-      throw new DomainError("payment_not_found", "Paiement introuvable.");
-    }
-    const pmt = pmtSnap.data() as PaymentRecord;
-    if (pmt.userId !== uid) {
-      throw new HttpsError("permission-denied", "Ce paiement ne vous appartient pas.");
-    }
-    if (pmt.status !== "succeeded") {
-      throw new DomainError("invalid_status", "Seul un paiement confirmé peut être remboursé.");
-    }
-
-    const platform = await getPlatformConfig();
-    const verdict = checkRetraction(
-      {purchasedAt: pmt.createdAt, now: new Date()},
-      platform
-    );
-    if (!verdict.eligible) {
-      throw new DomainError(
-        "retraction_expired",
-        "Le délai légal de rétractation de 7 jours est expiré."
-      );
-    }
+    const refundId = reqString(data, "refundId", 80);
+    const providerReference = reqString(data, "providerReference", 100);
+    const refundRef = db.collection("refunds").doc(refundId);
+    const paymentRef = db.collection("payments").doc(refundId);
 
     await db.runTransaction(async (tx) => {
-      tx.update(paymentRef, {
-        status: "refunded",
-        refundedAt: FieldValue.serverTimestamp(),
-        refundReason: reason,
-      });
-
-      const userRef = db.collection("users").doc(uid);
-      tx.update(userRef, {
-        isActivated: false,
-        subscriptionPlan: "free",
-      });
-
-      const commsQuery = await db.collection("commissions")
-        .where("paymentId", "==", paymentId)
-        .where("status", "==", "pending_retraction")
-        .get();
-
-      for (const cDoc of commsQuery.docs) {
-        tx.update(cDoc.ref, {
-          status: "cancelled_retraction",
-          cancelledAt: FieldValue.serverTimestamp(),
-        });
+      const refundSnap = await tx.get(refundRef);
+      if (!refundSnap.exists) {
+        throw new DomainError("not_found", "Remboursement introuvable.");
       }
+      const refund = refundSnap.data() as {
+        status: string; userId: string; amount: number; operator: string;
+      };
+      if (refund.status !== "pending") {
+        throw new DomainError("invalid_status",
+          "Ce remboursement est déjà traité.");
+      }
+      const balances = await readBalances(tx, refund.userId);
+      tx.update(refundRef, {
+        status: "paid", providerReference, processedBy: request.auth?.uid,
+        processedAt: FieldValue.serverTimestamp(),
+      });
+      tx.update(paymentRef, {status: "refunded",
+        refundedAt: FieldValue.serverTimestamp()});
+      writeWalletAndLedger(tx, refund.userId, "XOF", balances, [{
+        entryId: `refund_${refundId}`, userId: refund.userId, type: "refund",
+        phase: "paid", currency: "XOF",
+        posting: {from: "external", to: "external", amount: refund.amount},
+        origin: `Remboursement rétractation via ${refund.operator}`,
+        ref: {kind: "payment", id: refundId}, meta: {providerReference},
+      }]);
+      notify(tx, refund.userId, "Remboursement effectué",
+        `${refund.amount.toLocaleString("fr-FR")} XOF ont été renvoyés vers ` +
+        `votre compte ${refund.operator}.`);
+      await writeAudit({
+        actorUid: request.auth?.uid ?? null, actorRole: role,
+        action: "refund.paid", target: refundId, rule: "section 6",
+        details: {providerReference, amount: refund.amount},
+      }, tx);
     });
-
-    await writeAudit({
-      actorUid: uid,
-      actorRole: "member",
-      action: "payment.retraction_granted",
-      target: paymentId,
-      rule: "section 6",
-      details: {amount: pmt.amount, reason},
-    });
-
-    return {success: true, message: "Rétractation acceptée et remboursement initié."};
+    return {refundId, status: "paid"};
   });
 });
 
 /**
- * Valide les commissions d'affiliation dont la période de rétractation est échue.
+ * Crédite les commissions dont le délai de rétractation est échu.
+ * Chaque commission est relue DANS la transaction : un double passage (ou
+ * un appel manuel concurrent) ne peut pas créditer deux fois.
+ * @param {number} maxBatches Nombre maximal de lots de 50.
+ * @return {Promise<number>} Nombre de commissions créditées.
  */
-export const validateMaturedCommissions = onCall(async (request: CallableRequest) => {
-  return guard(async () => {
-    if (!request.auth || request.auth.token.role !== "super_admin") {
-      throw new HttpsError("permission-denied", "Réservé aux administrateurs.");
-    }
-
-    const now = Timestamp.now();
+async function creditMaturedCommissions(maxBatches: number): Promise<number> {
+  let processed = 0;
+  for (let batch = 0; batch < maxBatches; batch++) {
     const snapshot = await db.collection("commissions")
       .where("status", "==", "pending_retraction")
-      .where("matureAt", "<=", now)
-      .limit(50)
-      .get();
-
-    let processedCount = 0;
+      .where("matureAt", "<=", Timestamp.now()).limit(50).get();
+    if (snapshot.empty) break;
     for (const doc of snapshot.docs) {
-      const comm = doc.data() as {
-        id: string;
-        beneficiaryUid: string;
-        amount: number;
-        level: number;
-      };
-
-      await db.runTransaction(async (tx) => {
-        tx.update(doc.ref, {
-          status: "credited",
-          creditedAt: FieldValue.serverTimestamp(),
-        });
-
+      const done = await db.runTransaction(async (tx) => {
+        const fresh = await tx.get(doc.ref);
+        const comm = fresh.data() as {
+          id: string; beneficiaryUid: string; amount: number; level: number;
+          status: string;
+        } | undefined;
+        if (!comm || comm.status !== "pending_retraction") return false;
         const balances = await readBalances(tx, comm.beneficiaryUid);
-        const posting: Posting = {
-          from: "external",
-          to: "available",
-          amount: comm.amount,
-        };
-        const nextBalances = applyPosting(balances, posting);
-
-        writeWalletAndLedger(
-          tx,
-          comm.beneficiaryUid,
-          "XOF",
-          nextBalances,
-          [{
-            entryId: `comm_cred_${comm.id}`,
-            userId: comm.beneficiaryUid,
-            type: "commission",
-            posting,
-            currency: "XOF",
+        const posting: Posting = {from: "external", to: "available",
+          amount: comm.amount};
+        tx.update(doc.ref, {status: "credited",
+          creditedAt: FieldValue.serverTimestamp()});
+        writeWalletAndLedger(tx, comm.beneficiaryUid, "XOF",
+          applyPosting(balances, posting), [{
+            entryId: `comm_cred_${comm.id}`, userId: comm.beneficiaryUid,
+            type: "commission", posting, currency: "XOF",
             origin: `Commission affiliation niveau ${comm.level}`,
-            ref: {kind: "payment", id: comm.id},
+            ref: {kind: "commission", id: comm.id},
             meta: {level: comm.level, amount: comm.amount},
-          }]
-        );
+          }]);
+        notify(tx, comm.beneficiaryUid, "Commission créditée",
+          `${comm.amount.toLocaleString("fr-FR")} XOF de commission ` +
+          `(niveau ${comm.level}) ont été ajoutés à votre solde.`);
+        return true;
       });
-      processedCount++;
+      if (done) processed++;
     }
+  }
+  return processed;
+}
 
-    return {success: true, processedCount};
+/** Déclenchement manuel (super administrateur). */
+export const validateMaturedCommissions = onCall(
+  async (request: CallableRequest) => {
+    return guard(async () => {
+      if (!request.auth || request.auth.token.role !== "super_admin") {
+        throw new HttpsError("permission-denied",
+          "Réservé aux administrateurs.");
+      }
+      return {success: true, processedCount: await creditMaturedCommissions(1)};
+    });
   });
-});
+
+/** Exécution automatique quotidienne (cahier des charges : CRON/jobs). */
+export const creditMaturedCommissionsDaily = onSchedule(
+  {schedule: "every day 03:00", timeZone: "Africa/Abidjan"},
+  async () => {
+    const count = await creditMaturedCommissions(10);
+    console.log(`Commissions créditées : ${count}`);
+  });

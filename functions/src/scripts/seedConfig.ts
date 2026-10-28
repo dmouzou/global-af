@@ -48,6 +48,8 @@ const countries: CountryConfig[] = [{
 // Packs du prototype. `kind: "activation"` n'ouvre PAS droit à commission
 // (section 6). À trancher : un pack est-il une activation ou un abonnement ?
 const products = [
+  {id: "standard", name: "Pass Membre Standard", priceXOF: 3000,
+    kind: "activation"}, // prototype : à confirmer
   {id: "premium", name: "Pack Premium", priceXOF: 9900, kind: "activation"},
   {id: "business", name: "Pack Business", priceXOF: 25000, kind: "activation"},
 ];
