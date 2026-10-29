@@ -15,8 +15,10 @@ build et des tests ; **rien n'a été testé dans un navigateur ni avec les
 | Mes activités (missions) | Oui | Majoration « +40 % » inexistante retirée ; envoi de preuve non disponible (pas de backend) |
 | Académie (cours, quiz) | Oui | Message de quiz corrigé (plus de points/certificat annoncés) ; notation locale seulement |
 | VCF, Outils IA, Communauté, Support | Parcourues | Pas de backend : messages explicites ; contenu VCF/IA non audité ligne à ligne |
-| Barre de navigation, pages publiques (accueil, tarifs, etc.) | Non | Seule la mention « +40 % » de l'accueil a été retirée ; reste à relire |
-| `server.ts` (chatbot), `storage.rules` | Non revus dans ce lot | |
+| Pages publiques : accueil, Missions, Académie, Affiliation, Transparence, Outils, Partenaires, FAQ | Oui (affirmations et chiffres) | Corrigées (voir §1 bis) ; mise en page et accessibilité non revues |
+| Chatbot (widget + `server.ts`) | Oui | Réécrit (voir §1 bis) |
+| Barre de navigation, pied de page | Parcourus | Pages légales absentes (voir §3) |
+| `storage.rules` | Non revu | |
 | Comportement réel (navigateur, émulateurs Firebase, mobile) | **Non testé** | Aucun test de bout en bout n'a été exécuté |
 
 ## 1. Corrigé dans ce lot
@@ -82,6 +84,36 @@ build et des tests ; **rien n'a été testé dans un navigateur ni avec les
   (les adaptateurs simulent ; variable `PAYMENTS_SIMULATION=true` pour le dev).
 - Tests : 44 (13 nouveaux : webhooks sans secret, prix, plafond, Timestamp).
 
+## 1 bis. Pages publiques et chatbot (corrigés)
+
+- Chiffres inventés affichés au public : revenu médian de 28 500 FCFA, « 32 450+ missions »,
+  « 100 % de retraits », 4 210 membres actifs → retirés ; la page Transparence affiche
+  « indicateurs en cours de collecte ».
+- **Règle de rétractation contradictoire** : le site affirmait qu'elle ne s'appliquait pas au
+  Pass Standard (3 000 FCFA), alors que le cahier des charges (condition 2) et le serveur
+  l'appliquent à toute offre payante. Alignée sur 7 jours pour toutes les offres.
+- Fausses certifications ou fonctions annoncées : « Certifié ARTCI & UEMOA », « 100 % légal »,
+  « certificat inviolable », « 4 certifications vérifiées », « outils IA illimités (Gemini sans
+  quota) », « téléchargement illimité des répertoires VCF », « retraits sous 2 h », « missions
+  VIP à fort montant », « Chat instantané avec un conseiller » (aucun conseiller humain) →
+  retirés ou reformulés (« à venir », « en cours d'ouverture »).
+- Promesses de gains : « rémunérations garanties », « 10 % / 5 % garantis », « commissions
+  récurrentes mensuelles » (aucun prélèvement récurrent n'existe) → reformulées ; simulateur
+  d'affiliation relabellisé « exemple hypothétique » avec valeurs par défaut prudentes.
+- Chatbot : réponses et fallbacks affirmaient des retraits « instantanés », un remboursement « en
+  un clic en 1 à 3 jours », « aucun frais masqué » (frais de retrait pourtant prévus), Wave à 1 %
+  ici et 1,5 % ailleurs, des fourchettes de gains de missions, des certificats, « aucune obligation
+  d'achat pour retirer » (contraire à l'interface). Réécrits sur les seuls faits existants ;
+  l'en-tête dit désormais « assistant automatique » (plus « en direct »).
+- Serveur du chatbot : le message d'accueil du bot en tête de conversation faisait échouer les
+  appels Gemini (la conversation doit commencer par l'utilisateur) → corrigé ; consignes
+  anti-promesses et anti-injection ajoutées.
+- Générateur de texte publicitaire et outils IA locaux : les modèles inventaient garanties,
+  rareté (« 20 premiers »), avis clients et statistiques pour le compte du membre ; le « résumé »
+  ne lisait même pas le texte. Remplacés par des trames à compléter (crochets) et un message
+  clair quand l'IA n'est pas connectée.
+- Paiement : carte Visa et Mobile Money via CinetPay (voir `docs/PAIEMENTS-MOBILE-MONEY.md`).
+
 ## 2. À faire avant toute mise en production
 
 1. Définir les secrets `CINETPAY_API_KEY` et `CINETPAY_SECRET_KEY` (sans eux, aucun
@@ -110,6 +142,17 @@ build et des tests ; **rien n'a été testé dans un navigateur ni avec les
 - Catalogue de missions, formations, VCF et « Gains » affichés : données de
   démonstration, sans backend. Le catalogue VCF (droits d'usage) reste à valider.
 - Une hausse de plafond prend effet après 24 h (choix de protection à confirmer).
+
+- **Pages légales absentes** : le pied de page ne propose ni CGU, ni politique de
+  confidentialité, ni cookies, ni contact (prévus au cahier des charges, sections 4 et 38).
+  Seul un texte de CGU existe dans la fenêtre d'inscription. Textes à faire rédiger/valider.
+- **Contradiction à trancher** : l'accueil et l'interface indiquent que missions et retraits
+  exigent le Pass payant ; la charte éthique promet un palier gratuit réellement utile et sans
+  achat pour retirer. Les textes publics ne l'affirment plus, mais la règle de fond reste à choisir.
+- **API du chatbot et du générateur** (`/api/chat`, `/api/generate-copy`) : servies par
+  `server.ts`, **non déployé par Firebase Hosting** (qui renvoie `index.html` pour toute URL) ; en
+  production le widget retombe donc sur sa base locale. Si le serveur est déployé : exiger une
+  authentification (limite actuelle : 15 requêtes/minute/IP, publique) pour protéger le quota Gemini.
 
 ## 4. Modules sans backend (désormais explicites, rien n'est simulé)
 

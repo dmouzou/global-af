@@ -120,14 +120,14 @@ export const TransparencePage: React.FC<TransparencePageProps> = ({ onGoToDashbo
             <div>
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span className="text-xs font-bold text-slate-900">Architecture Éthique & Déterministe certifiée</span>
+                <span className="text-xs font-bold text-slate-900">Architecture éthique et déterministe (aucun tirage au sort)</span>
               </div>
               <p className="text-[11px] text-slate-600 mt-0.5">
                 Chaque transaction est tracée dans un grand livre comptable. Zéro jeu de hasard, zéro promesse trompeuse.
               </p>
             </div>
             <span className="text-[10px] font-mono font-bold uppercase bg-slate-900 text-white px-3 py-1 rounded-full shrink-0">
-              Certifié ARTCI & UEMOA
+              Conformité ARTCI & UEMOA : validation juridique en cours
             </span>
           </div>
         </div>
@@ -167,7 +167,7 @@ export const TransparencePage: React.FC<TransparencePageProps> = ({ onGoToDashbo
               </div>
               <h3 className="font-bold text-slate-900 text-sm">Droit de Rétractation VIP & Délais d'Affiliation</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Le délai de rétractation de 7 jours avec remboursement intégral Mobile Money s'applique exclusivement à l'abonnement mensuel VIP Premium (9 900 FCFA/mois). Pour le Pass Membre Standard (3 000 FCFA), l'accès numérique aux formations et micro-jobs est immédiat et définitif. Les commissions d'affiliation (10%, soit 990 FCFA) ne sont versées au parrain qu'après l'expiration complète de ce délai de rétractation de 7 jours.
+                Le délai de rétractation de 7 jours s'applique à toute offre payante, avec remboursement vers le moyen de paiement utilisé (traité par notre équipe). Les commissions d'affiliation ne sont créditées au parrain qu'après l'expiration complète de ce délai, et sont annulées si le filleul se rétracte.
               </p>
             </div>
 
@@ -249,10 +249,10 @@ export const TransparencePage: React.FC<TransparencePageProps> = ({ onGoToDashbo
             <div className="p-5 rounded-2xl bg-orange-50/60 border border-orange-200/80 space-y-2">
               <div className="text-xs font-bold text-orange-950 flex items-center gap-2">
                 <BabiMascot variant="wallet" size="xs" />
-                <span>Commissions Mensuelles Récurrentes</span>
+                <span>Commissions sur ventes réelles</span>
               </div>
               <p className="text-xs text-slate-700 leading-relaxed">
-                Tant que votre filleul actif règle un abonnement mensuel (ex: VIP Premium), vous percevez votre pourcentage (10% Niveau 1, 5% Niveau 2) chaque mois de manière automatique.
+                Une commission est due lorsqu'un filleul achète réellement un produit ou un service éligible ; les taux en vigueur (niveaux 1 et 2) sont affichés dans l'espace membre. Aucun gain n'est garanti.
               </p>
             </div>
 
@@ -305,12 +305,12 @@ export const TransparencePage: React.FC<TransparencePageProps> = ({ onGoToDashbo
                   </tr>
                   <tr>
                     <td className="py-3 px-4 font-medium text-slate-900">Rétractation & Remboursement</td>
-                    <td className="py-3 px-4 text-emerald-800 font-semibold bg-emerald-50/30">Garantie 7 jours avec remboursement intégral Mobile Money</td>
+                    <td className="py-3 px-4 text-emerald-800 font-semibold bg-emerald-50/30">Rétractation de 7 jours avec remboursement</td>
                     <td className="py-3 px-4 text-rose-700 bg-rose-50/30">Aucune rétractation, fonds bloqués sans recours</td>
                   </tr>
                   <tr>
                     <td className="py-3 px-4 font-medium text-slate-900">Jeux de hasard / Loteries</td>
-                    <td className="py-3 px-4 text-emerald-800 font-semibold bg-emerald-50/30">Formellement interdits (Zéro hasard certifié)</td>
+                    <td className="py-3 px-4 text-emerald-800 font-semibold bg-emerald-50/30">Formellement interdits (aucun tirage au sort)</td>
                     <td className="py-3 px-4 text-rose-700 bg-rose-50/30">Roues tournantes, tombolas et promesses irréalistes</td>
                   </tr>
                 </tbody>
@@ -340,7 +340,7 @@ export const TransparencePage: React.FC<TransparencePageProps> = ({ onGoToDashbo
           <div className="space-y-2 max-w-xl">
             <h3 className="text-xl font-bold text-white">Retraits sécurisés sur vos portefeuilles officiels</h3>
             <p className="text-xs text-slate-300 leading-relaxed">
-              Vos gains sont transférés directement sans intermédiaire bancaire vers votre compte Wave, Orange Money, MTN MoMo ou Moov Africa Côte d'Ivoire dès 2 000 FCFA.
+              Vos gains sont versés sur votre compte Wave, Orange Money, MTN MoMo ou Moov Africa Côte d'Ivoire après contrôle de la demande ; montant minimum et frais sont affichés avant validation.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">

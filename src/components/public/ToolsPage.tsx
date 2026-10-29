@@ -118,7 +118,7 @@ export const ToolsPage: React.FC<ToolsPageProps> = ({ onGoToDashboard, onOpenAut
                 Générateur d'Accroches WhatsApp & Réseaux Sociaux
               </h2>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Connecté au modèle <strong className="text-orange-300">Google Gemini Flash</strong> spécialement instruit sur les habitudes de consommation, le vocabulaire nouchi et les paiements Mobile Money en Côte d'Ivoire.
+                Génère un texte avec le modèle <strong className="text-orange-300">Google Gemini Flash</strong> lorsque le service est disponible ; sinon une trame à compléter est proposée. Relisez toujours le texte et n'y ajoutez que des informations exactes.
               </p>
 
               <div className="space-y-3">
@@ -233,7 +233,7 @@ export const ToolsPage: React.FC<ToolsPageProps> = ({ onGoToDashboard, onOpenAut
                   <FileText className="w-4 h-4" />
                   <span>Résultat Optimisé pour Conversion Mobile</span>
                   <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono">
-                    {aiSource === 'gemini_ai' ? '✨ Gemini Flash' : '⚡ Smart Model CI'}
+                    {aiSource === 'gemini_ai' ? '✨ Gemini Flash' : '📝 Trame à compléter'}
                   </span>
                 </span>
                 {generatedPost && (
@@ -277,7 +277,7 @@ export const ToolsPage: React.FC<ToolsPageProps> = ({ onGoToDashboard, onOpenAut
               Répertoires de Contacts Professionnels VCF
             </h2>
             <p className="text-xs text-slate-500 mt-1">
-              Des carnets d'adresses qualifiés d'entreprises, grossistes et artisans par secteur en Côte d'Ivoire. Téléchargeables en 1 clic pour votre prospection.
+              Catalogue de carnets d'adresses professionnels par secteur en Côte d'Ivoire. Le téléchargement n'est pas encore ouvert : l'origine et les droits d'usage des contacts sont en cours de validation avant toute mise à disposition.
             </p>
           </div>
 
@@ -292,8 +292,8 @@ export const ToolsPage: React.FC<ToolsPageProps> = ({ onGoToDashboard, onOpenAut
                     <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
                       {res.sector}
                     </span>
-                    <span className="text-xs font-notable text-slate-700 font-bold">
-                      {res.entriesCount} contacts
+                    <span className="text-[10px] text-slate-500 font-semibold">
+                      Bientôt disponible
                     </span>
                   </div>
                   <h3 className="font-bold text-slate-900 text-sm">

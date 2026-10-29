@@ -17,42 +17,41 @@ export interface ChatMessage {
 // Built-in verified high-performance knowledge engine for instant local responses
 const KNOWLEDGE_BASE: { keywords: string[]; title: string; answer: string; suggestions?: string[]; links?: { label: string; view: string }[] }[] = [
   {
-    keywords: ['retrait', 'retirer', 'solde', 'seuil', 'virement', 'argent', 'gain'],
-    title: 'Retraits & Paiements Mobile Money',
-    answer: `Les retraits de gains sur GLOBAL-AF s'effectuent simplement et rapidement :
+    keywords: ['retrait', 'retirer', 'solde', 'seuil', 'virement', 'argent', 'gain', 'gagne'],
+    title: 'Retraits',
+    answer: `Voici comment fonctionnent les retraits sur GLOBAL-AF :
 
-• **Seuil minimal de retrait :** dès **2 000 FCFA** de solde disponible.
-• **Opérateurs supportés :** 
-  - **Wave Côte d'Ivoire** (frais de transfert de 1,5%)
-  - **Orange Money CI** (validation sécurisée par USSD ou app)
-  - **MTN MoMo CI** (transfert direct sur votre numéro)
-  - **Moov Africa Money**
-• **Délai d'exécution :** les retraits sont contrôlés par notre grand livre comptable et exécutés selon les délais interopérateurs habituels.
-• **Aucun frais masqué :** le solde affiché correspond exactement à ce qui vous est versé.`,
+• **Où :** depuis la rubrique « Retraits » de votre espace personnel, vers un compte Mobile Money (Wave, Orange Money, MTN MoMo ou Moov Money).
+• **Numéro :** le versement se fait sur le numéro Mobile Money indiqué à votre inscription.
+• **Montant minimum et frais :** ils sont affichés dans la fenêtre de retrait **avant** que vous validiez, avec le montant net que vous recevrez.
+• **Contrôle :** chaque demande est contrôlée avant paiement ; le montant demandé est mis de côté sur votre solde pendant ce temps. Le délai dépend de ce contrôle et de l'opérateur : il n'est pas garanti.
+• **Prérequis :** votre adresse e-mail doit être confirmée.
+
+Aucun gain n'est garanti : le solde dépend uniquement des récompenses et commissions effectivement validées.`,
     suggestions: [
-      "Quels opérateurs Mobile Money sont acceptés ?",
-      "Comment réaliser des micro-jobs ?",
-      "Règles de rémunération des parrains"
+      "Quel est le délai de rétractation ?",
+      "Comment fonctionne le parrainage ?",
+      "Quels moyens de paiement sont acceptés ?"
     ],
     links: [
-      { label: "Accéder à mon Wallet", view: "dashboard" }
+      { label: "Accéder à mon espace", view: "dashboard" }
     ]
   },
   {
-    keywords: ['parrain', 'parrainage', 'affiliation', 'commission', 'filleul', 'niveaux', 'niveau 1', 'niveau 2', 'remuneration parrain'],
-    title: 'Règles de Rémunération des Parrains',
-    answer: `Le programme d'affiliation de GLOBAL-AF est 100% transparent et éthique :
+    keywords: ['parrain', 'parrainage', 'affiliation', 'commission', 'filleul', 'niveaux', 'niveau 1', 'niveau 2'],
+    title: 'Parrainage',
+    answer: `Le parrainage de GLOBAL-AF repose sur des **ventes réelles**, jamais sur le simple recrutement :
 
-• **Niveau 1 (Parrainage Direct) :** vous touchez **10% de commission nette** sur chaque vente réelle de packs ou formations effectuée par vos filleuls directs.
-  *Exemple : Un filleul souscrit un Pack Premium à 9 900 FCFA → Vous recevez 990 FCFA crédités après validation de la période légale de rétractation (7 jours).*
-• **Niveau 2 (Parrainage Indirect) :** vous touchez **5% de commission nette** sur les achats réalisés par les filleuls de votre niveau 1.
-• **Zéro commission sur l'inscription :** aucune commission n'est versée sur le simple recrutement d'un utilisateur. L'inscription est gratuite.
-• **Plafonnement strict à 2 niveaux maximum :** aucun niveau 3 pour interdire tout montage pyramidal.
-• **Condition :** les commissions proviennent exclusivement de produits tangibles et utiles (formations, outils IA, répertoires qualifiés).`,
+• **Deux niveaux au maximum** : vos filleuls directs (niveau 1) et les filleuls de vos filleuls (niveau 2). Il n'y a pas de niveau 3.
+• **Une commission n'existe que si un filleul achète réellement** un produit ou un service éligible. L'inscription, ou l'activation d'un compte seule, ne génère aucune commission.
+• **Taux :** les taux en vigueur sont affichés dans l'onglet « Équipe » de votre espace.
+• **Délai :** une commission est créditée après le délai de rétractation de 7 jours, et annulée si le filleul se rétracte.
+• **Vos commissions** (en attente, créditées, annulées) sont visibles dans l'onglet « Équipe ».
+
+Test simple : si plus personne ne s'inscrivait pendant un an, vous ne gagneriez que grâce aux achats réels de vos filleuls. Aucun gain n'est garanti.`,
     suggestions: [
       "Comment retirer mes commissions ?",
-      "Quel est le délai de rétractation ?",
-      "Combien coûte le Pack Premium ?"
+      "Quel est le délai de rétractation ?"
     ],
     links: [
       { label: "Voir la page Affiliation", view: "affiliation" },
@@ -60,108 +59,104 @@ const KNOWLEDGE_BASE: { keywords: string[]; title: string; answer: string; sugge
     ]
   },
   {
-    keywords: ['micro-job', 'microjob', 'mission', 'tâche', 'remunere', 'sondage', 'test'],
-    title: 'Micro-jobs & Missions Rémunérées',
-    answer: `Les micro-jobs sur GLOBAL-AF sont des tâches digitales réelles commandées par des entreprises partenaires :
+    keywords: ['micro-job', 'microjob', 'mission', 'tâche', 'tache', 'remunere', 'sondage', 'test'],
+    title: 'Micro-jobs et missions',
+    answer: `Les missions sont des tâches numériques (sondages, tests, revues de contenu) :
 
-• **Types de missions :**
-  - **Sondages & Enquêtes consommateurs** (ex : 400 à 1 200 FCFA)
-  - **Tests d'applications mobiles ivoiriennes** (ex : 800 à 2 500 FCFA)
-  - **Sensibilisation & visionnage de tutoriels** (ex : 300 à 600 FCFA)
-  - **Revue de contenu et contrôle qualité**
-• **Rémunération déterministe :** chaque mission a un tarif fixe connu d'avance. Dès que votre preuve de complétion est validée, les fonds s'ajoutent à votre Wallet.
-• **Zéro jeu de hasard :** aucun tirage au sort, chaque travail validé est intégralement payé.`,
+• **Récompense connue à l'avance :** chaque mission indique sa récompense et ses conditions avant que vous commenciez. Il n'y a aucun tirage au sort.
+• **Validation :** la récompense est versée si votre preuve est validée.
+• **Disponibilité :** l'envoi de preuves et le versement des récompenses **ne sont pas encore ouverts**. Le catalogue présenté est une démonstration de ce qui sera proposé.
+
+Aucun gain n'est garanti.`,
     suggestions: [
-      "Comment retirer mes gains de micro-jobs ?",
-      "Le palier gratuit donne-t-il accès aux micro-jobs ?",
-      "Quel est le revenu médian des membres ?"
+      "Comment retirer mes gains ?",
+      "Quels sont les packs et tarifs ?"
     ],
     links: [
-      { label: "Explorer le catalogue des missions", view: "missions" }
+      { label: "Voir le catalogue des missions", view: "missions" }
     ]
   },
   {
-    keywords: ['retractation', 'remboursement', '7j', '7 jours', '14', 'garantie', 'annuler'],
-    title: 'Délai Légal de Rétractation de 7 Jours',
-    answer: `GLOBAL-AF applique une politique de garantie et de rétractation stricte de **7 jours** :
+    keywords: ['retractation', 'rétractation', 'remboursement', '7j', '7 jours', 'garantie', 'annuler'],
+    title: 'Délai de rétractation',
+    answer: `Pour toute offre payante, vous disposez d'un **délai de rétractation de 7 jours** à compter du paiement :
 
-• **Durée :** vous disposez de **7 jours calendaires** à compter de la souscription d'une option payante (Pack Premium ou Pack Business).
-• **Modalité :** la demande s'effectue en **1 clic** depuis vos paramètres dans l'Espace Personnel, sans formulaire complexe.
-• **Remboursement Mobile Money :** le montant intégral souscrit (9 900 FCFA ou 25 000 FCFA) est reversé directement sur votre compte Mobile Money d'origine (Wave, Orange Money, MTN MoMo ou Moov) selon les délais bancaires et opérateurs (1 à 3 jours ouvrés).
-• **Zéro pénalité ni frais cachés.**`,
+• **Demande :** depuis la rubrique « Paramètres » de votre espace. Votre accès à l'offre est alors retiré et les commissions liées à votre achat sont annulées.
+• **Remboursement :** il est traité par notre équipe vers le moyen de paiement utilisé (Mobile Money ou carte). Le délai dépend du traitement et de l'opérateur ou de la banque : vous êtes notifié dès qu'il est effectué.
+• **Frais :** le montant, les frais éventuels et le contenu de l'offre vous sont présentés avant tout paiement.`,
     suggestions: [
-      "Quels sont les tarifs des packs ?",
-      "Comment contacter le support ?",
-      "L'accès gratuit est-il sans engagement ?"
+      "Quels moyens de paiement sont acceptés ?",
+      "Comment contacter le support ?"
     ],
     links: [
       { label: "Consulter la charte de transparence", view: "transparence" }
     ]
   },
   {
-    keywords: ['gratuit', 'inscription', 'sans achat', 'prix', 'cout', 'abonnement', 'tarif', 'packs', 'premium'],
-    title: 'Formules d\'Accès & Tarifs en Francs CFA (XOF)',
-    answer: `GLOBAL-AF propose un palier gratuit pérenne et des options d'accélération :
+    keywords: ['gratuit', 'inscription', 'sans achat', 'prix', 'cout', 'coût', 'abonnement', 'tarif', 'packs', 'premium', 'standard', 'business'],
+    title: 'Offres et tarifs',
+    answer: `L'inscription est **gratuite**. Des offres payantes optionnelles existent (Pass Standard, Premium, Business) :
 
-• **Membre Gratuit (0 FCFA pour toujours) :**
-  - Accès direct aux micro-jobs standard
-  - Modules d'initiation de l'Académie
-  - Retraits Mobile Money dès 2 000 FCFA
-  - Lien d'affiliation éthique 2 niveaux
-  - **Aucune obligation d'achat pour retirer vos gains**
+• **Contenu et prix :** chaque offre décrit précisément ce qu'elle contient, son prix et ses éventuels frais **avant** le paiement, sur la page de paiement elle-même.
+• **Rétractation :** 7 jours, avec remboursement (voir « délai de rétractation »).
+• **Pas d'endettement :** ne souscrivez jamais une offre en vous endettant. Vous pouvez fixer un plafond de dépense mensuel dans « Paramètres ».
+• **Gains :** acheter une offre ne garantit aucun gain.
 
-• **Membre Premium (9 900 FCFA - Rétractation 7 jours) :**
-  - Missions prioritaires à rémunération majorée
-  - Outils IA illimités (Assistant rédactionnel, devis)
-  - Téléchargement des répertoires de contacts VCF
-  - Certifications complètes de l'Académie
-
-• **Pack Business (25 000 FCFA) :**
-  - Pour diffuser des campagnes et micro-jobs d'entreprises.`,
+Les conditions d'accès détaillées de chaque rubrique sont indiquées dans votre espace.`,
     suggestions: [
-      "Comment s'applique le délai de 7 jours de rétractation ?",
-      "Règles de rémunération des parrains",
-      "Quels opérateurs Mobile Money sont acceptés ?"
+      "Quels moyens de paiement sont acceptés ?",
+      "Quel est le délai de rétractation ?"
     ],
     links: [
-      { label: "Voir tous les tarifs", view: "landing" }
+      { label: "Voir la page d'accueil", view: "landing" }
     ]
   },
   {
-    keywords: ['wave', 'orange', 'mtn', 'moov', 'operateur', 'momo'],
-    title: 'Opérateurs Mobile Money Partenaires',
-    answer: `GLOBAL-AF est nativement interconnecté avec les 4 grands réseaux de paiement en Côte d'Ivoire :
+    keywords: ['wave', 'orange', 'mtn', 'moov', 'operateur', 'opérateur', 'momo', 'visa', 'carte', 'paiement', 'payer', 'cinetpay'],
+    title: 'Moyens de paiement',
+    answer: `Les paiements d'offres se font sur une **page sécurisée de notre partenaire CinetPay** :
 
-1. **Wave Côte d'Ivoire :** frais de transfert de 1,5% conformes aux barèmes, retraits sécurisés.
-2. **Orange Money CI :** validation sécurisée par code USSD ou notification d'application Orange.
-3. **MTN MoMo CI :** intégration directe pour dépôt et retrait sécurisé sur tout numéro MTN.
-4. **Moov Africa Money :** couverture nationale Moov Money.
+• **Mobile Money :** Wave, Orange Money, MTN MoMo, Moov Money ; vous choisissez votre opérateur sur cette page.
+• **Carte bancaire Visa :** les données de votre carte sont saisies uniquement sur la page sécurisée, jamais sur GLOBAL-AF ; une adresse de facturation vous est demandée.
+• **Devise :** Franc CFA (XOF).
+• **Activation :** votre offre est activée après la confirmation du paiement, pas avant.
 
-Tous les paiements s'effectuent en Francs CFA (XOF) en conformité avec la réglementation financière de l'UEMOA.`,
+Les **retraits** de gains se font vers un compte Mobile Money (voir « retraits »).`,
     suggestions: [
-      "Quel est le seuil de retrait ?",
-      "Comment fonctionne le parrainage ?",
-      "Comment démarrer les micro-jobs ?"
+      "Comment fonctionne un retrait ?",
+      "Quel est le délai de rétractation ?"
     ]
   },
   {
-    keywords: ['formation', 'academie', 'cours', 'certif', 'whatsapp', 'vcf', 'apprendre'],
-    title: 'Digital Academy & Certifications',
-    answer: `La Digital Academy GLOBAL-AF propose des cursus pratiques axés sur les compétences rémunératrices en Afrique de l'Ouest :
+    keywords: ['formation', 'academie', 'académie', 'cours', 'certif', 'whatsapp', 'vcf', 'apprendre'],
+    title: 'Digital Academy',
+    answer: `La Digital Academy propose des cours pratiques (vidéos, documents, quiz) sur la vente avec WhatsApp, la rédaction, l'intelligence artificielle ou l'e-commerce.
 
-• **Vendre avec WhatsApp & Wave en Côte d'Ivoire**
-• **Copywriting & Intelligence Artificielle pour le marché local**
-• **E-commerce rentable sans stock & prospection locale**
-• **Gestion et valorisation de fichiers prospects VCF**
+• **Quiz :** vous obtenez votre score à la fin d'un quiz.
+• **Points et certificats :** leur délivrance **n'est pas encore ouverte** ; aucun point ni certificat n'est enregistré pour le moment.
+• **Fichiers VCF :** le téléchargement n'est pas encore disponible (les droits d'usage des données sont en cours de validation).
 
-Chaque cours comprend des vidéos pas-à-pas, des quiz de validation et donne droit à une attestation certifiée avec bonus de points.`,
+Les cours ne promettent aucun revenu.`,
     suggestions: [
-      "Accéder aux cours de l'Académie",
-      "Combien gagne un membre ?",
-      "Quels sont les micro-jobs disponibles ?"
+      "Quels sont les packs et tarifs ?",
+      "Comment contacter le support ?"
     ],
     links: [
       { label: "Découvrir la Digital Academy", view: "academy" }
+    ]
+  },
+  {
+    keywords: ['support', 'contact', 'aide', 'ticket', 'probleme', 'problème'],
+    title: 'Support',
+    answer: `Le **support par tickets n'est pas encore ouvert** dans l'espace membre : un message envoyé depuis cette rubrique ne serait pas enregistré.
+
+• Pour un **remboursement** ou une **rétractation** : rubrique « Paramètres » de votre espace.
+• Pour un **paiement débité sans activation** : conservez la référence affichée sur la page de retour du paiement.
+
+Ce chatbot est un assistant automatique : il informe mais ne remplace ni un conseil juridique, ni un conseil financier.`,
+    suggestions: [
+      "Quel est le délai de rétractation ?",
+      "Comment fonctionne un retrait ?"
     ]
   }
 ];
@@ -181,14 +176,14 @@ export const InformationalChatbot: React.FC<InformationalChatbotProps> = ({
     {
       id: 'welcome',
       role: 'bot',
-      text: "Bonjour ! Je suis le **Chatbot Informationnel officiel de GLOBAL-AF**.\n\nJe réponds immédiatement à toutes vos questions sur les **micro-jobs rémunérés**, les **retraits Mobile Money** (Wave, Orange, MTN, Moov), les **règles de rémunération des parrains** (15% au niveau 1, 5% au niveau 2) et le **délai de rétractation de 7 jours**.\n\nComment puis-je vous renseigner aujourd'hui ?",
+      text: "Bonjour ! Je suis l'**assistant automatique de GLOBAL-AF**.\n\nJe peux vous informer sur les **retraits**, le **parrainage**, les **moyens de paiement**, le **délai de rétractation** et les **offres**. Je ne remplace ni un conseil juridique, ni un conseil financier, et aucun gain n'est garanti.",
       time: 'À l\'instant',
       suggestions: [
         "Comment retirer mes gains Mobile Money ?",
         "Quelles sont les règles de rémunération des parrains ?",
-        "Comment réaliser des micro-jobs rémunérés ?",
+        "Où en sont les micro-jobs ?",
         "Quel est le délai légal de rétractation ?",
-        "L'accès gratuit est-il sans achat obligatoire ?"
+        "Quels sont les packs et tarifs ?"
       ]
     }
   ]);
@@ -222,7 +217,7 @@ export const InformationalChatbot: React.FC<InformationalChatbotProps> = ({
         suggestions: [
           "Comment retirer mes gains Mobile Money ?",
           "Règles de rémunération des parrains",
-          "Comment réaliser des micro-jobs ?",
+          "Où en sont les micro-jobs ?",
           "Délai de rétractation de 7 jours"
         ]
       }
@@ -280,8 +275,8 @@ export const InformationalChatbot: React.FC<InformationalChatbotProps> = ({
             text: data.answer,
             time: currentTime,
             suggestions: [
-              "Règles de rémunération des parrains",
-              "Retrait Wave & Orange dès 2 000 FCFA",
+              "Comment fonctionne le parrainage ?",
+              "Comment fonctionne un retrait ?",
               "Délai de rétractation de 7 jours"
             ]
           };
@@ -307,7 +302,7 @@ export const InformationalChatbot: React.FC<InformationalChatbotProps> = ({
         links = matched.links;
         if (matched.suggestions) suggestions = matched.suggestions;
       } else {
-        replyText = `GLOBAL-AF est la plateforme d'opportunités numériques éthique en Côte d'Ivoire.\n\n• **Micro-jobs réels :** missions rémunérées (sondages, tests d'applis, revues) avec paiement fixe déterministe.\n• **Retraits sécurisés :** dès 2 000 FCFA sur Wave, Orange Money, MTN MoMo et Moov Africa (frais de 1,5%).\n• **Règles des parrains :** 10% au niveau 1 et 5% au niveau 2 sur ventes réelles, zéro commission sur simple inscription.\n• **Garantie :** droit légal de rétractation de 7 jours avec remboursement intégral Mobile Money.`;
+        replyText = `Je n'ai pas de réponse précise à cette question. Voici ce que je peux expliquer :\n\n• **Retraits** : contrôlés avant paiement, frais et montant net affichés avant validation.\n• **Parrainage** : commissions uniquement sur ventes réelles, 2 niveaux maximum.\n• **Paiements** : Mobile Money ou carte Visa sur une page sécurisée.\n• **Rétractation** : 7 jours pour toute offre payante.\n\nAucun gain n'est garanti.`;
       }
 
       const botMsg: ChatMessage = {
@@ -339,15 +334,15 @@ export const InformationalChatbot: React.FC<InformationalChatbotProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h3 className="font-bold text-sm sm:text-base text-white tracking-tight">
-                Chatbot Informationnel GLOBAL-AF
+                Assistant GLOBAL-AF
               </h3>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold hidden sm:inline-flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                En direct
+                Réponses automatiques
               </span>
             </div>
             <p className="text-[11px] text-slate-300">
-              Conseiller officiel · Micro-jobs, Mobile Money, Parrainage & Éthique
+              Assistant automatique · informations générales, sans garantie de gain
             </p>
           </div>
         </div>
@@ -535,9 +530,8 @@ export const InformationalChatbot: React.FC<InformationalChatbotProps> = ({
         <div className="flex items-center justify-between text-[10px] text-slate-400 mt-2 px-1">
           <div className="flex items-center gap-1.5">
             <ShieldCheck className="w-3 h-3 text-emerald-400" />
-            <span>Informations vérifiées selon la charte éthique GLOBAL-AF</span>
+            <span>Informations générales : vérifiez les conditions avant tout paiement</span>
           </div>
-          <span>Retraits dès 2 000 FCFA</span>
         </div>
       </div>
 

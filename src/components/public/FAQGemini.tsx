@@ -20,7 +20,7 @@ const PREDEFINED_FAQS: FAQItem[] = [
     id: 'faq-2',
     category: 'Paiements',
     question: "Quels sont les opérateurs de paiement Mobile Money supportés ?",
-    answer: "Nous intégrons nativement Wave Côte d'Ivoire, Orange Money, MTN MoMo et Moov Africa Côte d'Ivoire (frais de transfert de 1,5% conformes aux barèmes de la plateforme). Les demandes de retrait sont déclenchées directement vers votre numéro dès que votre solde disponible atteint 2 000 FCFA."
+    answer: "Les retraits se font vers un compte Wave, Orange Money, MTN MoMo ou Moov Money, sur le numéro indiqué à l'inscription. Le montant minimum, les frais et le montant net sont affichés avant validation ; chaque demande est contrôlée avant paiement, sans délai garanti."
   },
   {
     id: 'faq-3',
@@ -32,7 +32,7 @@ const PREDEFINED_FAQS: FAQItem[] = [
     id: 'faq-4',
     category: 'Éthique',
     question: "Quelles sont les règles de rémunération des parrains ?",
-    answer: "Sur GLOBAL-AF, le programme d'affiliation repose uniquement sur des ventes réelles : 10% de commission nette au Niveau 1 (parrainage direct) et 5% de commission nette au Niveau 2 (parrainage indirect). Le simple recrutement d'autres membres ne rapporte strictement rien. Aucun système de parrainage infini ni de gain passif fictif."
+    answer: "Le programme d'affiliation repose uniquement sur des ventes réelles, sur 2 niveaux maximum (parrainage direct et indirect) ; les taux en vigueur sont affichés dans l'espace membre. Le simple recrutement de membres ne rapporte rien, ni l'activation seule. Aucun gain n'est garanti."
   },
   {
     id: 'faq-5',
@@ -44,7 +44,7 @@ const PREDEFINED_FAQS: FAQItem[] = [
     id: 'faq-6',
     category: 'Éthique',
     question: "Comment fonctionne le droit légal de rétractation de 7 jours ?",
-    answer: "Si vous souscrivez un forfait payant (Pack Premium ou Pack Business), vous bénéficiez d'un délai légal et garanti de 7 jours calendaires pour changer d'avis. Un simple clic dans vos paramètres déclenche un remboursement intégral sans pénalité sur votre compte Mobile Money d'origine."
+    answer: "Pour toute offre payante, vous disposez de 7 jours à compter du paiement pour vous rétracter. La demande se fait depuis vos paramètres ; le remboursement est ensuite traité par notre équipe vers votre moyen de paiement (le délai dépend de l'opérateur ou de la banque)."
   }
 ];
 
@@ -215,7 +215,7 @@ export const FAQGemini: React.FC<{ onNavigateView?: (view: string) => void }> = 
                     <MessageCircle className="w-5 h-5 text-emerald-600" />
                     <div>
                       <div className="font-bold text-slate-900">Assistance WhatsApp Directe</div>
-                      <div className="text-[11px] text-emerald-700">Chat instantané avec un conseiller</div>
+                      <div className="text-[11px] text-emerald-700">Réponses automatiques (assistant)</div>
                     </div>
                   </div>
                   <ExternalLink className="w-4 h-4 text-emerald-600 group-hover:translate-x-0.5 transition-transform" />

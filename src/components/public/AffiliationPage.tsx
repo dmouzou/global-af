@@ -17,9 +17,9 @@ interface AffiliationPageProps {
 }
 
 export const AffiliationPage: React.FC<AffiliationPageProps> = ({ onGoToDashboard, onOpenAuth }) => {
-  const [level1Referrals, setLevel1Referrals] = useState(5);
-  const [level2Referrals, setLevel2Referrals] = useState(15);
-  const [averageBasket, setAverageBasket] = useState(15000); // 15 000 FCFA
+  const [level1Referrals, setLevel1Referrals] = useState(1);
+  const [level2Referrals, setLevel2Referrals] = useState(0);
+  const [averageBasket, setAverageBasket] = useState(10000); // exemple de panier, modifiable
 
   // Commissions: 10% on level 1, 5% on level 2
   const level1Earnings = level1Referrals * (averageBasket * 0.10);
@@ -113,13 +113,13 @@ export const AffiliationPage: React.FC<AffiliationPageProps> = ({ onGoToDashboar
             {/* Total Results */}
             <div className="lg:col-span-5 bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 space-y-4 text-center">
               <div className="text-xs uppercase tracking-wider text-orange-300 font-bold">
-                Commissions Estimées Reversées
+                Exemple de calcul (hypothétique)
               </div>
               <div className="space-y-1">
                 <div className="text-3xl sm:text-4xl font-extrabold text-white font-notable">
                   {totalCommission.toLocaleString()} FCFA
                 </div>
-                <div className="text-[11px] text-slate-300">Sur des achats réels et utiles constatés</div>
+                <div className="text-[11px] text-slate-300">Illustration : aucun gain n'est garanti. Le montant dépend des achats réels de vos filleuls ; les taux en vigueur sont affichés dans l'espace membre.</div>
               </div>
 
               <div className="pt-3 border-t border-white/10 grid grid-cols-2 gap-2 text-xs text-left">
@@ -149,7 +149,7 @@ export const AffiliationPage: React.FC<AffiliationPageProps> = ({ onGoToDashboar
         <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-xs space-y-6">
           <div className="max-w-2xl">
             <h2 className="text-2xl font-bold text-slate-900">
-              Pourquoi notre modèle est 100% légal et éthique
+              Pourquoi ce modèle est conçu pour être éthique
             </h2>
             <p className="text-xs text-slate-500 mt-1">
               Comprendre la différence fondamentale entre notre affiliation vertueuse et les montages pyramidaux frauduleux.
@@ -183,7 +183,7 @@ export const AffiliationPage: React.FC<AffiliationPageProps> = ({ onGoToDashboar
                 </tr>
                 <tr>
                   <td className="py-3.5 px-4 font-semibold text-slate-800">Accès gratuit et sans achat</td>
-                  <td className="py-3.5 px-4 text-emerald-800 font-medium">Oui, palier gratuit 100% fonctionnel</td>
+                  <td className="py-3.5 px-4 text-emerald-800 font-medium">Inscription gratuite ; offres payantes optionnelles</td>
                   <td className="py-3.5 px-4 text-rose-800">Non, achat obligatoire pour participer</td>
                 </tr>
                 <tr>

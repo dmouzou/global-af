@@ -49,7 +49,7 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({ onGoToDashboard, onOpe
           <div className="space-y-4 max-w-2xl text-left">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-100 border border-orange-200 text-orange-900 text-xs font-bold shadow-2xs">
               <GraduationCap className="w-4 h-4 text-orange-600" />
-              <span>Digital Academy Côte d'Ivoire · Compétences & Certifications</span>
+              <span>Digital Academy Côte d'Ivoire · Formations pratiques</span>
             </div>
             
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
@@ -131,10 +131,10 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({ onGoToDashboard, onOpe
                 03
               </div>
               <h3 className="font-bold text-slate-900 text-sm">
-                Décrochez votre Certification
+                Validez vos acquis
               </h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Passez l'examen final depuis votre espace membre et recevez votre attestation numérique certifiée munie d'un identifiant unique.
+                Passez les quiz depuis votre espace membre. La délivrance d'attestations numériques n'est pas encore ouverte.
               </p>
             </div>
           </div>
@@ -148,7 +148,7 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({ onGoToDashboard, onOpe
                 Catalogue des Formations
               </h2>
               <p className="text-xs text-slate-500 mt-1">
-                Découvrez les parcours certifiants actuellement dispensés sur GLOBAL-AF.
+                Découvrez les parcours de formation proposés sur GLOBAL-AF.
               </p>
             </div>
 
@@ -291,13 +291,13 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({ onGoToDashboard, onOpe
           <div className="space-y-4 max-w-xl text-left">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold">
               <Award className="w-3.5 h-3.5" />
-              <span>Attestation Numérique d'Excellence</span>
+              <span>Attestation numérique (à venir)</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
-              Une reconnaissance vérifiable pour vos compétences
+              Des attestations numériques à venir
             </h2>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
-              Chaque attestation délivrée par la Digital Academy GLOBAL-AF comporte un identifiant unique et une signature numérique infalsifiable. Idéal pour prouver vos aptitudes auprès d'entreprises partenaires, de clients ou sur vos profils professionnels.
+              Les attestations de la Digital Academy ne sont pas encore délivrées. L'aperçu ci-dessous est un exemple de présentation prévue ; une attestation de formation interne ne vaut pas diplôme reconnu.
             </p>
             <div className="pt-2">
               <button
@@ -305,7 +305,7 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({ onGoToDashboard, onOpe
                 className="px-5 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-xl text-xs font-semibold transition-colors flex items-center gap-2"
               >
                 <Award className="w-4 h-4 text-amber-400" />
-                <span>Voir un aperçu du certificat officiel</span>
+                <span>Voir un aperçu (exemple, non délivré)</span>
               </button>
             </div>
           </div>

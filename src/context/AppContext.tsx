@@ -727,51 +727,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     _tone: string = 'professionnel et engageant'
   ): Promise<string> => {
     setIsAILoading(true);
-    await new Promise(r => setTimeout(r, 600));
     setIsAILoading(false);
 
+    // Aucune IA n'est branchée ici : ce sont des TRAMES à compléter. Rien n'est inventé
+    // (ni témoignage, ni garantie, ni statistique, ni délai) ; les crochets [ ] indiquent
+    // ce que l'utilisateur doit renseigner lui-même avec des faits réels.
+    const topic = input.trim().slice(0, 200);
+
     if (toolType === 'copywriter') {
-      return `✨ **Proposition Rédactionnelle Optimisée (Marché Ivoirien & UEMOA)**\n\n` +
-        `🚀 **Accroche percutante :**\n` +
-        `« Vous cherchez une solution fiable pour ${input.trim()} sans vous compliquer la vie ? »\n\n` +
-        `💡 **Le bénéfice concret :**\n` +
-        `Dans notre quotidien à Abidjan et partout en Côte d'Ivoire, la rapidité et la confiance font toute la différence. Plus besoin d'attendre des jours pour obtenir un résultat concret : tout est pensé pour être accessible directement depuis votre smartphone.\n\n` +
-        `📲 **Comment en profiter dès aujourd'hui :**\n` +
-        `1. Cliquez sur le lien direct WhatsApp ci-dessous.\n` +
-        `2. Obtenez votre confirmation instantanée.\n` +
-        `3. Règlement sécurisé via Wave ou Orange Money.\n\n` +
-        `👉 *Contactez notre équipe dès maintenant pour réserver votre session !*`;
+      return `📝 **Trame de texte publicitaire pour : « ${topic} »**\n\n` +
+        `**Accroche :**\n« Vous cherchez ${topic} ? » [reformulez avec vos mots]\n\n` +
+        `**Ce que vous proposez (faits réels uniquement) :**\n[caractéristiques, prix, zone desservie]\n\n` +
+        `**Conditions :**\n[livraison, délais, moyens de paiement acceptés : ne mentionnez que ce que vous proposez réellement]\n\n` +
+        `**Pour commander :**\n[votre numéro WhatsApp ou e-mail]\n\n` +
+        `ℹ️ L'assistant IA n'est pas encore connecté : cette trame est à compléter. N'ajoutez ni garantie, ni avis, ni urgence que vous ne pouvez pas tenir.`;
     }
 
     if (toolType === 'marketing_ideas') {
-      return `📊 **Plan de 5 Actions Marketing à Fort Impact pour : "${input}"**\n\n` +
-        `1. **Stratégie WhatsApp Status & Catalogue Pro :**\n` +
-        `Diffusez 3 stories courtes par jour montrant les coulisses de votre service et l'avis d'un client satisfait à Cocody ou Marcory avec paiement Wave direct.\n\n` +
-        `2. **Partenariat Micro-Influence Local :**\n` +
-        `Identifiez 2 créateurs de contenu émergents sur TikTok à Abidjan axés sur l'authenticité plutôt que sur les gros volumes de followers factices.\n\n` +
-        `3. **Offre Spéciale "Premier Pas" sans risque :**\n` +
-        `Proposez une démonstration ou un échantillon avec garantie satisfait ou remboursé sous 7 jours pour lever tout frein psychologique.\n\n` +
-        `4. **Missions Communautaires Éthiques sur GLOBAL-AF :**\n` +
-        `Publiez un micro-job de test ergonomique pour recueillir 50 retours qualifiés d'utilisateurs réels.\n\n` +
-        `5. **Paiement Mobile Money Simplifié :**\n` +
-        `Affichez un QR Code Wave et un numéro MTN MoMo dès la première page de contact pour diviser par deux l'abandon de panier.`;
+      return `📊 **Pistes de réflexion marketing pour : « ${topic} »**\n\n` +
+        `1. **Présenter l'offre clairement** : ce que vous vendez, à qui, pour quel prix, avec vos vraies conditions.\n` +
+        `2. **Recueillir de vrais avis** : demandez à vos clients réels l'autorisation de partager leur retour.\n` +
+        `3. **Choisir un canal** : concentrez-vous d'abord sur celui où se trouvent vos clients (WhatsApp, Facebook, bouche-à-oreille).\n` +
+        `4. **Tester avec un petit budget** : mesurez ce qui fonctionne avant de dépenser davantage.\n` +
+        `5. **Rester transparent** : prix, délais et conditions de retour clairement indiqués.\n\n` +
+        `ℹ️ Ces pistes sont génériques (l'assistant IA n'est pas encore connecté) et ne garantissent aucun résultat.`;
     }
 
     if (toolType === 'summarizer') {
-      return `📋 **Synthèse Exécutive en 4 Points Clés :**\n\n` +
-        `• **Constat initial :** L'analyse met en avant le besoin de clarté opérationnelle concernant "${input.slice(0, 80)}...".\n` +
-        `• **Opportunité identifiée :** Simplification des démarches et adoption massive des outils numériques mobiles en Afrique de l'Ouest.\n` +
-        `• **Facteur de succès :** Transparence totale sur les coûts et conformité éthique avec les directives de protection des consommateurs.\n` +
-        `• **Recommandation immédiate :** Lancement progressif avec validation terrain et encaissement sécurisé par Mobile Money.`;
+      return `📋 **Résumé automatique indisponible pour le moment.**\n\n` +
+        `Le résumé de texte nécessite l'assistant IA, qui n'est pas encore connecté : afficher un résumé sans analyser votre texte serait trompeur. Votre texte n'a pas été envoyé ni enregistré.`;
     }
 
-    return `🎯 **3 Prompts Optimisés pour votre Assistant Numérique :**\n\n` +
-      `**Prompt 1 (Expertise Métier) :**\n` +
-      `« Agis comme un directeur marketing senior spécialisé dans le marché ouest-africain. Élabore une feuille de route détaillée sur 30 jours pour "${input}", en tenant compte des spécificités d'Abidjan. »\n\n` +
-      `**Prompt 2 (Conversion & Ventes Réelles) :**\n` +
-      `« Rédige une page de vente en 5 étapes pour "${input}", axée sur la transparence des prix en Francs CFA (XOF) et un appel à l'action WhatsApp clair. »\n\n` +
-      `**Prompt 3 (Automatisation & Productivité) :**\n` +
-      `« Crée un tableau comparatif sous forme de matrice reprenant les forces, faiblesses, opportunités et coûts estimés pour déployer "${input}". »`;
+    return `🎯 **3 modèles de prompts à adapter pour : « ${topic} »**\n\n` +
+      `**Prompt 1 (plan d'action) :**\n« Agis comme un conseiller marketing. Propose un plan d'action sur 30 jours pour "${topic}". Précise les hypothèses que tu fais. »\n\n` +
+      `**Prompt 2 (page de vente) :**\n« Rédige une page de vente pour "${topic}" en n'utilisant que ces faits : [vos faits réels]. N'invente ni avis, ni garantie, ni statistique. »\n\n` +
+      `**Prompt 3 (comparatif) :**\n« Crée un tableau comparant les forces, faiblesses et coûts estimés de "${topic}", en indiquant ce qui est une estimation. »`;
   };
 
   return (

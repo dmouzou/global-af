@@ -82,7 +82,7 @@ export const MissionsPage: React.FC<MissionsPageProps> = ({
               Réalisez des tâches concrètes et encaissez directement
             </h2>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Chaque micro-job validé est immédiatement crédité dans votre grand livre comptable. Dès que vous atteignez le seuil de 2 000 FCFA, demandez votre virement vers Wave, Orange Money, MTN MoMo ou Moov Africa.
+              Chaque récompense validée est inscrite dans l'historique de votre portefeuille. Vous pouvez ensuite demander un retrait vers Wave, Orange Money, MTN MoMo ou Moov Africa : montant minimum, frais et montant net sont affichés avant validation, et chaque demande est contrôlée avant paiement.
             </p>
           </div>
 
@@ -109,7 +109,7 @@ export const MissionsPage: React.FC<MissionsPageProps> = ({
               </span>
             </div>
             <p className="text-xs text-slate-700 leading-relaxed">
-              « Chaque micro-job complété crédite instantanément votre cagnotte. Dès que vous atteignez <strong>2 000 FCFA</strong>, faites votre demande de retrait : vos fonds arrivent directement sur votre compte <strong>Wave, Orange Money, MTN MoMo ou Moov</strong> sans frais cachés ! »
+              « La récompense de chaque mission validée s'ajoute à votre portefeuille. Vous demandez ensuite un retrait vers <strong>Wave, Orange Money, MTN MoMo ou Moov</strong> ; les frais éventuels sont affichés avant que vous validiez. »
             </p>
           </div>
           <button
@@ -221,7 +221,7 @@ export const MissionsPage: React.FC<MissionsPageProps> = ({
                 <span className="text-xs font-bold text-slate-900">Paiements effectifs constatés sur le terrain</span>
               </div>
               <p className="text-[11px] text-slate-600 mt-0.5">
-                Des membres à Abidjan, Bouaké, San-Pédro et dans toute la Côte d'Ivoire effectuent leurs retraits dès 2 000 FCFA sans frais cachés.
+                Les retraits se font vers un compte Mobile Money en Côte d'Ivoire ; montant minimum et frais sont affichés avant validation.
               </p>
             </div>
             <button
@@ -252,7 +252,7 @@ export const MissionsPage: React.FC<MissionsPageProps> = ({
               </div>
               <div>
                 <h4 className="font-bold text-slate-900 text-sm">Zéro Tirage au Sort</h4>
-                <p className="text-xs text-slate-500 mt-0.5">La rémunération est fixe et garantie dès la validation de votre mission.</p>
+                <p className="text-xs text-slate-500 mt-0.5">La récompense est indiquée à l'avance et versée si votre preuve est validée.</p>
               </div>
             </div>
 
@@ -262,7 +262,7 @@ export const MissionsPage: React.FC<MissionsPageProps> = ({
               </div>
               <div>
                 <h4 className="font-bold text-slate-900 text-sm">Retraits Sécurisés</h4>
-                <p className="text-xs text-slate-500 mt-0.5">Dès 2 000 FCFA vers Wave, Orange Money, MTN MoMo ou Moov Africa.</p>
+                <p className="text-xs text-slate-500 mt-0.5">Vers Wave, Orange Money, MTN MoMo ou Moov Africa, après contrôle.</p>
               </div>
             </div>
           </div>

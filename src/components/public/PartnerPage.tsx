@@ -126,7 +126,7 @@ export const PartnerPage: React.FC<PartnerPageProps> = ({ onGoToDashboard, onOpe
             </div>
             <h3 className="font-bold text-slate-900 text-base">Sondages & Études d'Opinion</h3>
             <p className="text-xs text-slate-600 leading-relaxed">
-              Interrogez des segments ciblés (âge, commune, niveau de revenus, habitudes d'achat) et obtenez des centaines de réponses authentiques en moins de 48 heures.
+              Interrogez des segments ciblés (âge, commune, niveau de revenus, habitudes d'achat) et recueillez les réponses de membres (volume et délais précisés dans le devis ; aucun résultat n'est garanti).
             </p>
           </div>
 

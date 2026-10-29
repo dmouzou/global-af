@@ -49,23 +49,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
   const faqs = [
     {
       q: "Comment fonctionne la rémunération sur GLOBAL-AF ?",
-      a: "Vous gagnez des récompenses en réalisant des micro-missions numériques vérifiées (sondages, tests d'applications locales, revues de contenu) ou en vendant de réels produits utiles (formations, abonnements). Toutes les rémunérations sont fixes et déterministes. Aucun hasard n'intervient jamais."
+      a: "Les récompenses de missions et les commissions de parrainage sont fixées et publiées à l'avance ; aucun hasard n'intervient jamais. Les commissions ne portent que sur des ventes réelles (jamais sur l'inscription ni sur l'activation seule). L'ouverture des missions rémunérées est en cours : consultez votre espace pour l'état actuel. Aucun gain n'est garanti."
     },
     {
       q: "Qu'est-ce que la charte éthique et transparence de GLOBAL-AF ?",
-      a: "C'est notre règle fondamentale inviolable : 1. Commissions calculées exclusivement sur des ventes réelles (jamais sur les frais d'inscription). 2. Rétractation garantie de 7 jours avec remboursement Mobile Money. 3. Transparence totale sur les indicateurs de gains sans slogans trompeurs. 4. Interdiction absolue des jeux de hasard et des tombolas. 5. Protection des membres avec plafonds de dépenses configurables."
+      a: "Nos engagements : 1. Commissions calculées exclusivement sur des ventes réelles, jamais sur le simple recrutement, sur 2 niveaux maximum. 2. Une offre payante correspond à un contenu décrit avant paiement, avec 7 jours de rétractation. 3. Aucune promesse de gain facile : nous publierons des indicateurs réels dès qu'ils existent. 4. Interdiction des jeux de hasard et des tombolas. 5. Protection des membres : âge minimum de 18 ans, plafond de dépense mensuel réglable."
     },
     {
       q: "Quels opérateurs Mobile Money sont acceptés en Côte d'Ivoire ?",
-      a: "Nous supportons nativement Wave, Orange Money, MTN MoMo et Moov Money, aussi bien pour les paiements d'activation que pour les retraits de vos gains à partir de 2 000 FCFA."
+      a: "Les paiements d'offres se font sur une page sécurisée (CinetPay) par Mobile Money (Wave, Orange Money, MTN MoMo, Moov Money) ou par carte bancaire Visa. Les retraits de gains se font vers un compte Mobile Money ; le montant minimum et les frais sont affichés avant validation."
     },
     {
       q: "Le compte gratuit permet-il vraiment de gagner de l'argent et de retirer ?",
-      a: "Absolument. Conformément à nos engagements de transparence, un palier gratuit réellement utile est disponible. Les membres gratuits ont accès aux micro-jobs standard, à des modules de formation et peuvent retirer l'intégralité de leurs gains sans obligation d'achat."
+      a: "L'inscription est gratuite et les offres payantes sont optionnelles. Les conditions d'accès aux missions et aux retraits, ainsi que le contenu et le prix de chaque offre, sont affichés dans votre espace avant tout paiement. Aucun gain n'est garanti : ne payez jamais une offre dans l'espoir d'un revenu."
     },
     {
       q: "Comment s'applique le droit de rétractation de 7 jours ?",
-      a: "Le délai de rétractation de 7 jours avec remboursement intégral Mobile Money s'applique exclusivement à l'abonnement mensuel VIP Premium (9 900 FCFA/mois). Il ne s'applique pas au Pass Membre Standard (3 000 FCFA), dont la fourniture et l'accès numérique aux formations et micro-jobs sont immédiats. De plus, les commissions d'affiliation (10%, soit 990 FCFA) sont conservées en réserve de sécurité pendant 7 jours et ne sont définitivement versées au parrain qu'une fois ce délai de rétractation expiré."
+      a: "Vous disposez de 7 jours à compter du paiement pour vous rétracter, pour toute offre payante. La demande se fait depuis « Paramètres » : votre accès est retiré, les commissions liées à votre achat sont annulées et le remboursement est traité par notre équipe vers le moyen de paiement utilisé (le délai dépend de l'opérateur ou de la banque)."
     }
   ];
 
@@ -162,16 +162,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
                 <div className="space-y-4 text-left animate-fadeIn">
                   <div className="flex items-center gap-2 text-xs font-semibold flex-wrap">
                     <span className="px-2.5 py-0.5 rounded-full bg-orange-500/30 text-orange-300 font-bold border border-orange-500/40 text-[11px] uppercase tracking-wider">
-                      Digital Academy · Formations Certifiantes (18h - 26h)
+                      Digital Academy · Formations pratiques
                     </span>
                   </div>
 
                   <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
-                    Des compétences réelles avec <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400">40 questions d'examen</span> certifiant
-                  </h1>
+                    Des compétences concrètes avec des <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400">quiz de validation</span> à chaque module</h1>
 
                   <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal max-w-2xl">
-                    Fini les certificats bidons délivrés en 5 minutes. Nos parcours approfondis exigent un passage d'examen rigoureux avec 80% de réussite pour attester de vos capacités opérationnelles.
+                    Des parcours pratiques avec vidéos, documents et quiz de validation. La délivrance de points et d'attestations n'est pas encore ouverte.
                   </p>
 
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
@@ -199,16 +198,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
                 <div className="space-y-4 text-left animate-fadeIn">
                   <div className="flex items-center gap-2 text-xs font-semibold flex-wrap">
                     <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/30 text-emerald-300 font-bold border border-emerald-500/40 text-[11px] uppercase tracking-wider">
-                      Mobile Money Garanti · Wave, OM, MTN & Moov
+                      Retraits Mobile Money · Wave, OM, MTN & Moov
                     </span>
                   </div>
 
                   <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
-                    Vos gains crédités <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400">directement</span> sur votre numéro mobile
+                    Vos gains retirables <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400">directement</span> sur votre numéro mobile
                   </h1>
 
                   <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal max-w-2xl">
-                    Dès 2 000 FCFA de gains accumulés, demandez un virement vers votre compte personnel. Vérification sécurisée par email sans frais de SMS.
+                    Demandez un virement vers votre compte Mobile Money : montant minimum, frais et montant net affichés avant validation, contrôle avant paiement, e-mail confirmé requis. Aucun gain n'est garanti.
                   </p>
 
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
@@ -241,7 +240,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
                   </div>
 
                   <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
-                    Entreprises : <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400">Déléguez vos micro-tâches</span> à des profils certifiés
+                    Entreprises : <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400">Déléguez vos micro-tâches</span> à des membres
                   </h1>
 
                   <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal max-w-2xl">
@@ -282,9 +281,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
                   }
                   size="md"
                   speechText={
-                    currentSlideIndex === 0 ? "Akwaba ! Retirez vos gains dès 2 000 FCFA sur Wave & MoMo !" :
-                    currentSlideIndex === 1 ? "40 questions chronométrées en 45 min ! Obtenez un vrai diplôme !" :
-                    currentSlideIndex === 2 ? "Zéro jeu de hasard, zéro frais caché. Vos gains de missions à 100% !" :
+                    currentSlideIndex === 0 ? "Akwaba ! L'inscription est gratuite, sans obligation d'achat." :
+                    currentSlideIndex === 1 ? "Des formations pratiques avec des quiz de validation !" :
+                    currentSlideIndex === 2 ? "Zéro jeu de hasard. Montant minimum et frais affichés avant chaque retrait." :
                     "Inscrivez votre entreprise avec RCCM pour lancer vos missions !"
                   }
                 />
@@ -298,24 +297,24 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
-                      Réseau National Actif 🇨🇮
+                      Côte d'Ivoire 🇨🇮
                     </span>
                   </div>
                   <span className="text-[11px] font-mono text-emerald-300 bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
-                    28 500 FCFA Médian
+                    Lancement en cours
                   </span>
                 </div>
 
                 {/* Micro-jobs Live Metric */}
                 <div className="grid grid-cols-2 gap-2.5">
                   <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
-                    <div className="text-[10px] text-slate-400 uppercase font-semibold">Missions Récentes</div>
-                    <div className="text-lg font-extrabold text-white font-mono mt-0.5">32 450+</div>
-                    <div className="text-[10px] text-emerald-400 font-medium">Validées sans litige</div>
+                    <div className="text-[10px] text-slate-400 uppercase font-semibold">Missions</div>
+                    <div className="text-lg font-extrabold text-white font-mono mt-0.5">En cours d'ouverture</div>
+                    <div className="text-[10px] text-emerald-400 font-medium">Récompense indiquée à l'avance</div>
                   </div>
                   <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
                     <div className="text-[10px] text-slate-400 uppercase font-semibold">Retraits Mobile Money</div>
-                    <div className="text-lg font-extrabold text-emerald-400 font-mono mt-0.5">100%</div>
+                    <div className="text-lg font-extrabold text-emerald-400 font-mono mt-0.5">Contrôlés</div>
                     <div className="text-[10px] text-slate-300 font-medium">Wave, OM, MTN, Moov</div>
                   </div>
                 </div>
@@ -323,8 +322,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
                 {/* Operator Logos Pills */}
                 <div className="space-y-2">
                   <div className="text-[11px] text-slate-400 font-semibold flex items-center justify-between">
-                    <span>Partenaires de Paiement Reconnus</span>
-                    <span className="text-emerald-400 font-bold">Dès 2 000 FCFA</span>
+                    <span>Moyens de paiement</span>
+                    <span className="text-emerald-400 font-bold">Mobile Money & carte Visa</span>
                   </div>
                   <div className="grid grid-cols-4 gap-2">
                     <div className="flex flex-col items-center justify-center p-2 bg-white/10 hover:bg-white/20 rounded-xl border border-white/15 transition-all">
@@ -401,8 +400,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
               <ShieldCheck className="w-4 h-4 text-white" />
             </div>
             <div>
-              <span className="font-bold text-emerald-950">Statistiques Réelles & Indicateurs Vérifiés :</span>
-              <span className="text-emerald-800 ml-1">Revenu médian de 28 500 FCFA, transparence financière totale et zéro jeu de hasard.</span>
+              <span className="font-bold text-emerald-950">Transparence des gains :</span>
+              <span className="text-emerald-800 ml-1">Indicateurs publiés dès qu'ils reposent sur des retraits réels ; aucun chiffre estimé. Zéro jeu de hasard.</span>
             </div>
           </div>
           {onNavigatePage && (
@@ -450,7 +449,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
                 <h3 className="font-bold text-slate-900 text-sm">Réalisation de Micro-jobs</h3>
               </div>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Participez aux sondages, tests d'applications locales et missions partenaires. Rémunérations fixes garanties sans tirage au sort.
+                Participez aux sondages, tests d'applications locales et missions partenaires. Récompense indiquée à l'avance pour chaque mission, sans tirage au sort (ouverture en cours).
               </p>
             </div>
 
@@ -462,7 +461,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
                 <h3 className="font-bold text-slate-900 text-sm">Formation & Certifications</h3>
               </div>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Suivez des formations denses de 18h à 26h, réussissez l'examen chronométré de 40 questions et obtenez votre certificat vérifiable.
+                Suivez des formations pratiques et validez vos acquis par des quiz. Les attestations seront délivrées à l'ouverture du module de certification.
               </p>
             </div>
 
@@ -587,7 +586,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
                   <Award className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
                   <div>
                     <h4 className="font-bold text-slate-900">Quiz & Certifications internes</h4>
-                    <p className="text-slate-500 mt-0.5">Validez vos acquis à la fin des modules pour débloquer des points et des certificats de réussite.</p>
+                    <p className="text-slate-500 mt-0.5">Validez vos acquis à la fin des modules (la délivrance de points et d'attestations n'est pas encore ouverte).</p>
                   </div>
                 </div>
               </div>
@@ -616,13 +615,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
                 <BabiMascot variant="academic" size="xs" />
                 <div className="text-left">
                   <div className="text-[10px] text-amber-400 font-bold uppercase">Babi Académie</div>
-                  <div className="text-[11px] font-bold">Certificat Inviolable</div>
+                  <div className="text-[11px] font-bold">Quiz de validation</div>
                 </div>
               </div>
               <div className="absolute inset-x-3 bottom-3 liquid-glass p-4 rounded-2xl border border-white/80 shadow-xl space-y-1.5">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-900 font-mono">
-                    Module Pratique Certifié
+                    Module pratique
                   </span>
                   <span className="text-[11px] font-bold text-emerald-800">
                     Niveau Débutant & Pro
@@ -650,7 +649,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
             <BabiMascot 
               variant="wallet" 
               size="md" 
-              speechBubble="Le parrainage continue chaque mois tant que votre filleul dépense dans l'application ! 10% Niveau 1 et 5% Niveau 2 garantis !" 
+              speechBubble="Commissions uniquement sur les ventes réelles de vos filleuls, sur 2 niveaux. Aucun gain n'est garanti." 
             />
             <div>
               <span className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">
@@ -661,7 +660,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
               </h2>
             </div>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-2xl">
-              Un système de rémunération récurrent, clair et éthique, calculé exclusivement sur les ventes réelles de services et produits utiles (abonnements et formations certifiantes).
+              Un système de commissions clair et éthique, calculé exclusivement sur les ventes réelles de services et produits utiles. Aucune commission sur l'inscription ni sur l'activation seule.
             </p>
           </div>
 
@@ -748,7 +747,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
             <div className="space-y-1.5">
               <div className="font-bold text-slate-900 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                Retrait libre & garanti
+                Retraits contrôlés avant paiement
               </div>
               <p className="text-slate-600 leading-relaxed text-[11px]">
                 Vos commissions sont immédiatement cumulées et retirables dès 2 000 FCFA par Mobile Money (Wave, Orange, MTN, Moov).
@@ -931,7 +930,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
                 <div className="text-3xl font-black text-white font-anton">
                   9 900 XOF
                   <span className="text-xs font-normal text-emerald-400 block font-sans">
-                    Par mois · Sans engagement à long terme
+                    Paiement unique · aucun prélèvement automatique
                   </span>
                 </div>
 
@@ -944,25 +943,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
                     <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                     <span><strong className="text-emerald-300">Contenu de l'offre détaillé avant paiement</strong> (aucune majoration de gains promise)</span>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    <span>Missions exclusives VIP à fort montant</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    <span><strong className="text-white">Outils IA illimités</strong> (Gemini Flash sans quota)</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    <span>Téléchargement illimité des répertoires VCF qualifiés</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    <span>Retraits prioritaires traités <strong className="text-emerald-300">sous 2h ouvrées</strong></span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    <span>4 Certifications Professionnelles vérifiées</span>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>Fonctions en cours d'ouverture (outils IA, répertoires VCF, attestations) : le contenu exact est affiché avant paiement</span>
                   </li>
                 </ul>
 
@@ -1058,7 +1041,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
                 <span>Biens réels & Rétractation 7j</span>
               </div>
               <p className="text-slate-600 leading-relaxed text-[11px]">
-                Toute activation payante donne accès à un bien identifiable (formations, outils IA, répertoires). Remboursement par Mobile Money garanti sous 7 jours.
+                Toute activation payante donne accès à un bien identifiable (formations, outils IA, répertoires). Droit de rétractation de 7 jours, remboursement traité vers votre moyen de paiement.
               </p>
             </div>
 
@@ -1068,7 +1051,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
                 <span>Honnêteté sur les gains</span>
               </div>
               <p className="text-slate-600 leading-relaxed text-[11px]">
-                Interdiction des promesses trompeuses et des faux montages. Publication transparente du revenu médian réel et du délai d'obtention du premier virement.
+                Interdiction des promesses trompeuses et des faux montages. Publication des indicateurs réels (revenu médian, délai du premier virement) dès qu'ils existent ; aucun chiffre estimé.
               </p>
             </div>
 
