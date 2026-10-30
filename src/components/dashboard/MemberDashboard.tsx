@@ -274,7 +274,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
       activationMethod === 'card'
         ? { address: billingAddress.trim(), city: billingCity.trim(), zipCode: billingZip.trim() }
         : undefined,
-      activationPlan === 'standard' ? acceptNoRefund : undefined
+      activationPlan === 'premium' ? acceptNoRefund : undefined
     );
     setIsPaying(false);
     if (res.success) {
@@ -577,7 +577,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
             <span className="text-[11px] font-bold text-slate-800">GLOBAL-AF Côte d'Ivoire</span>
           </div>
           <div className="text-[10px] text-slate-400 leading-tight">
-            Plateforme conforme ARTCI · Zéro hasard garanti.
+            Plateforme conforme ARTCI.
           </div>
         </div>
       </aside>
@@ -667,7 +667,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                   </span>
                 </div>
                 <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                  Votre compte est créé gratuitement. Pour débloquer les <strong>micro-jobs rémunérés</strong>, les <strong>formations approfondies certifiantes (18h-26h)</strong> et les <strong>retraits Mobile Money</strong>, activez votre <strong>Pass Membre Standard (3 000 FCFA à vie)</strong> ou souscrivez au <strong>VIP Premium (9 900 FCFA/mois)</strong>.
+                  Votre compte est créé gratuitement. Pour débloquer les <strong>micro-jobs rémunérés</strong>, les <strong>formations approfondies certifiantes</strong> et les <strong>retraits Mobile Money</strong>, activez votre <strong>Pass Membre Standard (3 000 FCFA à vie)</strong> ou souscrivez au <strong>VIP Premium (9 900 FCFA/mois)</strong>.
                 </p>
               </div>
             </div>
@@ -1573,7 +1573,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
               <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
               <div className="space-y-1">
                 <strong className="text-slate-900 font-bold block">
-                  Règle de Continuité & Récurrence du Parrainage (Cloud Functions & Firebase) :
+                  Règle de Continuité & Récurrence du Parrainage :
                 </strong>
                 <p className="text-slate-600 text-[11px] leading-relaxed">
                   Tant que votre filleul actif effectue des dépenses sur la plateforme (ex. renouvellement de son abonnement VIP Premium mensuel), vous percevez votre pourcentage de commission chaque mois de manière automatique. Le parrainage prend fin uniquement en cas de désactivation ou suppression de compte par l'une des parties.
@@ -1705,7 +1705,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                   <BabiMascot 
                     variant="academic" 
                     size="xl" 
-                    speechBubble="Activez votre pass pour accéder aux 4 formations (18h-26h) et certifications !" 
+                    speechBubble="Activez votre pass pour accéder aux 4 formations et certifications !" 
                   />
                 </div>
                 <div className="space-y-2">
@@ -1717,7 +1717,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                     Accès aux Formations Approfondies & Examens Officiels
                   </h2>
                   <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-lg mx-auto">
-                    Nos formations représentent de <strong>18h à 26h de cours denses</strong> sanctionnées par des <strong>examens officiels de 40 questions chronométrées (45 min)</strong>. L'accès à ces programmes de haute valeur professionnelle requiert l'activation du <strong>Pass Membre Standard (3 000 FCFA unique)</strong> ou l'abonnement <strong>VIP Premium (9 900 FCFA/mois)</strong>.
+                    Nos formations représentent des <strong>cours complets et approfondis</strong> sanctionnés par des <strong>examens officiels de 40 questions chronométrées (45 min)</strong>. L'accès à ces programmes de haute valeur professionnelle requiert l'activation du <strong>Pass Membre Standard (3 000 FCFA unique)</strong> ou l'abonnement <strong>VIP Premium (9 900 FCFA/mois)</strong>.
                   </p>
                 </div>
                 <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -1752,7 +1752,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                         Digital Academy & Certifications Professionnelles
                       </h1>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        Formations certifiantes approfondies (18h-26h) · Examens de 40 questions chronométrées (Passing score: 80%).
+                        Formations certifiantes approfondies · Examens de 40 questions chronométrées (Passing score: 80%).
                       </p>
                     </div>
                   </div>
@@ -2111,22 +2111,19 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
           </div>
         )}
 
-        {/* 10. BONUS DÉTERMINISTES (Section 14 & 15 : Zéro hasard) */}
+        {/* 10. BONUS & FIDÉLITÉ */}
         {activeTab === 'bonus' && (
           <div className="space-y-6">
             <div className="flex items-center gap-3">
               <BabiMascot variant="wallet" size="sm" />
               <div>
                 <h1 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">
-                  Mes Bonus Déterministes & Fidélité
+                  Mes Bonus & Fidélité
                 </h1>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Conforme Section 15 & 39 : Zéro roue de la fortune, zéro tirage au sort. Tout bonus est fixe, connu à l'avance et garanti.
-                </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-white p-5 rounded-2xl border border-orange-200 shadow-xs space-y-2">
                 <div className="w-8 h-8 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center font-bold">
                   <Gift className="w-4 h-4" />
@@ -2145,18 +2142,6 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                 <p className="text-xs text-slate-500">Les points et certificats récompenseront la réussite d'un quiz de formation ; la délivrance se fera côté serveur, avec une règle connue à l'avance.</p>
                 <div className="text-[11px] text-slate-600 font-medium pt-1">
                   Progression active : {currentUser.points} points
-                </div>
-              </div>
-
-              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-2">
-                <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
-                  <ShieldCheck className="w-4 h-4" />
-                </div>
-                <h3 className="font-display font-bold text-slate-900 text-sm">Garantie Déterministe</h3>
-                <div className="text-sm font-bold text-slate-800">100% Transparent</div>
-                <p className="text-xs text-slate-500">Interdiction légale des loteries et des jeux d'argent. Chaque point ou franc gagné récompense un travail réel.</p>
-                <div className="text-[11px] text-blue-700 font-semibold pt-1">
-                  Audit & Invariants Éthiques
                 </div>
               </div>
             </div>
@@ -2585,22 +2570,26 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
               <div className="flex items-center gap-2">
                 <RotateCcw className="w-5 h-5 text-orange-600" />
                 <h3 className="font-display font-bold text-slate-900 text-sm">
-                  Rétractation des abonnements ({POLICY.retractionDays} jours)
+                  Rétractation du Pass d'entrée ({POLICY.retractionDays} jours)
                 </h3>
               </div>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Si vous avez souscrit un abonnement (Premium ou Business), vous pouvez vous rétracter pendant 7 jours à compter du paiement. Le remboursement est versé sur le moyen de paiement utilisé, sous déduction des frais de transaction (3 %). Le Pass d'entrée n'est pas remboursable.
+                Si vous avez activé un Pass Membre Standard, vous pouvez vous rétracter pendant 7 jours à compter du paiement. Le remboursement est versé sur votre moyen de paiement sous déduction des frais de transaction (3 %). En cas de rétractation dans les 7 jours, le parrainage lié à ce pass est annulé et aucune commission n'est versée au parrain.
               </p>
+              <div className="p-3 bg-amber-50/70 rounded-xl border border-amber-200 text-[11px] text-amber-900 leading-relaxed">
+                <strong>Information VIP Premium :</strong> L'abonnement mensuel n'est pas remboursable en raison de l'accès immédiat et définitif aux fichiers et contacts VCF téléchargeables ainsi qu'aux outils IA.
+              </div>
 
-              {currentUser.subscriptionPlan === 'premium' || currentUser.subscriptionPlan === 'business' ? (
+              {currentUser.subscriptionPlan === 'standard' && currentUser.isActivated ? (
                 <div className="p-4 bg-orange-50 rounded-xl border border-orange-200 space-y-3 text-xs">
                   <div className="font-semibold text-orange-900">
-                    Abonnement actif : {currentUser.subscriptionPlan.toUpperCase()} (Activé le {currentUser.activationDate})
+                    Pass Membre Standard actif (Activé le {currentUser.activationDate ?? 'récent'})
                   </div>
                   <div>
                     <label className="block text-[11px] text-slate-700 font-semibold mb-1">Motif de rétractation :</label>
                     <input
                       type="text"
+                      placeholder="Ex: Changement d'avis"
                       value={retractionReason}
                       onChange={(e) => setRetractionReason(e.target.value)}
                       className="w-full p-2 text-xs border border-orange-300 rounded-lg bg-white"
@@ -2608,17 +2597,20 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                   </div>
                   <button
                     onClick={async () => {
+                      if (!confirm("Attention : la rétractation de votre Pass d'entrée sous 7 jours désactivera vos accès (micro-jobs, formations, retraits) et annulera le parrainage lié (aucun montant versé au parrain). Confirmer la demande de rétractation (remboursement montant - 3%) ?")) return;
                       const res = await requestRetractionRefund(retractionReason);
                       alert(res.message);
                     }}
                     className="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors shadow-xs"
                   >
-                    Demander la rétractation de mon abonnement
+                    Demander la rétractation de mon Pass d'entrée
                   </button>
                 </div>
               ) : (
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-500">
-                  {currentUser.subscriptionPlan === 'standard' ? "Votre Pass d'entrée n'est pas remboursable : seuls les abonnements ouvrent un droit de rétractation." : "Aucun abonnement actif : rien à rembourser."}
+                  {currentUser.subscriptionPlan === 'premium' || currentUser.subscriptionPlan === 'business'
+                    ? "Votre abonnement VIP Premium n'est pas remboursable : l'accès aux répertoires VCF est immédiat. Seul le Pass d'entrée Standard est éligible à la rétractation de 7 jours."
+                    : "Aucun Pass d'entrée actif à rétracter."}
                 </div>
               )}
             </div>
@@ -2784,7 +2776,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                   </div>
                   <div className="text-[10px] text-slate-500 mt-1 space-y-0.5">
                     <div>✓ Accès illimité aux micro-jobs</div>
-                    <div>✓ Formations 18h-26h & Certificats</div>
+                    <div>✓ Formations approfondies & Certifications</div>
                     <div>✓ Accès aux services du pack</div>
                   </div>
                 </button>
@@ -2882,6 +2874,15 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                   </span>
                 </div>
                 {activationPlan === 'standard' ? (
+                  <div className="text-[11px] text-slate-600 leading-snug space-y-1">
+                    <div>
+                      ✓ <strong>Pass Membre Standard :</strong> droit de rétractation de {POLICY.retractionDays} jours depuis la rubrique Paramètres. Le remboursement est versé sur votre moyen de paiement sous déduction des frais de transaction ({POLICY.refundFeePercent} %).
+                    </div>
+                    <div className="text-amber-800 text-[10px]">
+                      ℹ En cas de rétractation sous 7 jours, le parrainage est annulé et aucune commission n'est versée au parrain.
+                    </div>
+                  </div>
+                ) : (
                   <label className="flex items-start gap-2 text-[11px] text-slate-700 leading-snug cursor-pointer">
                     <input
                       type="checkbox" required checked={acceptNoRefund}
@@ -2889,13 +2890,9 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                       className="mt-0.5 rounded text-orange-600 focus:ring-orange-500 w-4 h-4"
                     />
                     <span>
-                      Je comprends que le <strong>Pass d'entrée n'est pas remboursable</strong> et qu'il donne accès aux missions et aux retraits. Il ne garantit aucun gain.
+                      Je comprends que l'abonnement VIP Premium offre un <strong>accès immédiat aux fichiers VCF téléchargeables</strong>, aux outils IA et formations exclusives. De ce fait, cet abonnement est <strong>définitif et non remboursable</strong> (aucun droit de rétractation).
                     </span>
                   </label>
-                ) : (
-                  <div className="text-[11px] text-slate-600 leading-snug">
-                    ✓ Abonnement : droit de rétractation de {POLICY.retractionDays} jours depuis Paramètres. Le remboursement est versé sur votre moyen de paiement après traitement, <strong>sous déduction des frais de transaction ({POLICY.refundFeePercent} %)</strong>.
-                  </div>
                 )}
               </div>
 

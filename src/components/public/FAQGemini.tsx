@@ -26,7 +26,7 @@ const PREDEFINED_FAQS: FAQItem[] = [
     id: 'faq-3',
     category: 'Missions',
     question: "Faut-il payer pour participer aux missions et retirer ses gains ?",
-    answer: "Oui. L'inscription est gratuite, mais les missions rémunérées, les formations et les retraits exigent un Pass actif : le Pass d'entrée (non remboursable, reconnu avant paiement) ou un abonnement (Premium, Business). Le prix et le contenu sont affichés avant tout paiement. Un Pass ne garantit aucun gain : ne payez jamais dans l'espoir d'un revenu, ni en vous endettant."
+    answer: "Oui. L'inscription est gratuite, mais les missions rémunérées, les formations et les retraits exigent un Pass actif : le Pass d'entrée (éligible à la rétractation de 7 jours) ou un abonnement VIP Premium. Le prix et le contenu sont affichés avant tout paiement. Un Pass ne garantit aucun gain : ne payez jamais dans l'espoir d'un revenu, ni en vous endettant."
   },
   {
     id: 'faq-4',
@@ -44,7 +44,7 @@ const PREDEFINED_FAQS: FAQItem[] = [
     id: 'faq-6',
     category: 'Éthique',
     question: "Comment fonctionne la rétractation de 7 jours ?",
-    answer: "Les abonnements (Premium, Business) peuvent être rétractés pendant 7 jours à compter du paiement, depuis vos paramètres. Le remboursement est traité par notre équipe vers votre moyen de paiement, sous déduction des frais de transaction (3 %) ; le délai dépend de l'opérateur ou de la banque. Le Pass d'entrée n'est pas remboursable."
+    answer: "Le Pass d'entrée (Standard) peut être rétracté pendant 7 jours à compter du paiement, depuis la rubrique « Paramètres ». Le remboursement est traité vers votre moyen de paiement sous déduction des frais de transaction (3 %). En cas de rétractation sous 7 jours, le parrainage échoue et aucune commission n'est versée au parrain. L'abonnement VIP Premium n'est pas remboursable (mise à disposition immédiate des fichiers et répertoires VCF)."
   }
 ];
 

@@ -35,11 +35,11 @@ export function checkRetraction(
 }
 
 /**
- * Seuls les abonnements ouvrent un droit de rétractation. Le Pass d'entrée
- * (kind « activation ») n'est pas remboursable : le membre le reconnaît
- * avant de payer (case à cocher, horodatée sur le paiement).
+ * Seul le Pass d'entrée (kind « activation ») ouvre un droit de rétractation
+ * de 7 jours (remboursement - 3 %). L'abonnement VIP Premium (kind « subscription »)
+ * n'est pas remboursable car l'accès aux fichiers et contacts VCF est immédiat.
  */
-export const RETRACTABLE_KINDS: SaleKind[] = ["subscription"];
+export const RETRACTABLE_KINDS: SaleKind[] = ["activation"];
 
 /**
  * @param {SaleKind} kind Type de vente.
@@ -56,8 +56,8 @@ export function isRetractableKind(kind: SaleKind): boolean {
 export function assertRetractableKind(kind: SaleKind): void {
   if (!isRetractableKind(kind)) {
     throw new DomainError("not_retractable",
-      "Le Pass d'entrée n'est pas remboursable. Seuls les abonnements " +
-      "ouvrent un droit de rétractation.");
+      "L'abonnement VIP Premium n'est pas remboursable (accès immédiat aux fichiers VCF). " +
+      "Seul le Pass d'entrée ouvre un droit de rétractation sous 7 jours.");
   }
 }
 

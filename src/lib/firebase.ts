@@ -69,7 +69,7 @@ export interface InitiatePaymentInput {
   productId: string;
   /** Obligatoire pour la carte (exigé par la passerelle). */
   billing?: { address: string; city: string; zipCode: string };
-  /** Obligatoire pour le Pass d'entrée : le membre reconnaît qu'il n'est pas remboursable. */
+  /** Obligatoire pour l'abonnement VIP Premium : le membre reconnaît qu'il n'est pas remboursable (fichiers VCF). */
   acceptedNoRefund?: boolean;
 }
 

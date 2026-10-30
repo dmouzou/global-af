@@ -68,10 +68,9 @@ export const LEGAL_DOCS: Record<LegalDoc['id'], LegalDoc> = {
       {
         title: '6. Rétractation et remboursement',
         list: [
-          "**Abonnements (Premium, Business)** : vous pouvez vous rétracter pendant **{{retractionDays}} jours** à compter du paiement, depuis la rubrique « Paramètres ». Votre accès à l'abonnement est alors retiré et les commissions liées à votre achat sont annulées.",
-          "Le remboursement est versé sur le moyen de paiement utilisé, **sous déduction des frais de transaction ({{refundFeePercent}} % à la date de ces conditions)**. Le délai dépend du traitement par notre équipe et de l'opérateur ou de la banque.",
-          "**Pass d'entrée** : il **n'est pas remboursable**. Vous reconnaissez ce point en cochant une case avant de payer ; cette reconnaissance est enregistrée avec votre paiement.",
-          "Si vous détenez à la fois un Pass d'entrée et un abonnement, la rétractation de l'abonnement ne retire pas l'accès ouvert par le Pass d'entrée.",
+          "**Pass d'entrée (Standard)** : vous pouvez vous rétracter pendant **{{retractionDays}} jours** à compter du paiement, depuis la rubrique « Paramètres ». Votre accès aux micro-jobs, formations et retraits est alors retiré. Si la rétractation intervient avant 7 jours, le parrainage échoue et aucune commission n'est versée au parrain.",
+          "Le remboursement du Pass d'entrée est versé sur le moyen de paiement utilisé, **sous déduction des frais de transaction ({{refundFeePercent}} %)**.",
+          "**Abonnements (VIP Premium)** : ils **ne sont pas remboursables**. En raison de la mise à disposition immédiate et définitive des fichiers et contacts VCF téléchargeables et des outils IA exclusifs, aucun droit de rétractation ne s'applique aux abonnements. Vous le reconnaissez expressément avant tout paiement.",
         ],
       },
       {

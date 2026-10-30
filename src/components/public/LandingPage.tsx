@@ -20,7 +20,8 @@ import {
   Lock,
   Zap,
   TrendingUp,
-  Building
+  Building,
+  CreditCard
 } from 'lucide-react';
 import { Task } from '../../types';
 import { OperatorLogo } from '../common/OperatorLogo';
@@ -38,13 +39,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
   const { selectedCountry, tasks, ethicalIndicators } = useApp();
   const [faqOpenIndex, setFaqOpenIndex] = useState<number | null>(0);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [slideProgress, setSlideProgress] = useState(0);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlideIndex(prev => (prev + 1) % 4);
-    }, 6000);
-    return () => clearInterval(timer);
+    const SLIDE_DURATION = 6000;
+    const TICK = 50;
+    const interval = setInterval(() => {
+      setSlideProgress((prev) => {
+        if (prev >= 100) {
+          setCurrentSlideIndex((curr) => (curr + 1) % 4);
+          return 0;
+        }
+        return prev + (TICK / SLIDE_DURATION) * 100;
+      });
+    }, TICK);
+    return () => clearInterval(interval);
   }, []);
+
+  const handleSelectSlide = (idx: number) => {
+    setCurrentSlideIndex(idx);
+    setSlideProgress(0);
+  };
 
   const faqs = [
     {
@@ -53,7 +68,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
     },
     {
       q: "Qu'est-ce que la charte éthique et transparence de GLOBAL-AF ?",
-      a: "Nos engagements : 1. Commissions calculées exclusivement sur des ventes réelles, jamais sur le simple recrutement, sur 2 niveaux maximum. 2. Une offre payante correspond à un contenu décrit avant paiement ; les abonnements ont 7 jours de rétractation, le Pass d'entrée n'est pas remboursable. 3. Aucune promesse de gain facile : nous publierons des indicateurs réels dès qu'ils existent. 4. Interdiction des jeux de hasard et des tombolas. 5. Protection des membres : âge minimum de 18 ans, plafond de dépense mensuel réglable."
+      a: "Nos engagements : 1. Commissions calculées exclusivement sur des ventes réelles, jamais sur le simple recrutement, sur 2 niveaux maximum. 2. Une offre payante correspond à un contenu décrit avant paiement ; le Pass d'entrée a 7 jours de rétractation (remboursement - 3 %), les abonnements VIP Premium ne sont pas remboursables (fichiers VCF immédiatement disponibles). 3. Aucune promesse de gain facile : nous publierons des indicateurs réels dès qu'ils existent. 4. Interdiction des jeux de hasard et des tombolas. 5. Protection des membres : âge minimum de 18 ans, plafond de dépense mensuel réglable."
     },
     {
       q: "Quels opérateurs Mobile Money sont acceptés en Côte d'Ivoire ?",
@@ -61,11 +76,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
     },
     {
       q: "Le compte gratuit permet-il vraiment de gagner de l'argent et de retirer ?",
-      a: "L'inscription est gratuite. Pour participer aux missions rémunérées, suivre les formations et demander un retrait, un Pass actif est nécessaire : le Pass d'entrée (non remboursable, reconnu avant paiement) ou un abonnement. Le prix et le contenu sont affichés avant tout paiement. Aucun gain n'est garanti : ne payez jamais dans l'espoir d'un revenu, ni en vous endettant."
+      a: "L'inscription est gratuite. Pour participer aux missions rémunérées, suivre les formations et demander un retrait, un Pass actif est nécessaire : le Pass d'entrée (rétractation de 7 jours) ou un abonnement VIP Premium. Le prix et le contenu sont affichés avant tout paiement. Aucun gain n'est garanti : ne payez jamais dans l'espoir d'un revenu, ni en vous endettant."
     },
     {
       q: "Comment s'applique le droit de rétractation de 7 jours ?",
-      a: "Les abonnements (Premium, Business) se rétractent pendant 7 jours à compter du paiement, depuis « Paramètres » : l'accès est retiré, les commissions liées à votre achat sont annulées et le remboursement, sous déduction des frais de transaction (3 %), est traité par notre équipe vers le moyen de paiement utilisé (délai selon l'opérateur ou la banque). Le Pass d'entrée n'est pas remboursable ; vous le reconnaissez avant de payer."
+      a: "Le Pass d'entrée (Standard) se rétracte pendant 7 jours à compter du paiement, depuis « Paramètres » : le remboursement, sous déduction des frais de transaction (3 %), est traité vers le moyen de paiement utilisé. En cas de rétractation, le parrainage échoue et aucune commission n'est versée au parrain. L'abonnement VIP Premium n'est pas remboursable car l'accès aux fichiers et contacts VCF est immédiat et définitif."
     }
   ];
 
@@ -268,18 +283,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
               )}
             </div>
 
-            {/* Right Column: 3D Mascot & Speech Bubble ON TOP of the 'Réseau National Actif' Card */}
-            <div className="lg:col-span-5 xl:col-span-5 relative flex flex-col items-center lg:items-end space-y-4">
-              
-              {/* Mascot & Speech Bubble resting right on top of the card */}
-              <div className="w-full flex items-center justify-center lg:justify-start pl-1 sm:pl-2 animate-fadeIn">
+            {/* Right Column: 3D Mascot & Speech Bubble */}
+            <div className="lg:col-span-5 xl:col-span-5 relative flex items-center justify-center lg:justify-end py-6">
+              <div className="animate-fadeIn">
                 <BabiMascot 
                   variant={
                     currentSlideIndex === 0 ? 'welcome' :
                     currentSlideIndex === 1 ? 'academic' :
                     currentSlideIndex === 2 ? 'wallet' : 'security'
                   }
-                  size="md"
+                  size="xl"
                   speechText={
                     currentSlideIndex === 0 ? "Akwaba ! L'inscription est gratuite ; un Pass est requis pour les missions et les retraits." :
                     currentSlideIndex === 1 ? "Des formations pratiques avec des quiz de validation !" :
@@ -288,106 +301,93 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
                   }
                 />
               </div>
-
-              {/* Floating Interactive Card */}
-              <div className="w-full relative liquid-glass-dark p-6 rounded-3xl border border-white/20 shadow-2xl space-y-4">
-                
-                {/* Header of Glass Card */}
-                <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
-                      Côte d'Ivoire 🇨🇮
-                    </span>
-                  </div>
-                  <span className="text-[11px] font-mono text-emerald-300 bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
-                    Lancement en cours
-                  </span>
-                </div>
-
-                {/* Micro-jobs Live Metric */}
-                <div className="grid grid-cols-2 gap-2.5">
-                  <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
-                    <div className="text-[10px] text-slate-400 uppercase font-semibold">Missions</div>
-                    <div className="text-lg font-extrabold text-white font-mono mt-0.5">En cours d'ouverture</div>
-                    <div className="text-[10px] text-emerald-400 font-medium">Récompense indiquée à l'avance</div>
-                  </div>
-                  <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
-                    <div className="text-[10px] text-slate-400 uppercase font-semibold">Retraits Mobile Money</div>
-                    <div className="text-lg font-extrabold text-emerald-400 font-mono mt-0.5">Contrôlés</div>
-                    <div className="text-[10px] text-slate-300 font-medium">Wave, OM, MTN, Moov</div>
-                  </div>
-                </div>
-
-                {/* Operator Logos Pills */}
-                <div className="space-y-2">
-                  <div className="text-[11px] text-slate-400 font-semibold flex items-center justify-between">
-                    <span>Moyens de paiement</span>
-                    <span className="text-emerald-400 font-bold">Mobile Money & carte Visa</span>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2">
-                    <div className="flex flex-col items-center justify-center p-2 bg-white/10 hover:bg-white/20 rounded-xl border border-white/15 transition-all">
-                      <img src="/logos/wave.svg" alt="Wave" className="w-6 h-6 sm:w-7 sm:h-7 object-contain" />
-                      <span className="text-[10px] font-bold text-white mt-1">Wave</span>
-                    </div>
-                    <div className="flex flex-col items-center justify-center p-2 bg-white/10 hover:bg-white/20 rounded-xl border border-white/15 transition-all">
-                      <img src="/logos/orange-money.svg" alt="Orange Money" className="w-6 h-6 sm:w-7 sm:h-7 object-contain" />
-                      <span className="text-[10px] font-bold text-[#FF7900] mt-1">Orange</span>
-                    </div>
-                    <div className="flex flex-col items-center justify-center p-2 bg-white/10 hover:bg-white/20 rounded-xl border border-white/15 transition-all">
-                      <img src="/logos/mtn-momo.png" alt="MTN MoMo" className="w-6 h-6 sm:w-7 sm:h-7 object-contain" />
-                      <span className="text-[10px] font-bold text-amber-300 mt-1">MTN</span>
-                    </div>
-                    <div className="flex flex-col items-center justify-center p-2 bg-white/10 hover:bg-white/20 rounded-xl border border-white/15 transition-all">
-                      <img src="/logos/moov-africa.svg" alt="Moov Africa" className="w-6 h-6 sm:w-7 sm:h-7 object-contain" />
-                      <span className="text-[10px] font-bold text-blue-300 mt-1">Moov</span>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
             </div>
 
           </div>
         </div>
 
-        {/* Netflix / Lupin Style Bottom Carousel Progress Dashes & Controls */}
+        {/* Bottom Carousel Progress Gauges & Controls */}
         <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-5 flex items-center justify-between w-full">
           <div className="flex items-center gap-3">
             <span className="text-xs font-semibold text-slate-300 font-mono">
               0{currentSlideIndex + 1} <span className="text-slate-500">/ 04</span>
             </span>
             <div className="flex items-center gap-2">
-              {[0, 1, 2, 3].map((idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setCurrentSlideIndex(idx)}
-                  className={`h-1.5 rounded-full transition-all ${
-                    currentSlideIndex === idx 
-                      ? 'w-10 sm:w-14 bg-gradient-to-r from-orange-400 to-amber-400' 
-                      : 'w-4 sm:w-6 bg-white/30 hover:bg-white/60'
-                  }`}
-                  aria-label={`Slide ${idx + 1}`}
-                />
-              ))}
+              {[0, 1, 2, 3].map((idx) => {
+                const isCurrent = currentSlideIndex === idx;
+                const isPast = currentSlideIndex > idx;
+                const fillWidth = isCurrent ? `${slideProgress}%` : isPast ? '100%' : '0%';
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => handleSelectSlide(idx)}
+                    className="py-2 flex items-center group cursor-pointer"
+                    aria-label={`Slide ${idx + 1}`}
+                  >
+                    <div className="w-10 sm:w-16 h-1.5 bg-white/20 rounded-full overflow-hidden relative">
+                      <div
+                        className="h-full bg-gradient-to-r from-orange-400 via-amber-400 to-emerald-400 rounded-full"
+                        style={{
+                          width: fillWidth,
+                          transition: isCurrent ? 'width 50ms linear' : 'width 200ms ease'
+                        }}
+                      />
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setCurrentSlideIndex((prev) => (prev === 0 ? 3 : prev - 1))}
+              onClick={() => handleSelectSlide(currentSlideIndex === 0 ? 3 : currentSlideIndex - 1)}
               className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center text-white transition-colors"
               aria-label="Slide précédent"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
             <button
-              onClick={() => setCurrentSlideIndex((prev) => (prev === 3 ? 0 : prev + 1))}
+              onClick={() => handleSelectSlide(currentSlideIndex === 3 ? 0 : currentSlideIndex + 1)}
               className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center text-white transition-colors"
               aria-label="Slide suivant"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
+          </div>
+        </div>
+      </section>
+
+      {/* PARTENAIRES DE PAIEMENT EN BAS DE L'ENTÊTE / EN HAUT DE PARCOURS TRANSPARENT */}
+      <section className="bg-slate-900 border-b border-slate-800/80 py-4 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5 text-xs text-slate-300">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span className="font-semibold uppercase tracking-wider text-[11px] text-slate-200">
+              Partenaires de paiement & Mobile Money en Côte d'Ivoire
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6">
+            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+              <img src="/logos/wave.svg" alt="Wave" className="w-5 h-5 object-contain" />
+              <span className="text-xs font-bold text-white">Wave</span>
+            </div>
+            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+              <img src="/logos/orange-money.svg" alt="Orange Money" className="w-5 h-5 object-contain" />
+              <span className="text-xs font-bold text-[#FF7900]">Orange Money</span>
+            </div>
+            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+              <img src="/logos/mtn-momo.png" alt="MTN MoMo" className="w-5 h-5 object-contain" />
+              <span className="text-xs font-bold text-amber-300">MTN MoMo</span>
+            </div>
+            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+              <img src="/logos/moov-africa.svg" alt="Moov Africa" className="w-5 h-5 object-contain" />
+              <span className="text-xs font-bold text-blue-300">Moov Money</span>
+            </div>
+            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+              <CreditCard className="w-4 h-4 text-emerald-400" />
+              <span className="text-xs font-bold text-slate-200">Carte Visa</span>
+            </div>
           </div>
         </div>
       </section>
@@ -718,7 +718,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
               </div>
 
               <div className="pt-2 border-t border-slate-100 text-[11px] text-slate-500">
-                ✓ Plafonnement strict à 2 niveaux · Aucun système infini
+                ✓ Plafonnement strict à 2 niveaux
               </div>
             </div>
 
@@ -897,7 +897,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
 
                 <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-[11px] text-slate-700 flex items-start gap-2">
                   <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>Pass d'entrée : accès aux missions et aux retraits ; non remboursable (reconnu avant paiement).</span>
+                  <span>Pass d'entrée : accès aux missions et aux retraits ; rétractation de 7 jours (remboursement déduction faite des frais de 3 %).</span>
                 </div>
               </div>
 
@@ -951,7 +951,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
 
                 <div className="p-2.5 bg-slate-800/90 rounded-xl border border-slate-700 text-[11px] text-slate-300 flex items-start gap-2">
                   <RotateCcw className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                  <span>Rétractation de 7 jours, remboursement sous déduction des frais de transaction (3 %). Commission du parrain créditée après ce délai.</span>
+                  <span>Abonnement VIP Premium : accès immédiat aux fichiers et contacts VCF, outils IA illimités ; non remboursable.</span>
                 </div>
               </div>
 
@@ -1041,7 +1041,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
                 <span>Biens réels & transparence</span>
               </div>
               <p className="text-slate-600 leading-relaxed text-[11px]">
-                Toute activation payante donne accès à un bien identifiable (formations, outils IA, répertoires). Abonnements : rétractation de 7 jours, remboursement sous déduction des frais de transaction (3 %). Pass d'entrée : non remboursable.
+                Toute activation payante donne accès à un bien identifiable (formations, outils IA, répertoires). Pass d'entrée : rétractation de 7 jours, remboursement sous déduction des frais de transaction (3 %). Abonnements VIP Premium : non remboursables (fichiers VCF immédiatement disponibles).
               </p>
             </div>
 

@@ -46,8 +46,8 @@ export const PaymentReturnBanner: React.FC = () => {
   } else if (payment?.status === 'succeeded') {
     tone = 'bg-emerald-50 border-emerald-200 text-emerald-900';
     message = payment.retractable
-      ? 'Paiement confirmé. Votre abonnement est activé. Vous pouvez vous rétracter pendant 7 jours depuis Paramètres (remboursement sous déduction des frais de transaction).'
-      : "Paiement confirmé. Votre Pass d'entrée est activé.";
+      ? "Paiement confirmé. Votre Pass d'entrée est activé. Vous pouvez vous rétracter pendant 7 jours depuis la rubrique Paramètres (remboursement sous déduction des frais de transaction)."
+      : 'Paiement confirmé. Votre abonnement VIP Premium est activé (accès immédiat aux fichiers VCF et répertoires).';
   } else if (payment?.status === 'pending' || payment?.status === 'initiated') {
     tone = 'bg-amber-50 border-amber-200 text-amber-900';
     message = "Paiement en cours de confirmation par l'opérateur. Cela peut prendre quelques minutes : cette page se met à jour automatiquement. Ne payez pas une seconde fois.";

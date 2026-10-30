@@ -114,6 +114,7 @@ function AppContent() {
   };
 
   const handleAdminLogout = async () => {
+    if (!window.confirm("Êtes-vous sûr de vouloir vous déconnecter de la console d'administration ?")) return;
     await logout();
     setAdvertiserAuth(null);
   };
@@ -285,7 +286,7 @@ function AppContent() {
         )}
 
         {/* Fallback to prevent blank white screens for any unmapped route */}
-        {!['landing', 'missions', 'academy', 'academie', 'affiliation', 'partenaire', 'tools', 'outils', 'transparence', 'dashboard'].includes(currentView) && (
+        {!['landing', 'missions', 'academy', 'academie', 'affiliation', 'partenaire', 'tools', 'outils', 'transparence', 'dashboard', 'cgu', 'confidentialite', 'cookies', 'mentions'].includes(currentView) && (
           <LandingPage 
             onGoToDashboard={() => {
               if (currentUser) {

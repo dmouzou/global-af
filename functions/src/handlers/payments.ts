@@ -50,9 +50,15 @@ function notify(tx: FirebaseFirestore.Transaction, userId: string,
 // Clés sensibles CinetPay : Secret Manager (exposées en variables d'environnement
 // uniquement dans les fonctions qui les déclarent). CINETPAY_SITE_ID et
 // APP_BASE_URL (non secrets) se règlent dans functions/.env.<projet>.
-const cinetpaySecrets = [
-  defineSecret("CINETPAY_API_KEY"),
-  defineSecret("CINETPAY_SECRET_KEY"),
+// NOTE : Laissé vide tant que les clés réelles CinetPay ne sont pas disponibles,
+// pour éviter le blocage 'Secret Payload cannot be empty' lors de 'firebase deploy'.
+// Pour activer ultérieurement :
+//   1. firebase functions:secrets:set CINETPAY_API_KEY
+//   2. firebase functions:secrets:set CINETPAY_SECRET_KEY
+//   3. Décommenter les deux defineSecret ci-dessous.
+const cinetpaySecrets: ReturnType<typeof defineSecret>[] = [
+  // defineSecret("CINETPAY_API_KEY"),
+  // defineSecret("CINETPAY_SECRET_KEY"),
 ];
 
 /** Passerelle d'encaissement (CinetPay par défaut ; Wave direct possible). */
@@ -139,13 +145,13 @@ export const initiateOnlinePayment = onCall(
           "Votre compte ne permet pas de paiement pour le moment.");
       }
       const amount = validateCheckoutAmount(product.priceXOF);
-      // Le Pass d'entrée n'est pas remboursable : le membre doit l'avoir
-      // reconnu explicitement (preuve conservée sur le paiement).
+      // L'abonnement VIP Premium n'est pas remboursable (accès immédiat aux fichiers
+      // et contacts VCF téléchargeables) : le membre doit l'avoir reconnu explicitement.
       const nonRefundable = !isRetractableKind(product.kind);
       if (nonRefundable && data.acceptedNoRefund !== true) {
         throw new DomainError("acknowledgement_required",
-          "Vous devez reconnaître que le Pass d'entrée n'est pas " +
-          "remboursable avant de payer.");
+          "Vous devez reconnaître que l'abonnement VIP Premium n'est pas " +
+          "remboursable (accès immédiat aux répertoires VCF) avant de payer.");
       }
 
       const now = new Date();
@@ -417,8 +423,8 @@ export const requestPaymentRetraction = onCall(
       const requestedId = optString(data, "paymentId", 80);
       const platform = await getPlatformConfig();
 
-      // Sans identifiant : le dernier ABONNEMENT confirmé (seuls les abonnements
-      // sont rétractables ; le Pass d'entrée ne l'est pas).
+      // Sans identifiant : le dernier Pass d'entrée confirmé (seul le Pass d'entrée
+      // est rétractable sous 7 jours ; les abonnements ne le sont pas).
       let paymentId = requestedId;
       if (!paymentId) {
         const q = await db.collection("payments")
@@ -428,8 +434,8 @@ export const requestPaymentRetraction = onCall(
           isRetractableKind((d.data() as PaymentRecord).kind));
         if (!target) {
           throw new DomainError("payment_not_found",
-            "Aucun abonnement confirmé à rembourser. Le Pass d'entrée " +
-            "n'est pas remboursable.");
+            "Aucun Pass d'entrée confirmé éligible à la rétractation. " +
+            "L'abonnement VIP Premium n'est pas remboursable (fichiers VCF).");
         }
         paymentId = target.id;
       }
@@ -493,7 +499,8 @@ export const requestPaymentRetraction = onCall(
           const update: Record<string, unknown> = remainingPlan ?
             {isActivated: true, planId: remainingPlan,
               subscriptionPlan: remainingPlan} :
-            {isActivated: false, planId: null, subscriptionPlan: "free"};
+            {isActivated: false, planId: null, subscriptionPlan: "free",
+              activatedAt: null, activationDate: null};
           if (user.spentMonth === monthKey(now)) {
             update.spentThisMonth = Math.max(0,
               (user.spentThisMonth ?? 0) - pmt.amount);
@@ -511,7 +518,7 @@ export const requestPaymentRetraction = onCall(
       const amount = outcome.paid;
 
       // Commissions de cette vente : annulées (le crédit n'a lieu qu'après le
-      // délai de rétractation, donc rien n'a encore été versé).
+      // délai de rétractation, donc rien n'a encore été versé). Le parrainage échoue.
       const comms = await db.collection("commissions")
         .where("paymentId", "==", paymentId)
         .where("status", "==", "pending_retraction").get();
@@ -519,6 +526,23 @@ export const requestPaymentRetraction = onCall(
         status: "cancelled_retraction",
         cancelledAt: FieldValue.serverTimestamp(),
       })));
+
+      // Notification du/des parrain(s) : annulation de la commission
+      for (const commDoc of comms.docs) {
+        const cData = commDoc.data() as {beneficiaryUid?: string};
+        if (cData.beneficiaryUid) {
+          await db.collection("notifications").doc().set({
+            userId: cData.beneficiaryUid,
+            title: "Parrainage annulé (rétractation)",
+            message: "Votre filleul a exercé son droit de rétractation de 7 jours " +
+              "sur son Pass d'entrée. Le parrainage a été annulé et aucune commission " +
+              "n'a été versée.",
+            type: "system",
+            read: false,
+            createdAt: FieldValue.serverTimestamp(),
+          });
+        }
+      }
 
       await writeAudit({
         actorUid: uid, actorRole: "member",
