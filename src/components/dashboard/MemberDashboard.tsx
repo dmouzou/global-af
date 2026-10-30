@@ -332,6 +332,16 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
     Platinum: 10000
   };
 
+  // Abonnement : échéance et jours restants (l'accès réel est contrôlé par le serveur).
+  const subExpiry = currentUser.subscriptionExpiresAt ? new Date(currentUser.subscriptionExpiresAt) : null;
+  const subDaysLeft = subExpiry ? Math.ceil((subExpiry.getTime() - Date.now()) / 86400000) : null;
+  const hasSubscription = currentUser.subscriptionPlan === 'premium' || currentUser.subscriptionPlan === 'business';
+  const formatDay = (d: Date) => d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+  const openRenewal = () => {
+    setActivationPlan('premium');
+    setIsActivationModalOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
       
@@ -649,6 +659,22 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                 Renvoyer l'e-mail
               </button>
             </div>
+          </div>
+        )}
+
+        {/* ÉCHÉANCE DE L'ABONNEMENT : rappel (renouvellement manuel, aucun prélèvement automatique) */}
+        {hasSubscription && subExpiry && subDaysLeft !== null && subDaysLeft <= POLICY.reminderDays && (
+          <div role="status" className="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-300 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+            <div className="text-amber-900 leading-relaxed">
+              <strong>Votre abonnement expire le {formatDay(subExpiry)}.</strong> Il n'est pas renouvelé automatiquement : renouvelez-le avant cette date pour ne perdre aucun jour (les jours restants sont conservés).
+            </div>
+            <button
+              type="button"
+              onClick={openRenewal}
+              className="px-3 py-1.5 font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-lg shrink-0"
+            >
+              Renouveler
+            </button>
           </div>
         )}
 
@@ -1576,7 +1602,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                   Règle de Continuité & Récurrence du Parrainage (Cloud Functions & Firebase) :
                 </strong>
                 <p className="text-slate-600 text-[11px] leading-relaxed">
-                  Tant que votre filleul actif effectue des dépenses sur la plateforme (ex. renouvellement de son abonnement VIP Premium mensuel), vous percevez votre pourcentage de commission chaque mois de manière automatique. Le parrainage prend fin uniquement en cas de désactivation ou suppression de compte par l'une des parties.
+                  Chaque achat éligible d'un filleul, y compris le renouvellement de son abonnement, ouvre une commission. Rien n'est automatique : une commission n'existe que si le filleul paie réellement. Le parrainage prend fin uniquement en cas de désactivation ou suppression de compte par l'une des parties.
                 </p>
               </div>
             </div>
@@ -2033,7 +2059,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                     Annuaires & Fichiers VCF Qualifiés
                   </h2>
                   <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-lg mx-auto">
-                    Téléchargez chaque mois nos carnets de contacts qualifiés d'entreprises, de grossistes, d'artisans et de commerçants de Côte d'Ivoire (Abidjan, San Pedro, Bouaké, Yamoussoukro). Cet outil commercial à fort impact est une <strong>exclusivité réservée aux membres VIP Premium (9 900 FCFA/mois)</strong>.
+                    Des carnets de contacts professionnels par secteur en Côte d'Ivoire seront proposés ici. Le téléchargement n'est pas encore ouvert (droits d'usage des données en cours de validation) ; il sera <strong>réservé aux abonnés Premium</strong>.
                   </p>
                 </div>
                 <div className="pt-2 flex justify-center">
@@ -2045,7 +2071,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                     className="px-6 py-3 text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 active:scale-95"
                   >
                     <Zap className="w-4 h-4" />
-                    <span>Débloquer avec le VIP Premium (9 900 FCFA/mois)</span>
+                    <span>Voir l'abonnement Premium (9 900 FCFA / 30 jours)</span>
                   </button>
                 </div>
               </div>
@@ -2580,6 +2606,33 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
               </div>
             </div>
 
+            {/* Abonnement : durée et renouvellement */}
+            <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-3 shadow-xs">
+              <h3 className="font-display font-bold text-slate-900 text-sm">Mon accès</h3>
+              <div className="text-xs text-slate-700 leading-relaxed">
+                {hasSubscription && subExpiry ? (
+                  <>
+                    <strong>Abonnement {currentUser.subscriptionPlan === 'business' ? 'Business' : 'Premium'} actif</strong> jusqu'au <strong>{formatDay(subExpiry)}</strong>
+                    {subDaysLeft !== null && ` (${subDaysLeft} jour${subDaysLeft > 1 ? 's' : ''} restant${subDaysLeft > 1 ? 's' : ''})`}.
+                    Chaque période dure {POLICY.subscriptionDays} jours. Le renouvellement est manuel : aucun prélèvement automatique, et un renouvellement fait avant l'échéance prolonge sans perdre de jours.
+                  </>
+                ) : currentUser.entryPass ? (
+                  <>Pass d'entrée actif, sans limite de durée. Vous pouvez en plus souscrire un abonnement Premium ({POLICY.subscriptionDays} jours, renouvelable à la main).</>
+                ) : (
+                  <>Aucun Pass actif : missions, formations et retraits sont bloqués. Vos soldes sont conservés.</>
+                )}
+              </div>
+              {(hasSubscription || !currentUser.entryPass) && (
+                <button
+                  type="button"
+                  onClick={openRenewal}
+                  className="px-4 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl"
+                >
+                  {hasSubscription ? "Renouveler mon abonnement" : "Voir l'abonnement Premium"}
+                </button>
+              )}
+            </div>
+
             {/* 7-day Retraction & Mobile Money Refund */}
             <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 shadow-xs">
               <div className="flex items-center gap-2">
@@ -2749,7 +2802,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
               <div className="flex items-center gap-2">
                 <BabiMascot variant="welcome" size="sm" />
                 <h3 className="font-display font-bold text-slate-900 text-sm">
-                  Activez votre Accès aux Services GLOBAL-AF
+                  {hasSubscription ? 'Renouveler mon abonnement' : 'Activez votre accès aux services GLOBAL-AF'}
                 </h3>
               </div>
               <button 
@@ -2764,6 +2817,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
               
               {/* Plan Choice Selector */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {!currentUser.entryPass && (
                 <button
                   type="button"
                   onClick={() => setActivationPlan('standard')}
@@ -2783,11 +2837,12 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                     3 000 FCFA
                   </div>
                   <div className="text-[10px] text-slate-500 mt-1 space-y-0.5">
-                    <div>✓ Accès illimité aux micro-jobs</div>
-                    <div>✓ Formations 18h-26h & Certificats</div>
-                    <div>✓ Accès aux services du pack</div>
+                    <div>✓ Accès aux missions (ouverture progressive)</div>
+                    <div>✓ Accès aux formations</div>
+                    <div>✓ Retraits Mobile Money (après contrôle)</div>
                   </div>
                 </button>
+                )}
 
                 <button
                   type="button"
@@ -2805,12 +2860,12 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                     </span>
                   </div>
                   <div className="text-base font-extrabold text-emerald-700 font-mono mt-1">
-                    9 900 FCFA <span className="text-[10px] text-slate-500 font-normal">/ mois</span>
+                    9 900 FCFA <span className="text-[10px] text-slate-500 font-normal">/ {POLICY.subscriptionDays} jours</span>
                   </div>
                   <div className="text-[10px] text-slate-500 mt-1 space-y-0.5">
-                    <div>★ <strong>Offre Premium</strong> (contenu détaillé avant paiement)</div>
-                    <div>★ Formations et outils réservés Premium</div>
-                    <div>★ Outils IA & Fichiers VCF illimités</div>
+                    <div>★ <strong>Abonnement de {POLICY.subscriptionDays} jours</strong>, renouvelable à la main</div>
+                    <div>★ Missions, formations et retraits pendant la période</div>
+                    <div>★ Outils IA et fichiers VCF : en cours d'ouverture</div>
                   </div>
                 </button>
               </div>
@@ -2878,7 +2933,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-slate-600 font-semibold">Total à régler :</span>
                   <span className="font-mono font-extrabold text-slate-900">
-                    {activationPlan === 'standard' ? '3 000 FCFA' : '9 900 FCFA'}
+                    {activationPlan === 'standard' ? '3 000 FCFA' : `9 900 FCFA pour ${POLICY.subscriptionDays} jours`}
                   </span>
                 </div>
                 {activationPlan === 'standard' ? (

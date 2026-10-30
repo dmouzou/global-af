@@ -77,20 +77,3 @@ export function computeRefund(amount: number, feeBps: number):
   const fee = Math.min(amount, Math.round(amount * feeBps / 10000));
   return {fee, refund: amount - fee};
 }
-
-/** Rang des offres : en cas de rétractation, on retombe sur la meilleure restante. */
-const PLAN_RANK: Record<string, number> = {standard: 1, premium: 2, business: 3};
-
-/**
- * Meilleure offre encore valide parmi les paiements confirmés restants.
- * @param {string[]} plans Identifiants d'offres des autres paiements confirmés.
- * @return {string|null} Offre à conserver, ou null (retour au palier gratuit).
- */
-export function bestRemainingPlan(plans: Array<string | undefined>):
-  string | null {
-  let best: string | null = null;
-  for (const p of plans) {
-    if (p && PLAN_RANK[p] && (!best || PLAN_RANK[p] > PLAN_RANK[best])) best = p;
-  }
-  return best;
-}

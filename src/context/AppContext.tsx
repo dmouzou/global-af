@@ -333,6 +333,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           ? d.createdAt.toDate().toLocaleDateString('fr-FR')
           : '';
         const pending = d.pendingSpendingLimit as { amount: number; effectiveAtMs: number } | null | undefined;
+        // Accès effectif (même règle que le serveur) : un abonnement échu ne compte plus,
+        // le Pass d'entrée n'expire pas.
+        const expiresAt: Date | null = d.subscriptionExpiresAt && typeof d.subscriptionExpiresAt.toDate === 'function'
+          ? d.subscriptionExpiresAt.toDate()
+          : null;
+        const entryPass = d.entryPass === true;
+        const subActive = (d.subscriptionPlan === 'premium' || d.subscriptionPlan === 'business')
+          && !!expiresAt && expiresAt.getTime() > Date.now();
+        const effectivePlan: User['subscriptionPlan'] = subActive ? d.subscriptionPlan : entryPass ? 'standard' : 'free';
         setCurrentUser({
           id: uid,
           firstName: d.firstName || '',
@@ -342,9 +351,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           country: (d.country as CountryCode) || 'CI',
           // Le rôle de référence est le claim signé, pas le document.
           role: claimRole,
-          isActivated: Boolean(d.isActivated || d.activatedAt),
+          isActivated: effectivePlan !== 'free',
+          entryPass,
+          subscriptionExpiresAt: subActive && expiresAt ? expiresAt.toISOString() : undefined,
           activationDate: d.activationDate ? String(d.activationDate).slice(0, 10) : undefined,
-          subscriptionPlan: d.subscriptionPlan || 'free',
+          subscriptionPlan: effectivePlan,
           referralCode: d.referralCode || '',
           referredBy: d.referredBy || d.referredByUid,
           level: d.level || 'Starter',

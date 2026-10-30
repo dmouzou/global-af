@@ -18,3 +18,4 @@ export {
 } from "./handlers/payments";
 
 export {updateMyProfile, setSpendingLimit, getMyAffiliation} from "./handlers/account";
+export {processSubscriptions} from "./handlers/subscriptions";

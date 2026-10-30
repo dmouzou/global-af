@@ -7,6 +7,7 @@ import {enforceRateLimit} from "../lib/rateLimit";
 import {guard} from "../lib/errors";
 import {asObject, optString, reqRequestId, reqString} from "../lib/validate";
 import {DomainError} from "../domain/errors";
+import {accessStateFromDoc, resolveAccess} from "../domain/subscription";
 import {applyPosting} from "../domain/ledger";
 import {
   assertTransition, canProcessWithdrawals, postingForStatus, quoteWithdrawal,
@@ -65,7 +66,8 @@ export const requestWithdrawal = onCall(async (request: CallableRequest) => {
       }
       const user = userSnap.data() as {
         status: string; country: string; phone: string;
-        isActivated?: boolean; activatedAt?: unknown;
+        entryPass?: boolean; subscriptionPlan?: string | null;
+        subscriptionExpiresAt?: unknown;
       };
       if (user.status !== "active") {
         throw new DomainError("account_not_active",
@@ -73,10 +75,13 @@ export const requestWithdrawal = onCall(async (request: CallableRequest) => {
       }
       // Règle produit : les retraits exigent un Pass actif (condition d'accès
       // affichée avant tout paiement).
-      if (!(user.isActivated === true || user.activatedAt)) {
+      // Accès EFFECTIF : un abonnement échu ne compte plus, même si la tâche
+      // planifiée n'est pas encore passée.
+      if (!resolveAccess(accessStateFromDoc(user), new Date()).isActivated) {
         throw new DomainError("activation_required",
-          "Les retraits nécessitent un Pass actif. Activez votre Pass depuis " +
-          "votre espace pour demander un retrait.");
+          "Les retraits nécessitent un Pass actif (Pass d'entrée ou " +
+          "abonnement en cours). Activez ou renouvelez votre Pass depuis " +
+          "votre espace.");
       }
       const country = await getCountryConfig(user.country, tx);
       const balances = await readBalances(tx, uid);

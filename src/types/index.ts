@@ -57,6 +57,10 @@ export interface User {
   isEmailVerified: boolean;
   spendingLimitMonthly: number;
   spentThisMonth: number;
+  /** Pass d'entrée acheté (sans limite de durée). */
+  entryPass?: boolean;
+  /** Échéance de l'abonnement Premium/Business en cours (ISO), le cas échéant. */
+  subscriptionExpiresAt?: string;
   /** Hausse de plafond demandée, effective après un délai de réflexion de 24 h. */
   pendingSpendingLimit?: { amount: number; effectiveAtMs: number };
   createdAt: string;

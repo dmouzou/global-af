@@ -107,6 +107,8 @@ export interface CountryConfig {
 export interface PlatformConfig {
   minAge: number;
   retractionDays: number;
+  /** Durée d'une période d'abonnement (Premium, Business), en jours. */
+  subscriptionDays: number;
   /**
    * Frais de transaction retenus sur un remboursement de rétractation, en
    * points de base (300 = 3 %). Annoncés avant le paiement.

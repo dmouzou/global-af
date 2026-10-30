@@ -19,6 +19,11 @@ export async function getPlatformConfig(
   }
   const cfg = snap.data() as PlatformConfig;
   assertAffiliationConfig(cfg.affiliation);
+  if (!Number.isInteger(cfg.subscriptionDays) || cfg.subscriptionDays < 1 ||
+    cfg.subscriptionDays > 366) {
+    throw new DomainError("config_invalid",
+      "Durée d'abonnement invalide (relancer le script de seed).");
+  }
   if (!Number.isInteger(cfg.refundFeeBps) || cfg.refundFeeBps < 0 ||
     cfg.refundFeeBps > 2000) {
     throw new DomainError("config_invalid",

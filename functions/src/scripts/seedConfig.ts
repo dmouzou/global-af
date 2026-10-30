@@ -19,6 +19,7 @@ import {assertAffiliationConfig} from "../domain/commission";
 const platform: PlatformConfig = {
   minAge: 18,
   retractionDays: 7,
+  subscriptionDays: 30, // période d'abonnement ; renouvellement manuel
   refundFeeBps: 300, // 3 % retenus au remboursement : à confirmer avec les frais CinetPay
   retractionMaxConsumption: null, // critère « contenu consommé » : à définir
   defaultMonthlyLimit: 50000, // prototype : à confirmer

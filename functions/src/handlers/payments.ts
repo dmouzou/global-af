@@ -22,30 +22,18 @@ import {
 } from "../domain/spending";
 import {computeCommissions, SponsorChain} from "../domain/commission";
 import {
-  assertRetractableKind, bestRemainingPlan, checkRetraction, computeRefund,
-  isRetractableKind,
+  assertRetractableKind, checkRetraction, computeRefund, isRetractableKind,
 } from "../domain/retraction";
+import {
+  accessStateFromDoc, assertPurchasable, expiryAfterRetraction,
+  nextSubscriptionExpiry, resolveAccess,
+} from "../domain/subscription";
 import {getPlatformConfig} from "../lib/config";
+import {notify} from "../lib/notify";
 import {readBalances, writeWalletAndLedger} from "../lib/walletStore";
 import {applyPosting} from "../domain/ledger";
 
 const FINANCE_ROLES: Role[] = ["financial_manager", "admin", "super_admin"];
-
-/**
- * Crée une notification interne pour un membre (écriture serveur : les
- * règles Firestore interdisent au client d'en créer).
- * @param {FirebaseFirestore.Transaction} tx Transaction en cours.
- * @param {string} userId Destinataire.
- * @param {string} title Titre.
- * @param {string} message Message.
- */
-function notify(tx: FirebaseFirestore.Transaction, userId: string,
-  title: string, message: string): void {
-  tx.set(db.collection("notifications").doc(), {
-    userId, title, message, type: "system", read: false,
-    createdAt: FieldValue.serverTimestamp(),
-  });
-}
 
 // Clés sensibles CinetPay : Secret Manager (exposées en variables d'environnement
 // uniquement dans les fonctions qui les déclarent). CINETPAY_SITE_ID et
@@ -133,11 +121,17 @@ export const initiateOnlinePayment = onCall(
         country: string; status?: string; spentThisMonth?: number;
         spentMonth?: string; spendingLimitMonthly?: number;
         pendingSpendingLimit?: {amount: number; effectiveAtMs: number} | null;
+        entryPass?: boolean; subscriptionPlan?: string | null;
+        subscriptionExpiresAt?: unknown;
       };
       if (user.status !== undefined && user.status !== "active") {
         throw new DomainError("account_not_active",
           "Votre compte ne permet pas de paiement pour le moment.");
       }
+      // Pas de doublon de Pass d'entrée, pas de changement d'offre en cours de
+      // période, pas de prépaiement excessif (le membre perdrait de l'argent).
+      assertPurchasable(accessStateFromDoc(user), product, new Date(),
+        platform.subscriptionDays);
       const amount = validateCheckoutAmount(product.priceXOF);
       // Le Pass d'entrée n'est pas remboursable : le membre doit l'avoir
       // reconnu explicitement (preuve conservée sur le paiement).
@@ -299,6 +293,8 @@ function makePaymentWebhook(providerId: PaymentProviderId,
       const user = userSnap.data() as {
         referredBy?: string; referredByUid?: string; status?: string;
         spentThisMonth?: number; spentMonth?: string;
+        entryPass?: boolean; subscriptionPlan?: string | null;
+        subscriptionExpiresAt?: unknown;
       };
       const grantsAccess = pmt.kind === "activation" ||
         pmt.kind === "subscription";
@@ -308,11 +304,35 @@ function makePaymentWebhook(providerId: PaymentProviderId,
       };
       // Un achat sans accès (ex. un cours) ne doit JAMAIS modifier l'offre.
       if (grantsAccess) {
+        const before = accessStateFromDoc(user);
         userUpdate.isActivated = true;
-        userUpdate.planId = pmt.plan ?? null;
-        userUpdate.subscriptionPlan = pmt.plan ?? "premium";
         userUpdate.activatedAt = FieldValue.serverTimestamp();
         userUpdate.activationDate = now.toISOString();
+        if (pmt.kind === "subscription") {
+          // Abonnement : une période de `subscriptionDays` jours. Un
+          // renouvellement avant l'échéance prolonge sans perdre de jours.
+          const sameActivePlan = before.subscriptionPlan === pmt.plan;
+          const expires = nextSubscriptionExpiry(
+            sameActivePlan ? before.subscriptionExpiresAt : null, now,
+            platform.subscriptionDays);
+          userUpdate.subscriptionPlan = pmt.plan ?? "premium";
+          userUpdate.planId = pmt.plan ?? null;
+          userUpdate.subscriptionExpiresAt = Timestamp.fromDate(expires);
+          userUpdate.expiryReminderFor = null;
+          tx.update(paymentRef, {
+            grantedDays: platform.subscriptionDays,
+            subscriptionExpiresAfter: Timestamp.fromDate(expires),
+          });
+        } else {
+          // Pass d'entrée : sans limite de durée. Il ne remplace pas un
+          // abonnement en cours.
+          userUpdate.entryPass = true;
+          if (!resolveAccess(before, now).isActivated ||
+            resolveAccess(before, now).plan === "standard") {
+            userUpdate.subscriptionPlan = pmt.plan ?? "standard";
+            userUpdate.planId = pmt.plan ?? null;
+          }
+        }
       }
       tx.update(userRef, userUpdate);
 
@@ -328,7 +348,9 @@ function makePaymentWebhook(providerId: PaymentProviderId,
       }]);
       notify(tx, pmt.userId, "Paiement confirmé",
         `Votre paiement de ${pmt.amount.toLocaleString("fr-FR")} XOF est ` +
-        "confirmé." + (retractable ? " Vous pouvez vous rétracter pendant " +
+        "confirmé." + (pmt.kind === "subscription" ?
+          ` Abonnement valable ${platform.subscriptionDays} jours.` : "") +
+        (retractable ? " Vous pouvez vous rétracter pendant " +
           `${platform.retractionDays} jours.` : ""));
 
       // Commissions : seulement sur ventes réelles, comptes actifs.
@@ -463,15 +485,6 @@ export const requestPaymentRetraction = onCall(
         }
         const userRef = db.collection("users").doc(uid);
         const userSnap = await tx.get(userRef);
-        // Autres paiements confirmés (lus AVANT toute écriture) : si le membre
-        // a aussi un Pass d'entrée ou une autre offre valide, il la conserve.
-        const others = await tx.get(db.collection("payments")
-          .where("userId", "==", uid).where("status", "==", "succeeded"));
-        const remainingPlan = bestRemainingPlan(others.docs
-          .filter((d) => d.id !== paymentId)
-          .map((d) => d.data() as PaymentRecord)
-          .filter((p) => p.kind === "activation" || p.kind === "subscription")
-          .map((p) => p.plan));
         const now = new Date();
         // Frais de transaction retenus : annoncés avant le paiement.
         const {fee, refund} = computeRefund(pmt.amount, platform.refundFeeBps);
@@ -488,12 +501,29 @@ export const requestPaymentRetraction = onCall(
         });
         if (userSnap.exists) {
           const user = userSnap.data() as {
-            spentThisMonth?: number; spentMonth?: string;
+            spentThisMonth?: number; spentMonth?: string; entryPass?: boolean;
+            subscriptionPlan?: string | null; subscriptionExpiresAt?: unknown;
           };
-          const update: Record<string, unknown> = remainingPlan ?
-            {isActivated: true, planId: remainingPlan,
-              subscriptionPlan: remainingPlan} :
-            {isActivated: false, planId: null, subscriptionPlan: "free"};
+          // On retire les jours que ce paiement avait accordés ; s'il reste de
+          // la validité (renouvellement antérieur), l'abonnement continue.
+          const state = accessStateFromDoc(user);
+          const granted = (pmt as unknown as {grantedDays?: number})
+            .grantedDays ?? platform.subscriptionDays;
+          const newExpiry = expiryAfterRetraction(
+            state.subscriptionExpiresAt, granted, now);
+          const after = resolveAccess({
+            entryPass: state.entryPass,
+            subscriptionPlan: newExpiry ? state.subscriptionPlan : null,
+            subscriptionExpiresAt: newExpiry,
+          }, now);
+          const update: Record<string, unknown> = {
+            isActivated: after.isActivated,
+            subscriptionPlan: after.plan,
+            planId: after.plan === "free" ? null : after.plan,
+            subscriptionExpiresAt: newExpiry ?
+              Timestamp.fromDate(newExpiry) : null,
+            expiryReminderFor: null,
+          };
           if (user.spentMonth === monthKey(now)) {
             update.spentThisMonth = Math.max(0,
               (user.spentThisMonth ?? 0) - pmt.amount);

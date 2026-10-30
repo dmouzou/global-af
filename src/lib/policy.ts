@@ -7,6 +7,10 @@
 export const POLICY = {
   /** Délai de rétractation des ABONNEMENTS (jours). */
   retractionDays: 7,
+  /** Durée d'une période d'abonnement (jours) ; renouvellement manuel. */
+  subscriptionDays: 30,
+  /** Préavis du rappel d'échéance (jours). */
+  reminderDays: 3,
   /** Frais de transaction retenus sur un remboursement (%). */
   refundFeePercent: 3,
   minAge: 18,

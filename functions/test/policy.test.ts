@@ -1,6 +1,6 @@
 import {describe, expect, it} from "vitest";
 import {
-  assertRetractableKind, bestRemainingPlan, computeRefund, isRetractableKind,
+  assertRetractableKind, computeRefund, isRetractableKind,
 } from "../src/domain/retraction";
 
 describe("Politique de rétractation : abonnements uniquement", () => {
@@ -36,13 +36,5 @@ describe("Politique de rétractation : abonnements uniquement", () => {
     expect(() => computeRefund(9900.5, 300)).toThrow();
     expect(() => computeRefund(9900, -1)).toThrow();
     expect(() => computeRefund(9900, 10001)).toThrow();
-  });
-
-  it("après rétractation, le membre garde la meilleure offre restante", () => {
-    expect(bestRemainingPlan([])).toBeNull();
-    expect(bestRemainingPlan(["standard"])).toBe("standard");
-    expect(bestRemainingPlan(["standard", "premium"])).toBe("premium");
-    expect(bestRemainingPlan(["premium", "business", "standard"])).toBe("business");
-    expect(bestRemainingPlan([undefined, "inconnu"])).toBeNull();
   });
 });
