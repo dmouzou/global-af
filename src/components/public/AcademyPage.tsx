@@ -172,7 +172,7 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({ onGoToDashboard, onOpe
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                Standard Gratuites
+                Formations Standard
               </button>
               <button
                 onClick={() => setActiveTab('premium')}

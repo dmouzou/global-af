@@ -19,6 +19,7 @@ import {assertAffiliationConfig} from "../domain/commission";
 const platform: PlatformConfig = {
   minAge: 18,
   retractionDays: 7,
+  refundFeeBps: 300, // 3 % retenus au remboursement : à confirmer avec les frais CinetPay
   retractionMaxConsumption: null, // critère « contenu consommé » : à définir
   defaultMonthlyLimit: 50000, // prototype : à confirmer
   rapidPayment: null, // seuil des paiements rapprochés : à définir
@@ -45,13 +46,17 @@ const countries: CountryConfig[] = [{
   },
 }];
 
-// Packs du prototype. `kind: "activation"` n'ouvre PAS droit à commission
-// (section 6). À trancher : un pack est-il une activation ou un abonnement ?
+// Offres. `activation` = Pass d'entrée : NON remboursable (décision produit),
+// sans commission d'affiliation (section 6). `subscription` = abonnements :
+// droit de rétractation de 7 jours (remboursement sous déduction des frais
+// de transaction) et commissions d'affiliation sur ventes réelles.
 const products = [
   {id: "standard", name: "Pass Membre Standard", priceXOF: 3000,
-    kind: "activation"}, // prototype : à confirmer
-  {id: "premium", name: "Pack Premium", priceXOF: 9900, kind: "activation"},
-  {id: "business", name: "Pack Business", priceXOF: 25000, kind: "activation"},
+    kind: "activation"},
+  {id: "premium", name: "Abonnement Premium", priceXOF: 9900,
+    kind: "subscription"},
+  {id: "business", name: "Abonnement Business", priceXOF: 25000,
+    kind: "subscription"},
 ];
 
 /** Point d'entrée du script. */

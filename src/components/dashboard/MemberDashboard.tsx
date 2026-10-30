@@ -1,3 +1,4 @@
+import { POLICY } from '../../lib/policy';
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
@@ -110,6 +111,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
   const [billingCity, setBillingCity] = useState(currentUser?.city || '');
   const [billingZip, setBillingZip] = useState('');
   const [isPaying, setIsPaying] = useState(false);
+  const [acceptNoRefund, setAcceptNoRefund] = useState(false);
 
   // Profile Edit State
   const [editFirstName, setEditFirstName] = useState(currentUser?.firstName || '');
@@ -271,7 +273,8 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
       activationMethod,
       activationMethod === 'card'
         ? { address: billingAddress.trim(), city: billingCity.trim(), zipCode: billingZip.trim() }
-        : undefined
+        : undefined,
+      activationPlan === 'standard' ? acceptNoRefund : undefined
     );
     setIsPaying(false);
     if (res.success) {
@@ -2582,14 +2585,14 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
               <div className="flex items-center gap-2">
                 <RotateCcw className="w-5 h-5 text-orange-600" />
                 <h3 className="font-display font-bold text-slate-900 text-sm">
-                  Droit Légal de Rétractation de 7 Jours
+                  Rétractation des abonnements ({POLICY.retractionDays} jours)
                 </h3>
               </div>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Si vous avez activé un compte payant (Pack Premium ou Business), vous bénéficiez d'un droit de rétractation garanti de 7 jours avec remboursement intégral par Mobile Money (Wave / Orange Money).
+                Si vous avez souscrit un abonnement (Premium ou Business), vous pouvez vous rétracter pendant 7 jours à compter du paiement. Le remboursement est versé sur le moyen de paiement utilisé, sous déduction des frais de transaction (3 %). Le Pass d'entrée n'est pas remboursable.
               </p>
 
-              {currentUser.subscriptionPlan !== 'free' ? (
+              {currentUser.subscriptionPlan === 'premium' || currentUser.subscriptionPlan === 'business' ? (
                 <div className="p-4 bg-orange-50 rounded-xl border border-orange-200 space-y-3 text-xs">
                   <div className="font-semibold text-orange-900">
                     Abonnement actif : {currentUser.subscriptionPlan.toUpperCase()} (Activé le {currentUser.activationDate})
@@ -2610,12 +2613,12 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                     }}
                     className="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors shadow-xs"
                   >
-                    Demander mon remboursement Mobile Money immédiat
+                    Demander la rétractation de mon abonnement
                   </button>
                 </div>
               ) : (
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-500">
-                  Votre compte est actuellement sur le palier Gratuit. Aucun paiement actif n'est sujet à remboursement.
+                  {currentUser.subscriptionPlan === 'standard' ? "Votre Pass d'entrée n'est pas remboursable : seuls les abonnements ouvrent un droit de rétractation." : "Aucun abonnement actif : rien à rembourser."}
                 </div>
               )}
             </div>
@@ -2878,9 +2881,22 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                     {activationPlan === 'standard' ? '3 000 FCFA' : '9 900 FCFA'}
                   </span>
                 </div>
-                <div className="text-[11px] text-slate-600 leading-snug">
-                  ✓ Droit de rétractation de 7 jours : demandez le remboursement depuis Paramètres, il est versé sur votre moyen de paiement après traitement. Le montant, les frais éventuels et le contenu de l'offre vous sont présentés avant tout paiement.
-                </div>
+                {activationPlan === 'standard' ? (
+                  <label className="flex items-start gap-2 text-[11px] text-slate-700 leading-snug cursor-pointer">
+                    <input
+                      type="checkbox" required checked={acceptNoRefund}
+                      onChange={(e) => setAcceptNoRefund(e.target.checked)}
+                      className="mt-0.5 rounded text-orange-600 focus:ring-orange-500 w-4 h-4"
+                    />
+                    <span>
+                      Je comprends que le <strong>Pass d'entrée n'est pas remboursable</strong> et qu'il donne accès aux missions et aux retraits. Il ne garantit aucun gain.
+                    </span>
+                  </label>
+                ) : (
+                  <div className="text-[11px] text-slate-600 leading-snug">
+                    ✓ Abonnement : droit de rétractation de {POLICY.retractionDays} jours depuis Paramètres. Le remboursement est versé sur votre moyen de paiement après traitement, <strong>sous déduction des frais de transaction ({POLICY.refundFeePercent} %)</strong>.
+                  </div>
+                )}
               </div>
 
               <button

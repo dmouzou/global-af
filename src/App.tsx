@@ -21,6 +21,7 @@ import { AuthModal } from './components/auth/AuthModal';
 import { FloatingChatbotWidget } from './components/common/InformationalChatbot';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { PaymentReturnBanner } from './components/common/PaymentReturnBanner';
+import { LegalPage } from './components/public/LegalPage';
 import { Task, AppView } from './types';
 
 export const isExplicitAdminPortal = (): boolean => {
@@ -260,6 +261,10 @@ function AppContent() {
           />
         )}
 
+        {(currentView === 'cgu' || currentView === 'confidentialite' || currentView === 'cookies' || currentView === 'mentions') && (
+          <LegalPage doc={currentView} onNavigate={(v) => navigateToView(v as AppView)} />
+        )}
+
         {currentView === 'transparence' && (
           <TransparencePage 
             onGoToDashboard={() => {
@@ -299,7 +304,7 @@ function AppContent() {
       {/* Footer with multi-page and section routing */}
       <Footer 
         onNavigateSection={(sec) => {
-          if (['missions', 'academie', 'affiliation', 'outils', 'transparence', 'dashboard'].includes(sec)) {
+          if (['missions', 'academie', 'affiliation', 'outils', 'transparence', 'dashboard', 'cgu', 'confidentialite', 'cookies', 'mentions'].includes(sec)) {
             navigateToView(sec as AppView);
           } else {
             setCurrentView('landing');

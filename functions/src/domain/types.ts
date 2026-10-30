@@ -108,6 +108,11 @@ export interface PlatformConfig {
   minAge: number;
   retractionDays: number;
   /**
+   * Frais de transaction retenus sur un remboursement de rétractation, en
+   * points de base (300 = 3 %). Annoncés avant le paiement.
+   */
+  refundFeeBps: number;
+  /**
    * Part maximale du contenu consommée au-delà de laquelle la rétractation
    * est refusée (section 6). null = critère désactivé (à décider).
    */

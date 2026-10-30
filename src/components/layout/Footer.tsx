@@ -91,6 +91,13 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateSection }) => {
         <div className="mt-10 pt-6 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <div className="flex flex-wrap items-center gap-4">
             <p>© 2026 GLOBAL-AF. Tous droits réservés.</p>
+          
+            <nav aria-label="Informations légales" className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+              <button type="button" onClick={() => handleNav('cgu')} className="hover:text-white transition-colors">Conditions générales</button>
+              <button type="button" onClick={() => handleNav('confidentialite')} className="hover:text-white transition-colors">Confidentialité</button>
+              <button type="button" onClick={() => handleNav('cookies')} className="hover:text-white transition-colors">Cookies</button>
+              <button type="button" onClick={() => handleNav('mentions')} className="hover:text-white transition-colors">Mentions légales</button>
+            </nav>
           </div>
           <div className="flex items-center gap-2 text-[11px] text-slate-400">
             <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" />

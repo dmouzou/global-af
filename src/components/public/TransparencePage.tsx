@@ -163,11 +163,11 @@ export const TransparencePage: React.FC<TransparencePageProps> = ({ onGoToDashbo
                 <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-600 font-extrabold text-xs flex items-center justify-center font-mono">
                   02
                 </div>
-                <span className="text-[10px] font-bold uppercase text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Rétractation VIP</span>
+                <span className="text-[10px] font-bold uppercase text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Rétractation</span>
               </div>
-              <h3 className="font-bold text-slate-900 text-sm">Droit de Rétractation VIP & Délais d'Affiliation</h3>
+              <h3 className="font-bold text-slate-900 text-sm">Rétractation des abonnements & délais d'affiliation</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Le délai de rétractation de 7 jours s'applique à toute offre payante, avec remboursement vers le moyen de paiement utilisé (traité par notre équipe). Les commissions d'affiliation ne sont créditées au parrain qu'après l'expiration complète de ce délai, et sont annulées si le filleul se rétracte.
+                Les abonnements (Premium, Business) ont un délai de rétractation de 7 jours, avec remboursement vers le moyen de paiement utilisé sous déduction des frais de transaction (3 %). Le Pass d'entrée n'est pas remboursable : le membre le reconnaît avant de payer. Les commissions d'affiliation ne sont créditées qu'après un délai de 7 jours et sont annulées si le filleul se rétracte.
               </p>
             </div>
 
@@ -305,7 +305,7 @@ export const TransparencePage: React.FC<TransparencePageProps> = ({ onGoToDashbo
                   </tr>
                   <tr>
                     <td className="py-3 px-4 font-medium text-slate-900">Rétractation & Remboursement</td>
-                    <td className="py-3 px-4 text-emerald-800 font-semibold bg-emerald-50/30">Rétractation de 7 jours avec remboursement</td>
+                    <td className="py-3 px-4 text-emerald-800 font-semibold bg-emerald-50/30">Rétractation de 7 jours des abonnements, avec remboursement sous déduction des frais (3 %)</td>
                     <td className="py-3 px-4 text-rose-700 bg-rose-50/30">Aucune rétractation, fonds bloqués sans recours</td>
                   </tr>
                   <tr>

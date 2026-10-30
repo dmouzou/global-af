@@ -46,6 +46,19 @@ aucun secret par défaut (clés absentes = webhook refusé).
 7. Adresse de notification à connaître (déjà envoyée dans chaque paiement) :
    `https://europe-west1-<projet>.cloudfunctions.net/cinetpayWebhook`.
 
+## Règles commerciales appliquées (décisions du propriétaire)
+
+- `standard` = **Pass d'entrée** (`kind: activation`) : non remboursable, aucune commission ;
+  la case « je comprends qu'il n'est pas remboursable » est exigée et horodatée (`acceptedNoRefundAt`).
+- `premium` et `business` = **abonnements** (`kind: subscription`) : rétractation de 7 jours,
+  remboursement du montant payé **moins 3 %** (`refundFeeBps = 300`, à aligner sur les frais
+  CinetPay), commissions d'affiliation (créditées après 7 jours, annulées en cas de rétractation).
+- Retraits : refusés par le serveur sans Pass actif.
+- Si le membre a plusieurs achats, la rétractation d'un abonnement lui laisse la meilleure offre restante.
+- **Non géré** : durée et renouvellement des abonnements. Un abonnement payé reste actif sans
+  date d'expiration et il n'y a aucun prélèvement automatique ; à définir si « abonnement »
+  doit signifier « 30 jours renouvelables ».
+
 ## Ce qui reste manuel ou non branché
 
 - **Retraits (versements aux membres)** : manuels. L'API de transfert CinetPay existe

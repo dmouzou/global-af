@@ -21,7 +21,11 @@ export type AppView =
   | 'outils'
   | 'dashboard' 
   | 'admin'
-  | 'partenaire';
+  | 'partenaire'
+  | 'cgu'
+  | 'confidentialite'
+  | 'cookies'
+  | 'mentions';
 
 export type CountryCode = 'CI' | 'SN' | 'CM' | 'BF';
 

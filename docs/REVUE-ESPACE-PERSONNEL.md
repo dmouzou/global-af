@@ -17,7 +17,7 @@ build et des tests ; **rien n'a été testé dans un navigateur ni avec les
 | VCF, Outils IA, Communauté, Support | Parcourues | Pas de backend : messages explicites ; contenu VCF/IA non audité ligne à ligne |
 | Pages publiques : accueil, Missions, Académie, Affiliation, Transparence, Outils, Partenaires, FAQ | Oui (affirmations et chiffres) | Corrigées (voir §1 bis) ; mise en page et accessibilité non revues |
 | Chatbot (widget + `server.ts`) | Oui | Réécrit (voir §1 bis) |
-| Barre de navigation, pied de page | Parcourus | Pages légales absentes (voir §3) |
+| Barre de navigation, pied de page | Parcourus | Liens légaux ajoutés au pied de page |
 | `storage.rules` | Non revu | |
 | Comportement réel (navigateur, émulateurs Firebase, mobile) | **Non testé** | Aucun test de bout en bout n'a été exécuté |
 
@@ -143,12 +143,14 @@ build et des tests ; **rien n'a été testé dans un navigateur ni avec les
   démonstration, sans backend. Le catalogue VCF (droits d'usage) reste à valider.
 - Une hausse de plafond prend effet après 24 h (choix de protection à confirmer).
 
-- **Pages légales absentes** : le pied de page ne propose ni CGU, ni politique de
-  confidentialité, ni cookies, ni contact (prévus au cahier des charges, sections 4 et 38).
-  Seul un texte de CGU existe dans la fenêtre d'inscription. Textes à faire rédiger/valider.
-- **Contradiction à trancher** : l'accueil et l'interface indiquent que missions et retraits
-  exigent le Pass payant ; la charte éthique promet un palier gratuit réellement utile et sans
-  achat pour retirer. Les textes publics ne l'affirment plus, mais la règle de fond reste à choisir.
+- **Pages légales** : ajoutées (CGU, confidentialité, cookies, mentions) en version provisoire ;
+  identité de l'éditeur, références ARTCI et durées de conservation à renseigner, validation
+  juridique requise (voir `docs/PAGES-LEGALES.md`).
+- **Décisions du propriétaire (écart assumé avec le cahier des charges)** : missions, formations
+  et retraits exigent un Pass payant (désormais aussi contrôlé côté serveur) ; la rétractation ne
+  s'applique qu'aux abonnements, avec 3 % de frais retenus ; le Pass d'entrée n'est pas
+  remboursable. Textes publics, chatbot, interface et serveur alignés. Points à faire valider
+  par un juriste (voir `docs/PAGES-LEGALES.md`).
 - **API du chatbot et du générateur** (`/api/chat`, `/api/generate-copy`) : servies par
   `server.ts`, **non déployé par Firebase Hosting** (qui renvoie `index.html` pour toute URL) ; en
   production le widget retombe donc sur sa base locale. Si le serveur est déployé : exiger une

@@ -3,7 +3,7 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { useApp } from '../../context/AppContext';
 
-type PaymentView = { status: string; amount?: number; failureReason?: string } | null;
+type PaymentView = { status: string; amount?: number; failureReason?: string; retractable?: boolean } | null;
 
 /**
  * Page de retour du paiement : la passerelle redirige le membre vers
@@ -45,7 +45,9 @@ export const PaymentReturnBanner: React.FC = () => {
     message = 'Paiement introuvable pour ce compte. Si vous avez été débité, contactez le support en indiquant la référence ' + pid + '.';
   } else if (payment?.status === 'succeeded') {
     tone = 'bg-emerald-50 border-emerald-200 text-emerald-900';
-    message = 'Paiement confirmé. Votre offre est activée. Vous disposez de 7 jours pour vous rétracter depuis Paramètres.';
+    message = payment.retractable
+      ? 'Paiement confirmé. Votre abonnement est activé. Vous pouvez vous rétracter pendant 7 jours depuis Paramètres (remboursement sous déduction des frais de transaction).'
+      : "Paiement confirmé. Votre Pass d'entrée est activé.";
   } else if (payment?.status === 'pending' || payment?.status === 'initiated') {
     tone = 'bg-amber-50 border-amber-200 text-amber-900';
     message = "Paiement en cours de confirmation par l'opérateur. Cela peut prendre quelques minutes : cette page se met à jour automatiquement. Ne payez pas une seconde fois.";

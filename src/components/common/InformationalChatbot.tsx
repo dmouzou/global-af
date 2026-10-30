@@ -25,7 +25,7 @@ const KNOWLEDGE_BASE: { keywords: string[]; title: string; answer: string; sugge
 • **Numéro :** le versement se fait sur le numéro Mobile Money indiqué à votre inscription.
 • **Montant minimum et frais :** ils sont affichés dans la fenêtre de retrait **avant** que vous validiez, avec le montant net que vous recevrez.
 • **Contrôle :** chaque demande est contrôlée avant paiement ; le montant demandé est mis de côté sur votre solde pendant ce temps. Le délai dépend de ce contrôle et de l'opérateur : il n'est pas garanti.
-• **Prérequis :** votre adresse e-mail doit être confirmée.
+• **Prérequis :** un **Pass actif** (Pass d'entrée ou abonnement) et une adresse e-mail confirmée.
 
 Aucun gain n'est garanti : le solde dépend uniquement des récompenses et commissions effectivement validées.`,
     suggestions: [
@@ -79,11 +79,12 @@ Aucun gain n'est garanti.`,
   {
     keywords: ['retractation', 'rétractation', 'remboursement', '7j', '7 jours', 'garantie', 'annuler'],
     title: 'Délai de rétractation',
-    answer: `Pour toute offre payante, vous disposez d'un **délai de rétractation de 7 jours** à compter du paiement :
+    answer: `Le **droit de rétractation de 7 jours** s'applique aux **abonnements** (Premium, Business) :
 
-• **Demande :** depuis la rubrique « Paramètres » de votre espace. Votre accès à l'offre est alors retiré et les commissions liées à votre achat sont annulées.
-• **Remboursement :** il est traité par notre équipe vers le moyen de paiement utilisé (Mobile Money ou carte). Le délai dépend du traitement et de l'opérateur ou de la banque : vous êtes notifié dès qu'il est effectué.
-• **Frais :** le montant, les frais éventuels et le contenu de l'offre vous sont présentés avant tout paiement.`,
+• **Demande :** depuis la rubrique « Paramètres » de votre espace. Votre accès est alors retiré et les commissions liées à votre achat sont annulées.
+• **Remboursement :** il est traité par notre équipe vers le moyen de paiement utilisé (Mobile Money ou carte), **sous déduction des frais de transaction (3 %)**. Le délai dépend du traitement et de l'opérateur ou de la banque : vous êtes notifié dès qu'il est effectué.
+• **Pass d'entrée :** il **n'est pas remboursable** ; vous le reconnaissez avant de payer.
+• Le montant, le contenu de l'offre et ces conditions vous sont présentés avant tout paiement.`,
     suggestions: [
       "Quels moyens de paiement sont acceptés ?",
       "Comment contacter le support ?"
@@ -95,10 +96,11 @@ Aucun gain n'est garanti.`,
   {
     keywords: ['gratuit', 'inscription', 'sans achat', 'prix', 'cout', 'coût', 'abonnement', 'tarif', 'packs', 'premium', 'standard', 'business'],
     title: 'Offres et tarifs',
-    answer: `L'inscription est **gratuite**. Des offres payantes optionnelles existent (Pass Standard, Premium, Business) :
+    answer: `L'inscription est **gratuite**. Pour participer aux missions rémunérées, suivre les formations et demander un retrait, un **Pass actif** est nécessaire :
 
+• **Pass d'entrée (Standard) :** non remboursable, reconnu avant paiement.
+• **Abonnements (Premium, Business) :** rétractation de 7 jours, remboursement sous déduction des frais de transaction (3 %).
 • **Contenu et prix :** chaque offre décrit précisément ce qu'elle contient, son prix et ses éventuels frais **avant** le paiement, sur la page de paiement elle-même.
-• **Rétractation :** 7 jours, avec remboursement (voir « délai de rétractation »).
 • **Pas d'endettement :** ne souscrivez jamais une offre en vous endettant. Vous pouvez fixer un plafond de dépense mensuel dans « Paramètres ».
 • **Gains :** acheter une offre ne garantit aucun gain.
 
@@ -150,7 +152,7 @@ Les cours ne promettent aucun revenu.`,
     title: 'Support',
     answer: `Le **support par tickets n'est pas encore ouvert** dans l'espace membre : un message envoyé depuis cette rubrique ne serait pas enregistré.
 
-• Pour un **remboursement** ou une **rétractation** : rubrique « Paramètres » de votre espace.
+• Pour la **rétractation d'un abonnement** : rubrique « Paramètres » de votre espace (le Pass d'entrée n'est pas remboursable).
 • Pour un **paiement débité sans activation** : conservez la référence affichée sur la page de retour du paiement.
 
 Ce chatbot est un assistant automatique : il informe mais ne remplace ni un conseil juridique, ni un conseil financier.`,
@@ -218,7 +220,7 @@ export const InformationalChatbot: React.FC<InformationalChatbotProps> = ({
           "Comment retirer mes gains Mobile Money ?",
           "Règles de rémunération des parrains",
           "Où en sont les micro-jobs ?",
-          "Délai de rétractation de 7 jours"
+          "Rétractation des abonnements"
         ]
       }
     ]);
@@ -302,7 +304,7 @@ export const InformationalChatbot: React.FC<InformationalChatbotProps> = ({
         links = matched.links;
         if (matched.suggestions) suggestions = matched.suggestions;
       } else {
-        replyText = `Je n'ai pas de réponse précise à cette question. Voici ce que je peux expliquer :\n\n• **Retraits** : contrôlés avant paiement, frais et montant net affichés avant validation.\n• **Parrainage** : commissions uniquement sur ventes réelles, 2 niveaux maximum.\n• **Paiements** : Mobile Money ou carte Visa sur une page sécurisée.\n• **Rétractation** : 7 jours pour toute offre payante.\n\nAucun gain n'est garanti.`;
+        replyText = `Je n'ai pas de réponse précise à cette question. Voici ce que je peux expliquer :\n\n• **Retraits** : contrôlés avant paiement, frais et montant net affichés avant validation ; Pass actif requis.\n• **Parrainage** : commissions uniquement sur ventes réelles, 2 niveaux maximum.\n• **Paiements** : Mobile Money ou carte Visa sur une page sécurisée.\n• **Rétractation** : 7 jours pour les abonnements (frais de transaction retenus) ; Pass d'entrée non remboursable.\n\nAucun gain n'est garanti.`;
       }
 
       const botMsg: ChatMessage = {

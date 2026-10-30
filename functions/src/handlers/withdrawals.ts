@@ -65,10 +65,18 @@ export const requestWithdrawal = onCall(async (request: CallableRequest) => {
       }
       const user = userSnap.data() as {
         status: string; country: string; phone: string;
+        isActivated?: boolean; activatedAt?: unknown;
       };
       if (user.status !== "active") {
         throw new DomainError("account_not_active",
           "Votre compte ne permet pas de retrait pour le moment.");
+      }
+      // Règle produit : les retraits exigent un Pass actif (condition d'accès
+      // affichée avant tout paiement).
+      if (!(user.isActivated === true || user.activatedAt)) {
+        throw new DomainError("activation_required",
+          "Les retraits nécessitent un Pass actif. Activez votre Pass depuis " +
+          "votre espace pour demander un retrait.");
       }
       const country = await getCountryConfig(user.country, tx);
       const balances = await readBalances(tx, uid);

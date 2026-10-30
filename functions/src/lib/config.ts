@@ -19,6 +19,11 @@ export async function getPlatformConfig(
   }
   const cfg = snap.data() as PlatformConfig;
   assertAffiliationConfig(cfg.affiliation);
+  if (!Number.isInteger(cfg.refundFeeBps) || cfg.refundFeeBps < 0 ||
+    cfg.refundFeeBps > 2000) {
+    throw new DomainError("config_invalid",
+      "Frais de remboursement invalides (relancer le script de seed).");
+  }
   return cfg;
 }
 

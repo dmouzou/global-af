@@ -1,4 +1,5 @@
-import {PlatformConfig} from "./types";
+import {PlatformConfig, SaleKind} from "./types";
+import {DomainError} from "./errors";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -31,4 +32,65 @@ export function checkRetraction(
     return {eligible: false, reason: "consumed"};
   }
   return {eligible: true};
+}
+
+/**
+ * Seuls les abonnements ouvrent un droit de rétractation. Le Pass d'entrée
+ * (kind « activation ») n'est pas remboursable : le membre le reconnaît
+ * avant de payer (case à cocher, horodatée sur le paiement).
+ */
+export const RETRACTABLE_KINDS: SaleKind[] = ["subscription"];
+
+/**
+ * @param {SaleKind} kind Type de vente.
+ * @return {boolean} true si la vente ouvre un droit de rétractation.
+ */
+export function isRetractableKind(kind: SaleKind): boolean {
+  return RETRACTABLE_KINDS.includes(kind);
+}
+
+/**
+ * Refuse la rétractation d'une vente non rétractable.
+ * @param {SaleKind} kind Type de vente.
+ */
+export function assertRetractableKind(kind: SaleKind): void {
+  if (!isRetractableKind(kind)) {
+    throw new DomainError("not_retractable",
+      "Le Pass d'entrée n'est pas remboursable. Seuls les abonnements " +
+      "ouvrent un droit de rétractation.");
+  }
+}
+
+/**
+ * Montant remboursé en cas de rétractation : le montant payé moins les frais
+ * de transaction retenus (arrondi à l'entier, XOF sans décimales).
+ * @param {number} amount Montant payé.
+ * @param {number} feeBps Frais retenus en points de base (300 = 3 %).
+ * @return {{fee: number, refund: number}} Frais retenus et montant remboursé.
+ */
+export function computeRefund(amount: number, feeBps: number):
+  {fee: number; refund: number} {
+  if (!Number.isInteger(amount) || amount <= 0 || !Number.isInteger(feeBps) ||
+    feeBps < 0 || feeBps > 10000) {
+    throw new DomainError("invalid_refund", "Remboursement invalide.");
+  }
+  const fee = Math.min(amount, Math.round(amount * feeBps / 10000));
+  return {fee, refund: amount - fee};
+}
+
+/** Rang des offres : en cas de rétractation, on retombe sur la meilleure restante. */
+const PLAN_RANK: Record<string, number> = {standard: 1, premium: 2, business: 3};
+
+/**
+ * Meilleure offre encore valide parmi les paiements confirmés restants.
+ * @param {string[]} plans Identifiants d'offres des autres paiements confirmés.
+ * @return {string|null} Offre à conserver, ou null (retour au palier gratuit).
+ */
+export function bestRemainingPlan(plans: Array<string | undefined>):
+  string | null {
+  let best: string | null = null;
+  for (const p of plans) {
+    if (p && PLAN_RANK[p] && (!best || PLAN_RANK[p] > PLAN_RANK[best])) best = p;
+  }
+  return best;
 }

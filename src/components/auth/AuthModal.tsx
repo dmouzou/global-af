@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { LegalDocument } from '../public/LegalDocument';
 import { X, CheckCircle, ShieldCheck, ArrowRight, ArrowLeft } from 'lucide-react';
 import { CountryCode } from '../../types';
 import { BrandLogo } from '../common/BrandLogo';
@@ -525,7 +526,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
                 <ShieldCheck className="w-5 h-5 text-orange-600" />
                 <div>
                   <h3 className="text-sm font-bold text-slate-900">
-                    Conditions Générales d'Utilisation (CGU) & Charte Éthique
+                    Conditions générales d'utilisation
                   </h3>
                   <p className="text-[11px] text-slate-500">Cadre juridique GLOBAL-AF · République de Côte d'Ivoire & UEMOA</p>
                 </div>
@@ -541,65 +542,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
 
             {/* Modal Scrollable Content */}
             <div className="p-6 overflow-y-auto space-y-4 text-xs text-slate-600 leading-relaxed">
-              
-              <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-xs">
-                <strong>Préambule d'engagement :</strong> GLOBAL-AF est une plateforme d'opportunités numériques, de micro-jobs vérifiés, de formations professionnelles et d'outils digitaux. Elle opère sous le strict respect du droit ivoirien et de la charte éthique et zéro hasard.
-              </div>
-
-              <div>
-                <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide text-orange-600 mb-1">
-                  Article 1 — Capacité Juridique et Âge Requis (18 ans ou plus)
-                </h4>
-                <p>
-                  L'inscription, l'accès aux micro-missions rémunérées et la perception de fonds par Mobile Money sont strictement réservés aux personnes physiques âgées d'au moins <strong>18 ans révolus</strong> et bénéficiant de la pleine capacité juridique d'exercer et de contracter. L'inscription de mineurs est formellement prohibée. Tout compte créé par un mineur sera immédiatement clôturé sans préavis.
-                </p>
-              </div>
-
-              <div>
-                <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide text-orange-600 mb-1">
-                  Article 2 — Modèle Économique Réel & Absence de Gains Faciles
-                </h4>
-                <p>
-                  Toutes les rémunérations versées sur GLOBAL-AF sont corrélées à l'exécution de tâches effectives (sondages, tests fonctionnels, revues) ou à des commissions sur ventes réelles de services et formations numériques. La plateforme ne garantit aucun revenu passif ou gain minimum sans effort. Les revenus constatés varient selon les compétences et l'assiduité du membre.
-                </p>
-              </div>
-
-              <div>
-                <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide text-orange-600 mb-1">
-                  Article 3 — Interdiction Absolue des Jeux de Hasard et Loteries
-                </h4>
-                <p>
-                  GLOBAL-AF proscrit expressément tout mécanisme assimilé à un jeu d'argent ou de hasard (roues tournantes, tombolas, coffres-surprises aléatoires, loteries). Tous les systèmes de points et de récompenses reposent sur des critères 100% déterministes et auditables.
-                </p>
-              </div>
-
-              <div>
-                <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide text-orange-600 mb-1">
-                  Article 4 — Droit de Rétractation de 7 Jours
-                </h4>
-                <p>
-                  Tout membre souscrivant une option payante (Activation de Pack ou Formation certifiante) dispose d'un délai légal de rétractation de <strong>7 jours calendaires</strong> à compter de sa souscription. La demande s'effectue en 1 clic depuis l'Espace Personnel et donne lieu à un remboursement intégral sans pénalité via le compte Mobile Money d'origine (Wave, Orange Money, MTN MoMo ou Moov Money).
-                </p>
-              </div>
-
-              <div>
-                <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide text-orange-600 mb-1">
-                  Article 5 — Protection des Données Personnelles (ARTCI) & Traçabilité
-                </h4>
-                <p>
-                  En conformité avec les directives de l'ARTCI (Autorité de Régulation des Télécommunications/TIC de Côte d'Ivoire), vos données nominatives et vos numéros de portefeuille Mobile Money sont chiffrés et exclusivement utilisés pour l'exécution des ordres de virement et la communication de service.
-                </p>
-              </div>
-
-              <div>
-                <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wide text-orange-600 mb-1">
-                  Article 6 — Lutte Anti-Fraude & Règle du Compte Unique
-                </h4>
-                <p>
-                  Chaque utilisateur ne peut détenir qu'un seul compte personnel. Les pratiques de parrainage croisé frauduleux, d'auto-parrainage ou d'automatisation abusive (bots) entraînent le gel immédiat du solde litigieux et la transmission du dossier aux services de vérification.
-                </p>
-              </div>
-
+              <LegalDocument doc="cgu" compact />
             </div>
 
             {/* Modal Footer Actions */}

@@ -21,7 +21,10 @@ import {
   assertWithinSpendingLimit, effectiveLimit, monthKey, spentInCurrentMonth,
 } from "../domain/spending";
 import {computeCommissions, SponsorChain} from "../domain/commission";
-import {checkRetraction} from "../domain/retraction";
+import {
+  assertRetractableKind, bestRemainingPlan, checkRetraction, computeRefund,
+  isRetractableKind,
+} from "../domain/retraction";
 import {getPlatformConfig} from "../lib/config";
 import {readBalances, writeWalletAndLedger} from "../lib/walletStore";
 import {applyPosting} from "../domain/ledger";
@@ -136,6 +139,14 @@ export const initiateOnlinePayment = onCall(
           "Votre compte ne permet pas de paiement pour le moment.");
       }
       const amount = validateCheckoutAmount(product.priceXOF);
+      // Le Pass d'entrée n'est pas remboursable : le membre doit l'avoir
+      // reconnu explicitement (preuve conservée sur le paiement).
+      const nonRefundable = !isRetractableKind(product.kind);
+      if (nonRefundable && data.acceptedNoRefund !== true) {
+        throw new DomainError("acknowledgement_required",
+          "Vous devez reconnaître que le Pass d'entrée n'est pas " +
+          "remboursable avant de payer.");
+      }
 
       const now = new Date();
       assertWithinSpendingLimit({
@@ -157,9 +168,12 @@ export const initiateOnlinePayment = onCall(
         kind: product.kind, plan: product.id, status: "initiated",
         transactionReference: paymentId, createdAt: now,
       };
+      const acknowledgement = nonRefundable ?
+        {acceptedNoRefundAt: FieldValue.serverTimestamp()} : {};
       // Le paiement est enregistré AVANT d'ouvrir le guichet : une
       // notification très rapide trouve toujours son enregistrement.
-      await paymentRef.set({...record, createdAt: FieldValue.serverTimestamp()});
+      await paymentRef.set({...record, ...acknowledgement,
+        retractable: !nonRefundable, createdAt: FieldValue.serverTimestamp()});
 
       const projectId = process.env.GCLOUD_PROJECT ?? "global-af-dev";
       let init;
@@ -266,8 +280,9 @@ function makePaymentWebhook(providerId: PaymentProviderId,
       }
 
       const now = new Date();
-      const retractionUntil = new Date(
+      const reserveUntil = new Date(
         now.getTime() + platform.retractionDays * 24 * 60 * 60 * 1000);
+      const retractable = isRetractableKind(pmt.kind);
       const userRef = db.collection("users").doc(pmt.userId);
       const userSnap = await tx.get(userRef);
       const balances: Balances = await readBalances(tx, pmt.userId);
@@ -275,7 +290,7 @@ function makePaymentWebhook(providerId: PaymentProviderId,
       tx.update(paymentRef, {
         status: "succeeded", paidAt: FieldValue.serverTimestamp(),
         paidWith: result.paidWith ?? null,
-        retractionUntil: Timestamp.fromDate(retractionUntil),
+        retractionUntil: retractable ? Timestamp.fromDate(reserveUntil) : null,
         providerReference: result.providerReference ?? pmt.providerReference ??
           null,
       });
@@ -313,8 +328,8 @@ function makePaymentWebhook(providerId: PaymentProviderId,
       }]);
       notify(tx, pmt.userId, "Paiement confirmé",
         `Votre paiement de ${pmt.amount.toLocaleString("fr-FR")} XOF est ` +
-        "confirmé. Vous pouvez vous rétracter pendant " +
-        `${platform.retractionDays} jours.`);
+        "confirmé." + (retractable ? " Vous pouvez vous rétracter pendant " +
+          `${platform.retractionDays} jours.` : ""));
 
       // Commissions : seulement sur ventes réelles, comptes actifs.
       const isUserActive = user.status === "active" ||
@@ -332,7 +347,7 @@ function makePaymentWebhook(providerId: PaymentProviderId,
             beneficiaryUid: draft.beneficiaryUid, buyerUid: pmt.userId,
             level: draft.level, amount: draft.amount, rateBps: draft.rateBps,
             status: "pending_retraction",
-            matureAt: Timestamp.fromDate(retractionUntil),
+            matureAt: Timestamp.fromDate(reserveUntil),
             createdAt: FieldValue.serverTimestamp(),
           });
         }
@@ -402,22 +417,26 @@ export const requestPaymentRetraction = onCall(
       const requestedId = optString(data, "paymentId", 80);
       const platform = await getPlatformConfig();
 
-      // Sans identifiant : le dernier paiement confirmé encore rétractable.
+      // Sans identifiant : le dernier ABONNEMENT confirmé (seuls les abonnements
+      // sont rétractables ; le Pass d'entrée ne l'est pas).
       let paymentId = requestedId;
       if (!paymentId) {
         const q = await db.collection("payments")
           .where("userId", "==", uid).where("status", "==", "succeeded")
-          .orderBy("createdAt", "desc").limit(1).get();
-        if (q.empty) {
+          .orderBy("createdAt", "desc").limit(20).get();
+        const target = q.docs.find((d) =>
+          isRetractableKind((d.data() as PaymentRecord).kind));
+        if (!target) {
           throw new DomainError("payment_not_found",
-            "Aucun paiement confirmé à rembourser.");
+            "Aucun abonnement confirmé à rembourser. Le Pass d'entrée " +
+            "n'est pas remboursable.");
         }
-        paymentId = q.docs[0].id;
+        paymentId = target.id;
       }
       const paymentRef = db.collection("payments").doc(paymentId);
       const refundRef = db.collection("refunds").doc(paymentId);
 
-      const amount = await db.runTransaction(async (tx) => {
+      const outcome = await db.runTransaction(async (tx) => {
         const snap = await tx.get(paymentRef);
         if (!snap.exists) {
           throw new DomainError("payment_not_found", "Paiement introuvable.");
@@ -427,6 +446,7 @@ export const requestPaymentRetraction = onCall(
           throw new HttpsError("permission-denied",
             "Ce paiement ne vous appartient pas.");
         }
+        assertRetractableKind(pmt.kind);
         // Le contrôle du statut est DANS la transaction : deux demandes
         // simultanées ne peuvent pas ouvrir deux remboursements.
         if (pmt.status !== "succeeded") {
@@ -443,13 +463,25 @@ export const requestPaymentRetraction = onCall(
         }
         const userRef = db.collection("users").doc(uid);
         const userSnap = await tx.get(userRef);
+        // Autres paiements confirmés (lus AVANT toute écriture) : si le membre
+        // a aussi un Pass d'entrée ou une autre offre valide, il la conserve.
+        const others = await tx.get(db.collection("payments")
+          .where("userId", "==", uid).where("status", "==", "succeeded"));
+        const remainingPlan = bestRemainingPlan(others.docs
+          .filter((d) => d.id !== paymentId)
+          .map((d) => d.data() as PaymentRecord)
+          .filter((p) => p.kind === "activation" || p.kind === "subscription")
+          .map((p) => p.plan));
         const now = new Date();
+        // Frais de transaction retenus : annoncés avant le paiement.
+        const {fee, refund} = computeRefund(pmt.amount, platform.refundFeeBps);
         tx.update(paymentRef, {
           status: "refund_pending", retractedAt: FieldValue.serverTimestamp(),
           refundReason: reason,
         });
         tx.set(refundRef, {
           userId: uid, paymentId, amount: pmt.amount, currency: "XOF",
+          feeBps: platform.refundFeeBps, fee, refundAmount: refund,
           provider: pmt.provider, method: pmt.method,
           paidWith: pmt.paidWith ?? null, status: "pending",
           reason, createdAt: FieldValue.serverTimestamp(),
@@ -458,9 +490,10 @@ export const requestPaymentRetraction = onCall(
           const user = userSnap.data() as {
             spentThisMonth?: number; spentMonth?: string;
           };
-          const update: Record<string, unknown> = {
-            isActivated: false, planId: null, subscriptionPlan: "free",
-          };
+          const update: Record<string, unknown> = remainingPlan ?
+            {isActivated: true, planId: remainingPlan,
+              subscriptionPlan: remainingPlan} :
+            {isActivated: false, planId: null, subscriptionPlan: "free"};
           if (user.spentMonth === monthKey(now)) {
             update.spentThisMonth = Math.max(0,
               (user.spentThisMonth ?? 0) - pmt.amount);
@@ -468,11 +501,14 @@ export const requestPaymentRetraction = onCall(
           tx.update(userRef, update);
         }
         notify(tx, uid, "Rétractation enregistrée",
-          `Votre remboursement de ${pmt.amount.toLocaleString("fr-FR")} XOF ` +
-          `par ${paymentMethodLabel(pmt.paidWith, pmt.method)} est en cours ` +
+          `Remboursement de ${refund.toLocaleString("fr-FR")} XOF ` +
+          `(${pmt.amount.toLocaleString("fr-FR")} XOF payés, moins ` +
+          `${fee.toLocaleString("fr-FR")} XOF de frais de transaction) ` +
+          `par ${paymentMethodLabel(pmt.paidWith, pmt.method)} : en cours ` +
           "de traitement.");
-        return pmt.amount;
+        return {paid: pmt.amount, fee, refund};
       });
+      const amount = outcome.paid;
 
       // Commissions de cette vente : annulées (le crédit n'a lieu qu'après le
       // délai de rétractation, donc rien n'a encore été versé).
@@ -490,9 +526,11 @@ export const requestPaymentRetraction = onCall(
         rule: "section 6", details: {amount, reason},
       });
       return {
-        success: true, refundAmount: amount,
-        message: "Rétractation enregistrée. Le remboursement vers votre " +
-          "compte Mobile Money est en cours de traitement.",
+        success: true, refundAmount: outcome.refund, feeAmount: outcome.fee,
+        message: "Rétractation enregistrée. Remboursement de " +
+          `${outcome.refund.toLocaleString("fr-FR")} XOF (frais de ` +
+          `transaction retenus : ${outcome.fee.toLocaleString("fr-FR")} ` +
+          "XOF) en cours de traitement vers votre moyen de paiement.",
       };
     });
   });
@@ -523,7 +561,7 @@ export const adminProcessRefund = onCall(async (request: CallableRequest) => {
       }
       const refund = refundSnap.data() as {
         status: string; userId: string; amount: number; method: PaymentMethod;
-        paidWith?: string | null;
+        paidWith?: string | null; refundAmount?: number;
       };
       if (refund.status !== "pending") {
         throw new DomainError("invalid_status",
@@ -539,19 +577,21 @@ export const adminProcessRefund = onCall(async (request: CallableRequest) => {
       writeWalletAndLedger(tx, refund.userId, "XOF", balances, [{
         entryId: `refund_${refundId}`, userId: refund.userId, type: "refund",
         phase: "paid", currency: "XOF",
-        posting: {from: "external", to: "external", amount: refund.amount},
+        posting: {from: "external", to: "external",
+          amount: refund.refundAmount ?? refund.amount},
         origin: "Remboursement rétractation (" +
           `${paymentMethodLabel(refund.paidWith, refund.method)})`,
         ref: {kind: "payment", id: refundId}, meta: {providerReference},
       }]);
       notify(tx, refund.userId, "Remboursement effectué",
-        `${refund.amount.toLocaleString("fr-FR")} XOF ont été renvoyés vers ` +
+        `${(refund.refundAmount ?? refund.amount).toLocaleString("fr-FR")} ` +
+        "XOF ont été renvoyés vers " +
         `votre moyen de paiement (${paymentMethodLabel(refund.paidWith,
           refund.method)}).`);
       await writeAudit({
         actorUid: request.auth?.uid ?? null, actorRole: role,
         action: "refund.paid", target: refundId, rule: "section 6",
-        details: {providerReference, amount: refund.amount},
+        details: {providerReference, amount: refund.refundAmount ?? refund.amount},
       }, tx);
     });
     return {refundId, status: "paid"};

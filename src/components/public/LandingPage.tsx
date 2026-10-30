@@ -53,7 +53,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
     },
     {
       q: "Qu'est-ce que la charte éthique et transparence de GLOBAL-AF ?",
-      a: "Nos engagements : 1. Commissions calculées exclusivement sur des ventes réelles, jamais sur le simple recrutement, sur 2 niveaux maximum. 2. Une offre payante correspond à un contenu décrit avant paiement, avec 7 jours de rétractation. 3. Aucune promesse de gain facile : nous publierons des indicateurs réels dès qu'ils existent. 4. Interdiction des jeux de hasard et des tombolas. 5. Protection des membres : âge minimum de 18 ans, plafond de dépense mensuel réglable."
+      a: "Nos engagements : 1. Commissions calculées exclusivement sur des ventes réelles, jamais sur le simple recrutement, sur 2 niveaux maximum. 2. Une offre payante correspond à un contenu décrit avant paiement ; les abonnements ont 7 jours de rétractation, le Pass d'entrée n'est pas remboursable. 3. Aucune promesse de gain facile : nous publierons des indicateurs réels dès qu'ils existent. 4. Interdiction des jeux de hasard et des tombolas. 5. Protection des membres : âge minimum de 18 ans, plafond de dépense mensuel réglable."
     },
     {
       q: "Quels opérateurs Mobile Money sont acceptés en Côte d'Ivoire ?",
@@ -61,11 +61,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
     },
     {
       q: "Le compte gratuit permet-il vraiment de gagner de l'argent et de retirer ?",
-      a: "L'inscription est gratuite et les offres payantes sont optionnelles. Les conditions d'accès aux missions et aux retraits, ainsi que le contenu et le prix de chaque offre, sont affichés dans votre espace avant tout paiement. Aucun gain n'est garanti : ne payez jamais une offre dans l'espoir d'un revenu."
+      a: "L'inscription est gratuite. Pour participer aux missions rémunérées, suivre les formations et demander un retrait, un Pass actif est nécessaire : le Pass d'entrée (non remboursable, reconnu avant paiement) ou un abonnement. Le prix et le contenu sont affichés avant tout paiement. Aucun gain n'est garanti : ne payez jamais dans l'espoir d'un revenu, ni en vous endettant."
     },
     {
       q: "Comment s'applique le droit de rétractation de 7 jours ?",
-      a: "Vous disposez de 7 jours à compter du paiement pour vous rétracter, pour toute offre payante. La demande se fait depuis « Paramètres » : votre accès est retiré, les commissions liées à votre achat sont annulées et le remboursement est traité par notre équipe vers le moyen de paiement utilisé (le délai dépend de l'opérateur ou de la banque)."
+      a: "Les abonnements (Premium, Business) se rétractent pendant 7 jours à compter du paiement, depuis « Paramètres » : l'accès est retiré, les commissions liées à votre achat sont annulées et le remboursement, sous déduction des frais de transaction (3 %), est traité par notre équipe vers le moyen de paiement utilisé (délai selon l'opérateur ou la banque). Le Pass d'entrée n'est pas remboursable ; vous le reconnaissez avant de payer."
     }
   ];
 
@@ -281,7 +281,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
                   }
                   size="md"
                   speechText={
-                    currentSlideIndex === 0 ? "Akwaba ! L'inscription est gratuite, sans obligation d'achat." :
+                    currentSlideIndex === 0 ? "Akwaba ! L'inscription est gratuite ; un Pass est requis pour les missions et les retraits." :
                     currentSlideIndex === 1 ? "Des formations pratiques avec des quiz de validation !" :
                     currentSlideIndex === 2 ? "Zéro jeu de hasard. Montant minimum et frais affichés avant chaque retrait." :
                     "Inscrivez votre entreprise avec RCCM pour lancer vos missions !"
@@ -897,7 +897,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
 
                 <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-[11px] text-slate-700 flex items-start gap-2">
                   <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>Accès numérique immédiat à vie aux 15 cours et micro-jobs (non soumis au droit de rétractation).</span>
+                  <span>Pass d'entrée : accès aux missions et aux retraits ; non remboursable (reconnu avant paiement).</span>
                 </div>
               </div>
 
@@ -951,7 +951,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
 
                 <div className="p-2.5 bg-slate-800/90 rounded-xl border border-slate-700 text-[11px] text-slate-300 flex items-start gap-2">
                   <RotateCcw className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                  <span>Délai de rétractation de 7 jours avec remboursement intégral Mobile Money. (Commission parrain de 10% / 990 FCFA débloquée après ce délai).</span>
+                  <span>Rétractation de 7 jours, remboursement sous déduction des frais de transaction (3 %). Commission du parrain créditée après ce délai.</span>
                 </div>
               </div>
 
@@ -1038,10 +1038,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
             <div className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all space-y-2.5">
               <div className="font-bold text-slate-900 text-sm flex items-center gap-2.5">
                 <span className="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200/60 flex items-center justify-center font-extrabold text-xs shadow-2xs">2</span>
-                <span>Biens réels & Rétractation 7j</span>
+                <span>Biens réels & transparence</span>
               </div>
               <p className="text-slate-600 leading-relaxed text-[11px]">
-                Toute activation payante donne accès à un bien identifiable (formations, outils IA, répertoires). Droit de rétractation de 7 jours, remboursement traité vers votre moyen de paiement.
+                Toute activation payante donne accès à un bien identifiable (formations, outils IA, répertoires). Abonnements : rétractation de 7 jours, remboursement sous déduction des frais de transaction (3 %). Pass d'entrée : non remboursable.
               </p>
             </div>
 

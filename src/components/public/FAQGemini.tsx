@@ -25,8 +25,8 @@ const PREDEFINED_FAQS: FAQItem[] = [
   {
     id: 'faq-3',
     category: 'Missions',
-    question: "Y a-t-il une obligation de payer un abonnement pour retirer ses gains ?",
-    answer: "Non, absolument aucune. L'accès standard est gratuit et permet d'effectuer des micro-jobs et de retirer l'intégralité de vos gains sans obligation d'achat. Les options payantes (Packs Premium ou Business) sont des outils avancés d'accélération et de formation, et ne constituent en aucun cas une condition de retrait."
+    question: "Faut-il payer pour participer aux missions et retirer ses gains ?",
+    answer: "Oui. L'inscription est gratuite, mais les missions rémunérées, les formations et les retraits exigent un Pass actif : le Pass d'entrée (non remboursable, reconnu avant paiement) ou un abonnement (Premium, Business). Le prix et le contenu sont affichés avant tout paiement. Un Pass ne garantit aucun gain : ne payez jamais dans l'espoir d'un revenu, ni en vous endettant."
   },
   {
     id: 'faq-4',
@@ -43,8 +43,8 @@ const PREDEFINED_FAQS: FAQItem[] = [
   {
     id: 'faq-6',
     category: 'Éthique',
-    question: "Comment fonctionne le droit légal de rétractation de 7 jours ?",
-    answer: "Pour toute offre payante, vous disposez de 7 jours à compter du paiement pour vous rétracter. La demande se fait depuis vos paramètres ; le remboursement est ensuite traité par notre équipe vers votre moyen de paiement (le délai dépend de l'opérateur ou de la banque)."
+    question: "Comment fonctionne la rétractation de 7 jours ?",
+    answer: "Les abonnements (Premium, Business) peuvent être rétractés pendant 7 jours à compter du paiement, depuis vos paramètres. Le remboursement est traité par notre équipe vers votre moyen de paiement, sous déduction des frais de transaction (3 %) ; le délai dépend de l'opérateur ou de la banque. Le Pass d'entrée n'est pas remboursable."
   }
 ];
 
@@ -250,7 +250,7 @@ export const FAQGemini: React.FC<{ onNavigateView?: (view: string) => void }> = 
 
               <div className="text-[10px] text-slate-500 text-center flex items-center justify-center gap-1.5 pt-1">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Support gratuit ouvert 7j/7 de 8h à 20h GMT</span>
+                <span>Support par tickets : ouverture prochaine</span>
               </div>
             </div>
           </div>

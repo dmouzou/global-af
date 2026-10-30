@@ -182,13 +182,13 @@ export const AffiliationPage: React.FC<AffiliationPageProps> = ({ onGoToDashboar
                   <td className="py-3.5 px-4 text-rose-800">Niveaux infinis (Ponzi / Pyramide)</td>
                 </tr>
                 <tr>
-                  <td className="py-3.5 px-4 font-semibold text-slate-800">Accès gratuit et sans achat</td>
-                  <td className="py-3.5 px-4 text-emerald-800 font-medium">Inscription gratuite ; offres payantes optionnelles</td>
+                  <td className="py-3.5 px-4 font-semibold text-slate-800">Inscription et accès</td>
+                  <td className="py-3.5 px-4 text-emerald-800 font-medium">Inscription gratuite ; un Pass est requis pour les missions et les retraits</td>
                   <td className="py-3.5 px-4 text-rose-800">Non, achat obligatoire pour participer</td>
                 </tr>
                 <tr>
                   <td className="py-3.5 px-4 font-semibold text-slate-800">Droit de rétractation</td>
-                  <td className="py-3.5 px-4 text-emerald-800 font-medium">7 jours avec remboursement Mobile Money</td>
+                  <td className="py-3.5 px-4 text-emerald-800 font-medium">Abonnements : 7 jours, remboursement sous déduction des frais (3 %)</td>
                   <td className="py-3.5 px-4 text-rose-800">Fonds bloqués sans aucun recours</td>
                 </tr>
               </tbody>

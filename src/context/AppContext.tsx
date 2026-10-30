@@ -98,7 +98,8 @@ interface AppContextType {
   startActivationPayment: (
     plan: 'standard' | 'premium' | 'business',
     method: PaymentMethod,
-    billing?: { address: string; city: string; zipCode: string }
+    billing?: { address: string; city: string; zipCode: string },
+    acceptedNoRefund?: boolean
   ) => Promise<{ success: boolean; message: string; checkoutUrl?: string }>;
   requestRetractionRefund: (reason: string) => Promise<{ success: boolean; message: string }>;
   updateMonthlySpendingLimit: (amount: number) => Promise<ActionResult>;
@@ -597,14 +598,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Activation : le compte n'est activé QUE par la confirmation de la passerelle (webhook).
-  const startActivationPayment: AppContextType['startActivationPayment'] = async (plan, method, billing) => {
+  const startActivationPayment: AppContextType['startActivationPayment'] = async (plan, method, billing, acceptedNoRefund) => {
     if (!currentUser) return { success: false, message: 'Veuillez vous connecter pour activer un pack.' };
     if (!currentUser.isEmailVerified) {
       return { success: false, message: 'Confirmez votre adresse e-mail avant de payer.' };
     }
     try {
       // Le prix est fixé par le serveur : seuls l'identifiant du pack et le moyen de paiement sont envoyés.
-      const res = await initiateOnlinePaymentCallable({ method, productId: plan, billing });
+      const res = await initiateOnlinePaymentCallable({ method, productId: plan, billing, acceptedNoRefund });
       return {
         success: true,
         message: res.data.instructions || 'Paiement initié. Votre compte sera activé dès la confirmation du paiement.',
@@ -617,7 +618,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const requestRetractionRefund = async (reason: string): Promise<ActionResult> => {
     if (!currentUser || !currentUser.isActivated || currentUser.subscriptionPlan === 'free') {
-      return { success: false, message: "Vous n'avez aucun abonnement payant actif éligible au remboursement." };
+      return { success: false, message: "Vous n'avez aucun abonnement actif éligible au remboursement." };
+    }
+    if (currentUser.subscriptionPlan === 'standard') {
+      return { success: false, message: "Le Pass d'entrée n'est pas remboursable. Seuls les abonnements (Premium, Business) ouvrent un droit de rétractation." };
     }
     try {
       const res = await requestPaymentRetractionCallable({ reason });
