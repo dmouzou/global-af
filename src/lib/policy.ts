@@ -5,7 +5,7 @@
  * les montants réellement remboursés).
  */
 export const POLICY = {
-  /** Délai de rétractation des ABONNEMENTS (jours). */
+  /** Délai de rétractation du PASS D'ENTRÉE (jours). */
   retractionDays: 7,
   /** Durée d'une période d'abonnement (jours) ; renouvellement manuel. */
   subscriptionDays: 30,
@@ -18,6 +18,6 @@ export const POLICY = {
 
 /** Rappel court, réutilisé dans les pages et le chatbot. */
 export const REFUND_RULE_SHORT =
-  `Rétractation de ${POLICY.retractionDays} jours pour les abonnements (Premium, Business), ` +
+  `Rétractation de ${POLICY.retractionDays} jours pour le Pass d'entrée (Standard), ` +
   `remboursement sous déduction des frais de transaction (${POLICY.refundFeePercent} %) ; ` +
-  `le Pass d'entrée n'est pas remboursable.`;
+  `l'abonnement VIP Premium n'est pas remboursable (accès immédiat aux fichiers et répertoires VCF).`;

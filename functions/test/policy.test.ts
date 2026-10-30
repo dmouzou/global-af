@@ -3,13 +3,13 @@ import {
   assertRetractableKind, computeRefund, isRetractableKind,
 } from "../src/domain/retraction";
 
-describe("Politique de rétractation : abonnements uniquement", () => {
-  it("le Pass d'entrée (activation) n'est pas rétractable, les abonnements le sont", () => {
-    expect(isRetractableKind("activation")).toBe(false);
-    expect(isRetractableKind("subscription")).toBe(true);
+describe("Politique de rétractation : Pass d'entrée uniquement", () => {
+  it("Pass d'entrée rétractable, abonnements et cours non rétractables", () => {
+    expect(isRetractableKind("activation")).toBe(true);
+    expect(isRetractableKind("subscription")).toBe(false);
     expect(isRetractableKind("course")).toBe(false);
-    expect(() => assertRetractableKind("activation")).toThrow(/Pass d'entrée/);
-    expect(() => assertRetractableKind("subscription")).not.toThrow();
+    expect(() => assertRetractableKind("subscription")).toThrow(/VIP Premium/);
+    expect(() => assertRetractableKind("activation")).not.toThrow();
   });
 
   it("remboursement = montant payé moins les frais de transaction (3 %)", () => {

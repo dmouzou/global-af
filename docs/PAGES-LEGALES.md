@@ -26,7 +26,7 @@ Seul l'e-mail `contact@global-af.ci` (déjà dans le pied de page) est prérempl
   remboursable**, reconnu par case à cocher (horodatée sur le paiement). Si le membre
   possède aussi un Pass d'entrée, rétracter l'abonnement ne le lui retire pas.
 - Commissions : uniquement sur ventes réelles, jamais sur le Pass d'entrée ; créditées après
-  7 jours ; annulées si le filleul se rétracte.
+  7 jours (délai de sécurité), à chaque achat éligible y compris chaque renouvellement.
 - Ces choix **s'écartent du cahier des charges** (sections 6 et 39, conditions 2 et 5 : droit
   de rétractation pour toute activation payante, palier gratuit réellement utile). Écart
   assumé par le propriétaire du produit.

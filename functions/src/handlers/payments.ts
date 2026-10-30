@@ -25,8 +25,7 @@ import {
   assertRetractableKind, checkRetraction, computeRefund, isRetractableKind,
 } from "../domain/retraction";
 import {
-  accessStateFromDoc, assertPurchasable, expiryAfterRetraction,
-  nextSubscriptionExpiry, resolveAccess,
+  accessStateFromDoc, assertPurchasable, nextSubscriptionExpiry, resolveAccess,
 } from "../domain/subscription";
 import {getPlatformConfig} from "../lib/config";
 import {notify} from "../lib/notify";
@@ -38,9 +37,15 @@ const FINANCE_ROLES: Role[] = ["financial_manager", "admin", "super_admin"];
 // Clés sensibles CinetPay : Secret Manager (exposées en variables d'environnement
 // uniquement dans les fonctions qui les déclarent). CINETPAY_SITE_ID et
 // APP_BASE_URL (non secrets) se règlent dans functions/.env.<projet>.
-const cinetpaySecrets = [
-  defineSecret("CINETPAY_API_KEY"),
-  defineSecret("CINETPAY_SECRET_KEY"),
+// NOTE : Laissé vide tant que les clés réelles CinetPay ne sont pas disponibles,
+// pour éviter le blocage 'Secret Payload cannot be empty' lors de 'firebase deploy'.
+// Pour activer ultérieurement :
+//   1. firebase functions:secrets:set CINETPAY_API_KEY
+//   2. firebase functions:secrets:set CINETPAY_SECRET_KEY
+//   3. Décommenter les deux defineSecret ci-dessous.
+const cinetpaySecrets: ReturnType<typeof defineSecret>[] = [
+  // defineSecret("CINETPAY_API_KEY"),
+  // defineSecret("CINETPAY_SECRET_KEY"),
 ];
 
 /** Passerelle d'encaissement (CinetPay par défaut ; Wave direct possible). */
@@ -133,13 +138,13 @@ export const initiateOnlinePayment = onCall(
       assertPurchasable(accessStateFromDoc(user), product, new Date(),
         platform.subscriptionDays);
       const amount = validateCheckoutAmount(product.priceXOF);
-      // Le Pass d'entrée n'est pas remboursable : le membre doit l'avoir
-      // reconnu explicitement (preuve conservée sur le paiement).
+      // L'abonnement VIP Premium n'est pas remboursable (accès immédiat aux fichiers
+      // et contacts VCF téléchargeables) : le membre doit l'avoir reconnu explicitement.
       const nonRefundable = !isRetractableKind(product.kind);
       if (nonRefundable && data.acceptedNoRefund !== true) {
         throw new DomainError("acknowledgement_required",
-          "Vous devez reconnaître que le Pass d'entrée n'est pas " +
-          "remboursable avant de payer.");
+          "Vous devez reconnaître que l'abonnement VIP Premium n'est pas " +
+          "remboursable (accès immédiat aux répertoires VCF) avant de payer.");
       }
 
       const now = new Date();
@@ -439,8 +444,8 @@ export const requestPaymentRetraction = onCall(
       const requestedId = optString(data, "paymentId", 80);
       const platform = await getPlatformConfig();
 
-      // Sans identifiant : le dernier ABONNEMENT confirmé (seuls les abonnements
-      // sont rétractables ; le Pass d'entrée ne l'est pas).
+      // Sans identifiant : le dernier Pass d'entrée confirmé (seul le Pass d'entrée
+      // est rétractable sous 7 jours ; les abonnements ne le sont pas).
       let paymentId = requestedId;
       if (!paymentId) {
         const q = await db.collection("payments")
@@ -450,8 +455,8 @@ export const requestPaymentRetraction = onCall(
           isRetractableKind((d.data() as PaymentRecord).kind));
         if (!target) {
           throw new DomainError("payment_not_found",
-            "Aucun abonnement confirmé à rembourser. Le Pass d'entrée " +
-            "n'est pas remboursable.");
+            "Aucun Pass d'entrée confirmé éligible à la rétractation. " +
+            "L'abonnement VIP Premium n'est pas remboursable (fichiers VCF).");
         }
         paymentId = target.id;
       }
@@ -504,26 +509,24 @@ export const requestPaymentRetraction = onCall(
             spentThisMonth?: number; spentMonth?: string; entryPass?: boolean;
             subscriptionPlan?: string | null; subscriptionExpiresAt?: unknown;
           };
-          // On retire les jours que ce paiement avait accordés ; s'il reste de
-          // la validité (renouvellement antérieur), l'abonnement continue.
+          // Seul le Pass d'entrée est rétractable : il est retiré, mais un
+          // abonnement encore valide, lui, reste actif.
           const state = accessStateFromDoc(user);
-          const granted = (pmt as unknown as {grantedDays?: number})
-            .grantedDays ?? platform.subscriptionDays;
-          const newExpiry = expiryAfterRetraction(
-            state.subscriptionExpiresAt, granted, now);
           const after = resolveAccess({
-            entryPass: state.entryPass,
-            subscriptionPlan: newExpiry ? state.subscriptionPlan : null,
-            subscriptionExpiresAt: newExpiry,
+            entryPass: false,
+            subscriptionPlan: state.subscriptionPlan,
+            subscriptionExpiresAt: state.subscriptionExpiresAt,
           }, now);
           const update: Record<string, unknown> = {
+            entryPass: false,
             isActivated: after.isActivated,
             subscriptionPlan: after.plan,
             planId: after.plan === "free" ? null : after.plan,
-            subscriptionExpiresAt: newExpiry ?
-              Timestamp.fromDate(newExpiry) : null,
-            expiryReminderFor: null,
           };
+          if (!after.isActivated) {
+            update.activatedAt = null;
+            update.activationDate = null;
+          }
           if (user.spentMonth === monthKey(now)) {
             update.spentThisMonth = Math.max(0,
               (user.spentThisMonth ?? 0) - pmt.amount);
@@ -539,16 +542,6 @@ export const requestPaymentRetraction = onCall(
         return {paid: pmt.amount, fee, refund};
       });
       const amount = outcome.paid;
-
-      // Commissions de cette vente : annulées (le crédit n'a lieu qu'après le
-      // délai de rétractation, donc rien n'a encore été versé).
-      const comms = await db.collection("commissions")
-        .where("paymentId", "==", paymentId)
-        .where("status", "==", "pending_retraction").get();
-      await Promise.all(comms.docs.map((c) => c.ref.update({
-        status: "cancelled_retraction",
-        cancelledAt: FieldValue.serverTimestamp(),
-      })));
 
       await writeAudit({
         actorUid: uid, actorRole: "member",

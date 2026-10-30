@@ -45,7 +45,7 @@ Aucun gain n'est garanti : le solde dépend uniquement des récompenses et commi
 • **Deux niveaux au maximum** : vos filleuls directs (niveau 1) et les filleuls de vos filleuls (niveau 2). Il n'y a pas de niveau 3.
 • **Une commission n'existe que si un filleul achète réellement** un produit ou un service éligible. L'inscription, ou l'activation d'un compte seule, ne génère aucune commission.
 • **Taux :** les taux en vigueur sont affichés dans l'onglet « Équipe » de votre espace.
-• **Délai :** une commission est créditée après le délai de rétractation de 7 jours, et annulée si le filleul se rétracte.
+• **Délai :** une commission est créditée après un délai de sécurité de 7 jours. Elle est calculée à chaque achat éligible, y compris à chaque renouvellement d'abonnement.
 • **Vos commissions** (en attente, créditées, annulées) sont visibles dans l'onglet « Équipe ».
 
 Test simple : si plus personne ne s'inscrivait pendant un an, vous ne gagneriez que grâce aux achats réels de vos filleuls. Aucun gain n'est garanti.`,
@@ -79,12 +79,12 @@ Aucun gain n'est garanti.`,
   {
     keywords: ['retractation', 'rétractation', 'remboursement', '7j', '7 jours', 'garantie', 'annuler'],
     title: 'Délai de rétractation',
-    answer: `Le **droit de rétractation de 7 jours** s'applique aux **abonnements** (Premium, Business) :
+    answer: `Le **droit de rétractation de 7 jours** s'applique au **Pass d'entrée** (Standard) :
 
-• **Demande :** depuis la rubrique « Paramètres » de votre espace. Votre accès est alors retiré et les commissions liées à votre achat sont annulées.
-• **Remboursement :** il est traité par notre équipe vers le moyen de paiement utilisé (Mobile Money ou carte), **sous déduction des frais de transaction (3 %)**. Le délai dépend du traitement et de l'opérateur ou de la banque : vous êtes notifié dès qu'il est effectué.
-• **Pass d'entrée :** il **n'est pas remboursable** ; vous le reconnaissez avant de payer.
-• Le montant, le contenu de l'offre et ces conditions vous sont présentés avant tout paiement.`,
+• **Demande :** depuis la rubrique « Paramètres » de votre espace. Vos accès aux missions, formations et retraits sont retirés.
+• **Parrainage :** le Pass d'entrée ne génère aucune commission pour le parrain.
+• **Remboursement :** il est traité par notre équipe vers votre moyen de paiement, **sous déduction des frais de transaction (3 %)**.
+• **Abonnements (VIP Premium) :** non remboursables car l'accès aux fichiers et répertoires VCF téléchargeables est immédiat.`,
     suggestions: [
       "Quels moyens de paiement sont acceptés ?",
       "Comment contacter le support ?"
@@ -98,8 +98,8 @@ Aucun gain n'est garanti.`,
     title: 'Offres et tarifs',
     answer: `L'inscription est **gratuite**. Pour participer aux missions rémunérées, suivre les formations et demander un retrait, un **Pass actif** est nécessaire :
 
-• **Pass d'entrée (Standard) :** non remboursable, reconnu avant paiement.
-• **Abonnements (Premium, Business) :** rétractation de 7 jours, remboursement sous déduction des frais de transaction (3 %).
+• **Pass d'entrée (Standard) :** rétractation de 7 jours, remboursement sous déduction des frais de transaction (3 %).
+• **Abonnements (VIP Premium) :** non remboursables (fichiers et contacts VCF immédiatement mis à disposition).
 • **Contenu et prix :** chaque offre décrit précisément ce qu'elle contient, son prix et ses éventuels frais **avant** le paiement, sur la page de paiement elle-même.
 • **Pas d'endettement :** ne souscrivez jamais une offre en vous endettant. Vous pouvez fixer un plafond de dépense mensuel dans « Paramètres ».
 • **Gains :** acheter une offre ne garantit aucun gain.
@@ -152,7 +152,7 @@ Les cours ne promettent aucun revenu.`,
     title: 'Support',
     answer: `Le **support par tickets n'est pas encore ouvert** dans l'espace membre : un message envoyé depuis cette rubrique ne serait pas enregistré.
 
-• Pour la **rétractation d'un abonnement** : rubrique « Paramètres » de votre espace (le Pass d'entrée n'est pas remboursable).
+• Pour la **rétractation du Pass d'entrée** : rubrique « Paramètres » de votre espace (l'abonnement VIP Premium n'est pas remboursable).
 • Pour un **paiement débité sans activation** : conservez la référence affichée sur la page de retour du paiement.
 
 Ce chatbot est un assistant automatique : il informe mais ne remplace ni un conseil juridique, ni un conseil financier.`,
@@ -304,7 +304,7 @@ export const InformationalChatbot: React.FC<InformationalChatbotProps> = ({
         links = matched.links;
         if (matched.suggestions) suggestions = matched.suggestions;
       } else {
-        replyText = `Je n'ai pas de réponse précise à cette question. Voici ce que je peux expliquer :\n\n• **Retraits** : contrôlés avant paiement, frais et montant net affichés avant validation ; Pass actif requis.\n• **Parrainage** : commissions uniquement sur ventes réelles, 2 niveaux maximum.\n• **Paiements** : Mobile Money ou carte Visa sur une page sécurisée.\n• **Rétractation** : 7 jours pour les abonnements (frais de transaction retenus) ; Pass d'entrée non remboursable.\n\nAucun gain n'est garanti.`;
+        replyText = `Je n'ai pas de réponse précise à cette question. Voici ce que je peux expliquer :\n\n• **Retraits** : contrôlés avant paiement, frais et montant net affichés avant validation ; Pass actif requis.\n• **Parrainage** : commissions uniquement sur ventes réelles, 2 niveaux maximum.\n• **Paiements** : Mobile Money ou carte Visa sur une page sécurisée.\n• **Rétractation** : 7 jours pour le Pass d'entrée (frais de transaction retenus) ; abonnements VIP Premium non remboursables (fichiers VCF).\n\nAucun gain n'est garanti.`;
       }
 
       const botMsg: ChatMessage = {

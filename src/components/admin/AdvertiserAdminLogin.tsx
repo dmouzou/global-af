@@ -173,7 +173,7 @@ export const AdvertiserAdminLogin: React.FC<AdvertiserAdminLoginProps> = ({
             </label>
 
             <span className="text-[11px] text-slate-500 font-mono">
-              Firebase Auth / TLS 1.3
+              Session sécurisée / TLS 1.3
             </span>
           </div>
 
@@ -199,7 +199,7 @@ export const AdvertiserAdminLogin: React.FC<AdvertiserAdminLoginProps> = ({
         {/* Notice for administration */}
         <div className="mt-5 p-3 rounded-xl bg-slate-950/40 border border-slate-800/60 text-center">
           <p className="text-[11px] text-slate-400">
-            Conformité Section 25 : les accès de niveau administrateur sont vérifiés par règles de sécurité Firebase et audités.
+            Conformité Section 25 : les accès de niveau administrateur sont vérifiés par règles de sécurité serveur et audités.
           </p>
         </div>
 

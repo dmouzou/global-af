@@ -52,7 +52,7 @@ aucun secret par défaut (clés absentes = webhook refusé).
   la case « je comprends qu'il n'est pas remboursable » est exigée et horodatée (`acceptedNoRefundAt`).
 - `premium` et `business` = **abonnements** (`kind: subscription`) : rétractation de 7 jours,
   remboursement du montant payé **moins 3 %** (`refundFeeBps = 300`, à aligner sur les frais
-  CinetPay), commissions d'affiliation (créditées après 7 jours, annulées en cas de rétractation).
+  CinetPay), commissions d'affiliation (créditées après un délai de sécurité de 7 jours, à chaque renouvellement).
 - Retraits : refusés par le serveur sans Pass actif.
 - Si le membre a plusieurs achats, la rétractation d'un abonnement lui laisse la meilleure offre restante.
 - **Non géré** : durée et renouvellement des abonnements. Un abonnement payé reste actif sans

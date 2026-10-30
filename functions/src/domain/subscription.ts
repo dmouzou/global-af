@@ -82,21 +82,6 @@ export function nextSubscriptionExpiry(current: Date | null | undefined,
 }
 
 /**
- * Échéance après rétractation d'un paiement d'abonnement : on retire les jours
- * que ce paiement avait accordés.
- * @param {Date|null|undefined} current Échéance actuelle.
- * @param {number} grantedDays Jours accordés par le paiement rétracté.
- * @param {Date} now Instant courant.
- * @return {Date|null} Nouvelle échéance, ou null si l'abonnement s'arrête.
- */
-export function expiryAfterRetraction(current: Date | null | undefined,
-  grantedDays: number, now: Date): Date | null {
-  if (!current) return null;
-  const next = new Date(current.getTime() - grantedDays * DAY_MS);
-  return next.getTime() > now.getTime() ? next : null;
-}
-
-/**
  * Contrôles avant d'ouvrir un paiement : pas de doublon de Pass d'entrée, pas
  * de changement d'offre en cours de période (le temps payé serait perdu),
  * pas de prépaiement excessif.

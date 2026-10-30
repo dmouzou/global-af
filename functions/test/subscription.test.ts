@@ -1,8 +1,7 @@
 import {describe, expect, it} from "vitest";
 import {
-  accessStateFromDoc, assertPurchasable, expiryAfterRetraction,
-  isSubscriptionActive, MAX_PREPAID_DAYS, nextSubscriptionExpiry,
-  resolveAccess,
+  accessStateFromDoc, assertPurchasable, isSubscriptionActive, MAX_PREPAID_DAYS,
+  nextSubscriptionExpiry, resolveAccess,
 } from "../src/domain/subscription";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -23,15 +22,6 @@ describe("Abonnements : échéance et renouvellement", () => {
   it("renouveler APRÈS l'échéance repart de maintenant", () => {
     expect(nextSubscriptionExpiry(inDays(-2), now, 30).getTime())
       .toBe(inDays(30).getTime());
-  });
-
-  it("la rétractation retire les jours accordés ; sinon l'abonnement s'arrête", () => {
-    // payé il y a 2 jours : échéance dans 28 jours -> rétractation = fin immédiate
-    expect(expiryAfterRetraction(inDays(28), 30, now)).toBeNull();
-    // renouvellement anticipé : échéance dans 50 jours -> il reste 20 jours
-    expect(expiryAfterRetraction(inDays(50), 30, now)?.getTime())
-      .toBe(inDays(20).getTime());
-    expect(expiryAfterRetraction(null, 30, now)).toBeNull();
   });
 });
 

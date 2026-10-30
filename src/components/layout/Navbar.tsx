@@ -22,6 +22,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, setCurrentView, onO
   const { currentUser, logout, selectedCountry, setCountryCode, notifications } = useApp();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const unreadNotifCount = notifications.filter(n => !n.read).length;
 
@@ -132,7 +133,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, setCurrentView, onO
                   </span>
                 </button>
                 <button
-                  onClick={() => logout()}
+                  onClick={() => setShowLogoutConfirm(true)}
                   className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
                   title="Déconnexion"
                 >
@@ -215,7 +216,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, setCurrentView, onO
                   Mon Espace Personnel ({currentUser.firstName})
                 </button>
                 <button
-                  onClick={() => logout()}
+                  onClick={() => setShowLogoutConfirm(true)}
                   className="w-full text-center py-2 px-4 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-xl"
                 >
                   Se déconnecter
@@ -237,6 +238,45 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, setCurrentView, onO
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation de Déconnexion */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+          <div className="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 space-y-4 text-center">
+            <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
+              <LogOut className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="font-display font-bold text-slate-900 text-base">
+                Confirmer la déconnexion
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Êtes-vous sûr de vouloir vous déconnecter de votre compte GLOBAL-AF ?
+              </p>
+            </div>
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowLogoutConfirm(false)}
+                className="flex-1 py-2.5 px-4 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  setShowLogoutConfirm(false);
+                  setMobileMenuOpen(false);
+                  await logout();
+                }}
+                className="flex-1 py-2.5 px-4 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors shadow-xs"
+              >
+                Se déconnecter
+              </button>
+            </div>
           </div>
         </div>
       )}

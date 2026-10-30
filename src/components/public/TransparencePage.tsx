@@ -165,9 +165,9 @@ export const TransparencePage: React.FC<TransparencePageProps> = ({ onGoToDashbo
                 </div>
                 <span className="text-[10px] font-bold uppercase text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">Rétractation</span>
               </div>
-              <h3 className="font-bold text-slate-900 text-sm">Rétractation des abonnements & délais d'affiliation</h3>
+              <h3 className="font-bold text-slate-900 text-sm">Rétractation du Pass d'entrée & délais d'affiliation</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Les abonnements (Premium, Business) ont un délai de rétractation de 7 jours, avec remboursement vers le moyen de paiement utilisé sous déduction des frais de transaction (3 %). Le Pass d'entrée n'est pas remboursable : le membre le reconnaît avant de payer. Les commissions d'affiliation ne sont créditées qu'après un délai de 7 jours et sont annulées si le filleul se rétracte.
+                Le Pass d'entrée (Standard) dispose d'un délai de rétractation de 7 jours, avec remboursement vers le moyen de paiement utilisé sous déduction des frais de transaction (3 %). Les abonnements VIP Premium ne sont pas remboursables en raison de l'accès immédiat et définitif aux fichiers et contacts VCF.
               </p>
             </div>
 
@@ -305,7 +305,7 @@ export const TransparencePage: React.FC<TransparencePageProps> = ({ onGoToDashbo
                   </tr>
                   <tr>
                     <td className="py-3 px-4 font-medium text-slate-900">Rétractation & Remboursement</td>
-                    <td className="py-3 px-4 text-emerald-800 font-semibold bg-emerald-50/30">Rétractation de 7 jours des abonnements, avec remboursement sous déduction des frais (3 %)</td>
+                    <td className="py-3 px-4 text-emerald-800 font-semibold bg-emerald-50/30">Rétractation de 7 jours du Pass d'entrée, avec remboursement sous déduction des frais (3 %)</td>
                     <td className="py-3 px-4 text-rose-700 bg-rose-50/30">Aucune rétractation, fonds bloqués sans recours</td>
                   </tr>
                   <tr>
