@@ -70,6 +70,12 @@ service cloud.firestore {
         && resource.data.beneficiaryUid == request.auth.uid) || isFinance();
       allow write: if false;
     }
+    // Compteur quotidien d'appels IA : lecture par le titulaire, écriture serveur.
+    match /aiUsage/{id} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
+
     match /payments/{id} {
       allow read: if (signedIn() && resource.data.userId == request.auth.uid)
         || isFinance();

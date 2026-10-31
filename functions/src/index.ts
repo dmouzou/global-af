@@ -19,3 +19,4 @@ export {
 
 export {updateMyProfile, setSpendingLimit, getMyAffiliation} from "./handlers/account";
 export {processSubscriptions} from "./handlers/subscriptions";
+export {runAiTool} from "./handlers/ai";

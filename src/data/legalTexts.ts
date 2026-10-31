@@ -55,6 +55,8 @@ export const LEGAL_DOCS: Record<LegalDoc['id'], LegalDoc> = {
         paragraphs: [
           "L'inscription est **gratuite**. Pour participer aux missions rémunérées, suivre les formations et demander un retrait, un **Pass actif** est nécessaire. Cette condition est affichée avant tout paiement.",
           "Le contenu précis de chaque offre, son prix en francs CFA (XOF) et ses éventuels frais sont affichés **avant** le paiement, sur la page de paiement. Un changement de prix ne s'applique pas aux achats déjà effectués.",
+          "**Pass d'entrée** : paiement unique, sans limite de durée. **Abonnements (Premium, Business)** : chaque paiement ouvre une période de {{subscriptionDays}} jours. Ils **ne sont pas renouvelés automatiquement** : aucun prélèvement n'est effectué sans votre action. Vous pouvez renouveler à tout moment ; un renouvellement fait avant l'échéance prolonge l'abonnement à partir de cette échéance, sans perte de jours. Vous êtes prévenu quelques jours avant l'échéance (notification dans votre espace).",
+          "À l'échéance d'un abonnement non renouvelé, vous retrouvez l'accès de votre Pass d'entrée si vous en avez un ; sinon l'accès aux missions, aux formations et aux retraits est suspendu jusqu'à un nouveau paiement. **Vos soldes sont conservés.** Un abonnement ne peut pas être prépayé au-delà de 90 jours, et on ne change d'offre qu'à l'échéance de la période en cours.",
           "**Aucun gain n'est garanti.** Un Pass donne accès à des services ; il ne promet ni revenu, ni rendement. Ne payez jamais une offre dans l'espoir d'un revenu, ni en vous endettant.",
         ],
       },
@@ -182,7 +184,7 @@ export const LEGAL_DOCS: Record<LegalDoc['id'], LegalDoc> = {
           '**Opérations financières** : soldes, historique des opérations, références de paiement et de retrait, moyen de paiement utilisé (opérateur Mobile Money ou carte). **Nous ne recevons ni ne conservons aucun numéro de carte.**',
           "**Adresse de facturation** : saisie uniquement pour un paiement par carte, transmise au prestataire de paiement.",
           '**Sécurité** : journaux techniques et d\'audit des actions sensibles, mesures anti-fraude (limitation des requêtes, détection des comptes multiples).',
-          "**Assistant automatique** : les messages que vous lui envoyez. N'y saisissez aucune donnée personnelle ou financière.",
+          "**Outils IA et assistant** : les textes que vous saisissez sont transmis à notre fournisseur d'IA (Google Gemini) pour produire la réponse ; nous ne les conservons pas, seul un compteur quotidien d'utilisation est enregistré. N'y saisissez aucune donnée personnelle ou financière.",
         ],
       },
       {

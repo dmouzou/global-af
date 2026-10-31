@@ -164,3 +164,15 @@ export const getMyAffiliationCallable = httpsCallable<Record<string, never>, Aff
   functions,
   'getMyAffiliation'
 );
+
+export interface RunAiToolInput {
+  tool: 'copywriter' | 'marketing_ideas' | 'summarizer' | 'prompts';
+  input: string;
+  tone?: string;
+}
+
+/** Outils IA : appelés côté serveur (Gemini), réservés aux membres avec un Pass actif. */
+export const runAiToolCallable = httpsCallable<
+  RunAiToolInput,
+  { text: string; remaining: number; dailyLimit: number }
+>(functions, 'runAiTool', { timeout: 90000 });

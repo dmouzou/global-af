@@ -55,6 +55,7 @@ import {
   updateMyProfileCallable,
   setSpendingLimitCallable,
   getMyAffiliationCallable,
+  runAiToolCallable,
   AffiliationStats,
   RegisterUserInput
 } from '../lib/firebase';
@@ -118,7 +119,11 @@ interface AppContextType {
   submitCourseQuiz: (courseId: string, userAnswers: Record<string, number>) => { passed: boolean; score: number; pointsEarned: number };
 
   // AI Tools
-  runAITool: (toolType: 'copywriter' | 'marketing_ideas' | 'summarizer' | 'prompts', input: string, tone?: string) => Promise<string>;
+  runAITool: (
+    toolType: 'copywriter' | 'marketing_ideas' | 'summarizer' | 'prompts',
+    input: string,
+    tone?: string
+  ) => Promise<{ success: boolean; text: string; remaining?: number; dailyLimit?: number }>;
   isAILoading: boolean;
 
   // VCF Resources
@@ -734,49 +739,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try { await batch.commit(); } catch (e) { console.warn('Notifications non marquées lues:', e); }
   };
 
-  // Outils IA : modèles de texte locaux. Aucun appel direct à une API d'IA depuis le
-  // navigateur (une clé embarquée dans le bundle serait publique).
-  const runAITool = async (
-    toolType: 'copywriter' | 'marketing_ideas' | 'summarizer' | 'prompts',
-    input: string,
-    _tone: string = 'professionnel et engageant'
-  ): Promise<string> => {
+  // Outils IA : la génération se fait côté serveur (Cloud Function → Gemini). Aucune clé
+  // d'IA n'existe dans le navigateur ; le serveur contrôle le Pass actif et le quota.
+  const runAITool: AppContextType['runAITool'] = async (toolType, input, tone) => {
+    if (!currentUser) return { success: false, text: 'Connexion requise.' };
     setIsAILoading(true);
-    setIsAILoading(false);
-
-    // Aucune IA n'est branchée ici : ce sont des TRAMES à compléter. Rien n'est inventé
-    // (ni témoignage, ni garantie, ni statistique, ni délai) ; les crochets [ ] indiquent
-    // ce que l'utilisateur doit renseigner lui-même avec des faits réels.
-    const topic = input.trim().slice(0, 200);
-
-    if (toolType === 'copywriter') {
-      return `📝 **Trame de texte publicitaire pour : « ${topic} »**\n\n` +
-        `**Accroche :**\n« Vous cherchez ${topic} ? » [reformulez avec vos mots]\n\n` +
-        `**Ce que vous proposez (faits réels uniquement) :**\n[caractéristiques, prix, zone desservie]\n\n` +
-        `**Conditions :**\n[livraison, délais, moyens de paiement acceptés : ne mentionnez que ce que vous proposez réellement]\n\n` +
-        `**Pour commander :**\n[votre numéro WhatsApp ou e-mail]\n\n` +
-        `ℹ️ L'assistant IA n'est pas encore connecté : cette trame est à compléter. N'ajoutez ni garantie, ni avis, ni urgence que vous ne pouvez pas tenir.`;
+    try {
+      const res = await runAiToolCallable({ tool: toolType, input, tone });
+      return {
+        success: true,
+        text: res.data.text,
+        remaining: res.data.remaining,
+        dailyLimit: res.data.dailyLimit
+      };
+    } catch (err) {
+      return { success: false, text: fnError(err, "L'assistant IA est momentanément indisponible. Réessayez.") };
+    } finally {
+      setIsAILoading(false);
     }
-
-    if (toolType === 'marketing_ideas') {
-      return `📊 **Pistes de réflexion marketing pour : « ${topic} »**\n\n` +
-        `1. **Présenter l'offre clairement** : ce que vous vendez, à qui, pour quel prix, avec vos vraies conditions.\n` +
-        `2. **Recueillir de vrais avis** : demandez à vos clients réels l'autorisation de partager leur retour.\n` +
-        `3. **Choisir un canal** : concentrez-vous d'abord sur celui où se trouvent vos clients (WhatsApp, Facebook, bouche-à-oreille).\n` +
-        `4. **Tester avec un petit budget** : mesurez ce qui fonctionne avant de dépenser davantage.\n` +
-        `5. **Rester transparent** : prix, délais et conditions de retour clairement indiqués.\n\n` +
-        `ℹ️ Ces pistes sont génériques (l'assistant IA n'est pas encore connecté) et ne garantissent aucun résultat.`;
-    }
-
-    if (toolType === 'summarizer') {
-      return `📋 **Résumé automatique indisponible pour le moment.**\n\n` +
-        `Le résumé de texte nécessite l'assistant IA, qui n'est pas encore connecté : afficher un résumé sans analyser votre texte serait trompeur. Votre texte n'a pas été envoyé ni enregistré.`;
-    }
-
-    return `🎯 **3 modèles de prompts à adapter pour : « ${topic} »**\n\n` +
-      `**Prompt 1 (plan d'action) :**\n« Agis comme un conseiller marketing. Propose un plan d'action sur 30 jours pour "${topic}". Précise les hypothèses que tu fais. »\n\n` +
-      `**Prompt 2 (page de vente) :**\n« Rédige une page de vente pour "${topic}" en n'utilisant que ces faits : [vos faits réels]. N'invente ni avis, ni garantie, ni statistique. »\n\n` +
-      `**Prompt 3 (comparatif) :**\n« Crée un tableau comparant les forces, faiblesses et coûts estimés de "${topic}", en indiquant ce qui est une estimation. »`;
   };
 
   return (

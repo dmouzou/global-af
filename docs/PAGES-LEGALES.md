@@ -21,10 +21,10 @@ Seul l'e-mail `contact@global-af.ci` (déjà dans le pied de page) est prérempl
 ## Décisions produit reflétées dans les textes
 - **Pass actif obligatoire** pour les missions rémunérées, les formations et les retraits
   (appliqué aussi côté serveur : un retrait sans Pass est refusé).
-- **Rétractation de 7 jours uniquement pour les abonnements** (Premium, Business),
-  remboursement **sous déduction de 3 % de frais de transaction** ; **Pass d'entrée non
-  remboursable**, reconnu par case à cocher (horodatée sur le paiement). Si le membre
-  possède aussi un Pass d'entrée, rétracter l'abonnement ne le lui retire pas.
+- **Rétractation de 7 jours uniquement pour le Pass d'entrée** (remboursement sous déduction
+  de 3 % de frais de transaction) ; **abonnements non remboursables**, reconnus par case à cocher
+  (horodatée sur le paiement) en raison de l'accès immédiat annoncé (VCF, outils IA).
+  Abonnements de 30 jours, renouvelables à la main, sans prélèvement automatique.
 - Commissions : uniquement sur ventes réelles, jamais sur le Pass d'entrée ; créditées après
   7 jours (délai de sécurité), à chaque achat éligible y compris chaque renouvellement.
 - Ces choix **s'écartent du cahier des charges** (sections 6 et 39, conditions 2 et 5 : droit
@@ -32,7 +32,8 @@ Seul l'e-mail `contact@global-af.ci` (déjà dans le pied de page) est prérempl
   assumé par le propriétaire du produit.
 
 ## Points à faire valider par votre conseil
-1. **Non-remboursabilité du Pass d'entrée** et **conditionnement des retraits à un paiement** :
+1. **Non-remboursabilité des abonnements** (alors que les fichiers VCF ne sont pas encore
+   téléchargeables) et **conditionnement des retraits à un paiement** :
    ce sont les clauses les plus exposées au regard du droit de la consommation et de la
    réglementation sur les systèmes de parrainage/ventes pyramidales. Je ne suis pas juriste :
    ces textes ne valent pas conseil juridique.

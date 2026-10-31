@@ -930,7 +930,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
                 <div className="text-3xl font-black text-white font-anton">
                   9 900 XOF
                   <span className="text-xs font-normal text-emerald-400 block font-sans">
-                    Paiement unique · aucun prélèvement automatique
+                    30 jours · renouvellement manuel, sans prélèvement automatique
                   </span>
                 </div>
 

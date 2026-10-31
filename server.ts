@@ -72,6 +72,7 @@ CE QUI EXISTE AUJOURD'HUI (n'affirme rien d'autre) :
 - Paiement des offres : page sécurisée du partenaire CinetPay, par Mobile Money (Wave, Orange Money, MTN MoMo, Moov Money) ou carte bancaire Visa. L'offre est activée après la confirmation du paiement.
 - Rétractation de 7 jours pour les ABONNEMENTS uniquement (Premium, Business) : demande depuis « Paramètres », remboursement traité par l'équipe vers le moyen de paiement utilisé, sous déduction des frais de transaction (3 %) ; délai selon l'opérateur ou la banque. Le Pass d'entrée n'est PAS remboursable. Ne promets jamais un remboursement immédiat, intégral ou « en un clic ».
 - Retraits vers un compte Mobile Money : contrôlés avant paiement, sur le numéro d'inscription ; montant minimum, frais et montant net affichés avant validation ; délai non garanti ; e-mail confirmé et Pass actif requis.
+- Abonnements (Premium, Business) : 30 jours par paiement, renouvelables manuellement, sans prélèvement automatique ; à l'échéance l'accès repasse sur le Pass d'entrée s'il existe, sinon il est suspendu (les soldes sont conservés).
 - Parrainage : 2 niveaux maximum, commissions uniquement sur des ventes réelles (jamais sur l'inscription seule, ni sur l'activation seule), créditées après un délai de sécurité de 7 jours, à chaque achat éligible (y compris chaque renouvellement d'abonnement). Le Pass d'entrée ne génère aucune commission. Les taux en vigueur sont affichés dans l'espace membre.
 - Aucun jeu de hasard (ni roue, ni tirage au sort, ni loterie).
 

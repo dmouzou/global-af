@@ -99,7 +99,7 @@ Aucun gain n'est garanti.`,
     answer: `L'inscription est **gratuite**. Pour participer aux missions rémunérées, suivre les formations et demander un retrait, un **Pass actif** est nécessaire :
 
 • **Pass d'entrée (Standard) :** rétractation de 7 jours, remboursement sous déduction des frais de transaction (3 %).
-• **Abonnements (VIP Premium) :** non remboursables (fichiers et contacts VCF immédiatement mis à disposition).
+• **Abonnements (Premium, Business) :** 30 jours par paiement, renouvelables à la main (aucun prélèvement automatique) ; non remboursables, reconnu avant paiement.
 • **Contenu et prix :** chaque offre décrit précisément ce qu'elle contient, son prix et ses éventuels frais **avant** le paiement, sur la page de paiement elle-même.
 • **Pas d'endettement :** ne souscrivez jamais une offre en vous endettant. Vous pouvez fixer un plafond de dépense mensuel dans « Paramètres ».
 • **Gains :** acheter une offre ne garantit aucun gain.
@@ -220,7 +220,7 @@ export const InformationalChatbot: React.FC<InformationalChatbotProps> = ({
           "Comment retirer mes gains Mobile Money ?",
           "Règles de rémunération des parrains",
           "Où en sont les micro-jobs ?",
-          "Rétractation des abonnements"
+          "Rétractation du Pass d'entrée"
         ]
       }
     ]);

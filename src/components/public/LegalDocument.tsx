@@ -16,6 +16,7 @@ const POLICY_VALUES: Record<string, string> = {
   retractionDays: String(POLICY.retractionDays),
   refundFeePercent: String(POLICY.refundFeePercent),
   minAge: String(POLICY.minAge),
+  subscriptionDays: String(POLICY.subscriptionDays),
 };
 
 /** Remplace {{champ}} et met **gras** ; un champ non renseigné est signalé. */

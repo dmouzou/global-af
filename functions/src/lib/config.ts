@@ -24,6 +24,12 @@ export async function getPlatformConfig(
     throw new DomainError("config_invalid",
       "Durée d'abonnement invalide (relancer le script de seed).");
   }
+  const q = cfg.aiDailyQuota;
+  if (!q || ![q.standard, q.premium, q.business].every(
+    (n) => Number.isInteger(n) && n >= 0 && n <= 10000)) {
+    throw new DomainError("config_invalid",
+      "Quotas IA invalides (relancer le script de seed).");
+  }
   if (!Number.isInteger(cfg.refundFeeBps) || cfg.refundFeeBps < 0 ||
     cfg.refundFeeBps > 2000) {
     throw new DomainError("config_invalid",

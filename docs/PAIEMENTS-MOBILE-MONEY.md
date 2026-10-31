@@ -46,18 +46,26 @@ aucun secret par défaut (clés absentes = webhook refusé).
 7. Adresse de notification à connaître (déjà envoyée dans chaque paiement) :
    `https://europe-west1-<projet>.cloudfunctions.net/cinetpayWebhook`.
 
-## Règles commerciales appliquées (décisions du propriétaire)
+## Règles commerciales appliquées (décisions du propriétaire, version finale)
 
-- `standard` = **Pass d'entrée** (`kind: activation`) : non remboursable, aucune commission ;
-  la case « je comprends qu'il n'est pas remboursable » est exigée et horodatée (`acceptedNoRefundAt`).
-- `premium` et `business` = **abonnements** (`kind: subscription`) : rétractation de 7 jours,
+- `standard` = **Pass d'entrée** (`kind: activation`), sans limite de durée : **rétractable 7 jours**,
   remboursement du montant payé **moins 3 %** (`refundFeeBps = 300`, à aligner sur les frais
-  CinetPay), commissions d'affiliation (créditées après un délai de sécurité de 7 jours, à chaque renouvellement).
-- Retraits : refusés par le serveur sans Pass actif.
-- Si le membre a plusieurs achats, la rétractation d'un abonnement lui laisse la meilleure offre restante.
-- **Non géré** : durée et renouvellement des abonnements. Un abonnement payé reste actif sans
-  date d'expiration et il n'y a aucun prélèvement automatique ; à définir si « abonnement »
-  doit signifier « 30 jours renouvelables ».
+  CinetPay) ; **aucune commission d'affiliation** (cahier des charges, section 6 et condition 1).
+  Si le membre a aussi un abonnement valide, la rétractation du Pass ne le retire pas.
+- `premium` et `business` = **abonnements** (`kind: subscription`) : **non remboursables** (case à
+  cocher exigée et horodatée avant paiement), commissions d'affiliation à **chaque paiement**, y
+  compris chaque renouvellement (créditées après un délai de sécurité de 7 jours).
+- **Durée** : chaque paiement d'abonnement ouvre **30 jours** (`subscriptionDays`). Renouvellement
+  **manuel** (aucun prélèvement automatique : le guichet CinetPay exige une action du membre). Un
+  renouvellement avant l'échéance prolonge à partir de l'échéance (aucun jour perdu) ; après
+  l'échéance, la période repart de la date de paiement. Pas de changement d'offre en cours de
+  période, pas de prépaiement au-delà de 90 jours, pas de second Pass d'entrée.
+- **Échéance** : tâche quotidienne `processSubscriptions` (02:00 Abidjan) : un abonnement échu
+  repasse sur le Pass d'entrée s'il existe, sinon sur le palier gratuit ; rappel 3 jours avant
+  l'échéance ; notifications dans l'espace membre. Les contrôles d'accès du serveur (retraits, IA)
+  calculent l'accès à l'instant et ne dépendent pas de cette tâche.
+- Retraits et outils IA : refusés sans Pass actif. Les soldes sont conservés à l'échéance, mais un
+  retrait exige un Pass actif : **décision à confirmer** (délai de grâce ?).
 
 ## Ce qui reste manuel ou non branché
 

@@ -109,6 +109,8 @@ export interface PlatformConfig {
   retractionDays: number;
   /** Durée d'une période d'abonnement (Premium, Business), en jours. */
   subscriptionDays: number;
+  /** Appels IA autorisés par jour et par membre, selon l'offre. */
+  aiDailyQuota: {standard: number; premium: number; business: number};
   /**
    * Frais de transaction retenus sur un remboursement de rétractation, en
    * points de base (300 = 3 %). Annoncés avant le paiement.

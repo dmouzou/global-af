@@ -146,6 +146,8 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
   // AI Tool interactive runner
   const [aiToolType, setAiToolType] = useState<'copywriter' | 'marketing_ideas' | 'summarizer' | 'prompts'>('copywriter');
   const [aiInputText, setAiInputText] = useState('');
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiRemaining, setAiRemaining] = useState<number | null>(null);
   const [aiOutputResult, setAiOutputResult] = useState('');
   const [aiCopied, setAiCopied] = useState(false);
 
@@ -304,8 +306,15 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
 
   const handleRunAI = async () => {
     if (!aiInputText.trim()) return;
-    const output = await runAITool(aiToolType, aiInputText);
-    setAiOutputResult(output);
+    setAiError(null);
+    const res = await runAITool(aiToolType, aiInputText);
+    if (res.success) {
+      setAiOutputResult(res.text);
+      setAiRemaining(res.remaining ?? null);
+    } else {
+      setAiOutputResult('');
+      setAiError(res.text);
+    }
   };
 
   const handleCopyAI = () => {
@@ -2012,6 +2021,17 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                       )}
                     </button>
                   </div>
+
+                  {aiRemaining !== null && !aiError && (
+                    <p className="text-[11px] text-slate-500">
+                      Il vous reste {aiRemaining} génération{aiRemaining > 1 ? 's' : ''} aujourd'hui. Relisez toujours le texte : l'IA peut se tromper, et n'y ajoutez que des informations exactes.
+                    </p>
+                  )}
+                  {aiError && (
+                    <div role="alert" className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700">
+                      {aiError}
+                    </div>
+                  )}
 
                   {/* Output Display */}
                   {aiOutputResult && (

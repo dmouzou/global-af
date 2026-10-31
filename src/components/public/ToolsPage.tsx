@@ -19,7 +19,7 @@ interface ToolsPageProps {
 }
 
 export const ToolsPage: React.FC<ToolsPageProps> = ({ onGoToDashboard, onOpenAuth }) => {
-  const { vcfResources, runAITool } = useApp();
+  const { vcfResources, runAITool, currentUser } = useApp();
   const [productName, setProductName] = useState('Ensemble de robes en pagne baoulé');
   const [price, setPrice] = useState('18 000 FCFA');
   const [tone, setTone] = useState<'impact' | 'nouchi' | 'story' | 'promo'>('impact');
@@ -28,48 +28,54 @@ export const ToolsPage: React.FC<ToolsPageProps> = ({ onGoToDashboard, onOpenAut
   const [generatedPost, setGeneratedPost] = useState<string>('');
   const [copied, setCopied] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [aiSource, setAiSource] = useState<string>('gemini_ai');
+  const [aiSource, setAiSource] = useState<string>('template');
+  const [notice, setNotice] = useState<string | null>(null);
+
+  // Trame locale (sans IA) : uniquement ce que le visiteur a saisi ; les crochets [ ]
+  // indiquent ce qu'il doit compléter avec des faits réels (aucune garantie ni rareté inventée).
+  const buildTemplate = (prod: string, pr: string, town: string) =>
+    `${prod} — ${town}\n\n` +
+    `[Décrivez précisément le produit ou le service : caractéristiques, conditions.]\n\n` +
+    `💰 Prix : ${pr || '[à préciser]'}\n` +
+    `🚚 Livraison : [précisez vos conditions et délais réels]\n` +
+    `💳 Paiement : [précisez les moyens que vous acceptez réellement]\n\n` +
+    `📲 Contact : [votre numéro WhatsApp ou e-mail]`;
+
+  const TONE_MAP: Record<typeof tone, string> = {
+    impact: 'direct',
+    nouchi: 'familier ivoirien (nouchi)',
+    story: 'storytelling',
+    promo: 'promotionnel',
+  };
 
   const handleGenerateCopy = async () => {
     const prod = productName.trim() || 'votre produit';
     const pr = price.trim();
+    const town = city.trim() || 'Abidjan';
     setIsGenerating(true);
+    setNotice(null);
 
-    try {
-      const response = await fetch('/api/generate-copy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          productName: prod,
-          price: pr,
-          city: city.trim() || 'Abidjan',
-          tone,
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.text) {
-          setGeneratedPost(data.text);
-          setAiSource(data.source || 'gemini_ai');
-          setIsGenerating(false);
-          return;
-        }
+    // Génération par l'IA (serveur → Gemini) : réservée aux membres connectés avec un Pass actif.
+    if (currentUser && currentUser.isActivated) {
+      const contextPrompt = `Produit : "${prod}", Prix : "${pr || 'à préciser'}", Ville : "${town}", Canal : ${platform}`;
+      const res = await runAITool('copywriter', contextPrompt, TONE_MAP[tone]);
+      if (res.success) {
+        setGeneratedPost(res.text);
+        setAiSource('gemini');
+      } else {
+        setGeneratedPost('');
+        setNotice(res.text);
       }
-    } catch (e) {
-      console.warn('Backend /api/generate-copy not reachable, falling back to context AI runner:', e);
+      setIsGenerating(false);
+      return;
     }
 
-    try {
-      const contextPrompt = `Produit : "${prod}", Prix : "${pr || 'Sur demande'}", Ville : "${city}", Style : ${tone}`;
-      const res = await runAITool('copywriter', contextPrompt, tone);
-      setGeneratedPost(res);
-      setAiSource('gemini_context');
-    } catch (err) {
-      console.error('AI generator fallback error:', err);
-    } finally {
-      setIsGenerating(false);
-    }
+    setGeneratedPost(buildTemplate(prod, pr, town));
+    setAiSource('template');
+    setNotice(currentUser
+      ? "Activez un Pass pour générer ce texte avec l'IA : voici une trame à compléter."
+      : "Créez un compte et activez un Pass pour générer ce texte avec l'IA : voici une trame à compléter.");
+    setIsGenerating(false);
   };
 
   const handleCopy = () => {
@@ -118,7 +124,7 @@ export const ToolsPage: React.FC<ToolsPageProps> = ({ onGoToDashboard, onOpenAut
                 Générateur d'Accroches WhatsApp & Réseaux Sociaux
               </h2>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Génère un texte avec le modèle <strong className="text-orange-300">Google Gemini Flash</strong> lorsque le service est disponible ; sinon une trame à compléter est proposée. Relisez toujours le texte et n'y ajoutez que des informations exactes.
+                Avec un <strong className="text-orange-300">Pass actif</strong>, le texte est généré par <strong className="text-orange-300">Google Gemini</strong> ; sans Pass, une trame à compléter est proposée. Relisez toujours le texte et n'y ajoutez que des informations exactes.
               </p>
 
               <div className="space-y-3">
@@ -233,9 +239,14 @@ export const ToolsPage: React.FC<ToolsPageProps> = ({ onGoToDashboard, onOpenAut
                   <FileText className="w-4 h-4" />
                   <span>Résultat Optimisé pour Conversion Mobile</span>
                   <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono">
-                    {aiSource === 'gemini_ai' ? '✨ Gemini Flash' : '📝 Trame à compléter'}
+                    {aiSource === 'gemini' ? '✨ Généré par Gemini' : '📝 Trame à compléter'}
                   </span>
                 </span>
+                {notice && (
+                  <div role="status" className="mb-3 p-3 rounded-xl bg-amber-500/10 border border-amber-400/30 text-xs text-amber-100">
+                    {notice}
+                  </div>
+                )}
                 {generatedPost && (
                   <div className="flex items-center gap-2">
                     <a
