@@ -633,11 +633,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const requestRetractionRefund = async (reason: string): Promise<ActionResult> => {
-    if (!currentUser || !currentUser.isActivated || currentUser.subscriptionPlan === 'free') {
-      return { success: false, message: "Vous n'avez aucun Pass d'entrée actif éligible à la rétractation." };
-    }
-    if (currentUser.subscriptionPlan === 'premium' || currentUser.subscriptionPlan === 'business') {
-      return { success: false, message: "L'abonnement VIP Premium n'est pas remboursable (accès immédiat aux fichiers VCF téléchargeables). Seul le Pass d'entrée ouvre un droit de rétractation sous 7 jours." };
+    // Seul le Pass d'entrée est rétractable (même si un abonnement est aussi actif).
+    if (!currentUser || !currentUser.entryPass) {
+      return {
+        success: false,
+        message: currentUser && (currentUser.subscriptionPlan === 'premium' || currentUser.subscriptionPlan === 'business')
+          ? "L'abonnement n'est pas remboursable. Seul le Pass d'entrée ouvre un droit de rétractation de 7 jours."
+          : "Vous n'avez aucun Pass d'entrée actif éligible à la rétractation."
+      };
     }
     try {
       const res = await requestPaymentRetractionCallable({ reason });

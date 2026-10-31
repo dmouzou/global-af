@@ -2653,7 +2653,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                 <strong>Information VIP Premium :</strong> L'abonnement mensuel n'est pas remboursable en raison de l'accès immédiat et définitif aux fichiers et contacts VCF téléchargeables ainsi qu'aux outils IA.
               </div>
 
-              {currentUser.subscriptionPlan === 'standard' && currentUser.isActivated ? (
+              {currentUser.entryPass ? (
                 <div className="p-4 bg-orange-50 rounded-xl border border-orange-200 space-y-3 text-xs">
                   <div className="font-semibold text-orange-900">
                     Pass Membre Standard actif (Activé le {currentUser.activationDate ?? 'récent'})
