@@ -21,7 +21,6 @@ import {
 } from '../types';
 import {
   COUNTRIES_CONFIG,
-  INITIAL_TASKS,
   INITIAL_COURSES,
   INITIAL_VCF_RESOURCES
 } from '../data/initialData';
@@ -56,6 +55,10 @@ import {
   setSpendingLimitCallable,
   getMyAffiliationCallable,
   runAiToolCallable,
+  adminSaveMissionCallable,
+  adminSetMissionStatusCallable,
+  submitMissionProofCallable,
+  adminReviewSubmissionCallable,
   AffiliationStats,
   RegisterUserInput
 } from '../lib/firebase';
@@ -65,6 +68,11 @@ type ServerOperator = 'wave' | 'orange_money' | 'mtn_momo' | 'moov_money';
 type ActionResult = { success: boolean; message: string };
 
 const FINANCE_ROLES: UserRole[] = ['financial_manager', 'admin', 'super_admin'];
+const CONTENT_ROLES: UserRole[] = ['content_manager', 'admin', 'super_admin'];
+const MODERATION_ROLES: UserRole[] = ['moderator', 'content_manager', 'admin', 'super_admin'];
+
+/** Mission créée depuis le back-office (le code de fin reste côté serveur). */
+export type NewMission = Omit<Task, 'id' | 'quotaCurrent'> & { completionCode?: string };
 
 interface AppContextType {
   currentUser: User | null;
@@ -106,11 +114,23 @@ interface AppContextType {
   updateMonthlySpendingLimit: (amount: number) => Promise<ActionResult>;
 
   // Tasks & Micro-jobs
+  /** Missions publiées (catalogue public). */
   tasks: Task[];
+  /** Toutes les missions, brouillons compris (contenu / administration). */
+  adminMissions: Task[];
+  /** Participations du membre connecté. */
   submissions: TaskSubmission[];
+  /** Participations en attente de revue (modération / administration). */
+  adminSubmissions: TaskSubmission[];
+  /**
+   * Envoie la preuve au serveur. Retour immédiat (l'écran ferme son formulaire) ;
+   * le résultat réel est annoncé à la fin de l'appel.
+   * À remplacer par un retour asynchrone dès que le tableau de bord est découpé par onglet.
+   */
   submitTaskProof: (taskId: string, proofType: 'url' | 'text' | 'screenshot', content: string) => ActionResult;
-  reviewSubmissionAdmin: (submissionId: string, status: 'approved' | 'rejected', feedback?: string) => ActionResult;
-  createTaskAdmin: (newTask: Omit<Task, 'id' | 'quotaCurrent'>) => ActionResult;
+  reviewSubmissionAdmin: (submissionId: string, status: 'approved' | 'rejected', feedback?: string) => Promise<ActionResult>;
+  createTaskAdmin: (newTask: NewMission, missionId?: string) => Promise<ActionResult>;
+  setMissionStatusAdmin: (missionId: string, status: Task['status']) => Promise<ActionResult>;
 
   // Academy & Quiz
   courses: Course[];
@@ -234,6 +254,43 @@ const mapWithdrawal = (id: string, d: any, userName: string): WithdrawalRequest 
   rejectReason: d.rejectReason || undefined,
 });
 
+const mapTask = (id: string, d: any): Task => ({
+  id,
+  title: d.title || '',
+  category: d.category,
+  description: d.description || '',
+  instructions: Array.isArray(d.instructions) ? d.instructions : [],
+  rewardAmount: Number(d.rewardAmount ?? 0),
+  currency: d.currency || 'XOF',
+  quotaMax: Number(d.quotaMax ?? 0),
+  quotaCurrent: Number(d.quotaCurrent ?? 0),
+  requiredLevel: d.requiredLevel || 'Starter',
+  countries: Array.isArray(d.countries) ? d.countries : [],
+  isPremiumOnly: d.isPremiumOnly === true,
+  startDate: d.startDate || '',
+  endDate: d.endDate || '',
+  targetPlatform: d.targetPlatform || undefined,
+  targetUrl: d.targetUrl || undefined,
+  verificationType: d.verificationType || 'manual',
+  status: d.status || 'draft',
+});
+
+const mapSubmission = (id: string, d: any): TaskSubmission => ({
+  id,
+  taskId: d.missionId || '',
+  taskTitle: d.missionTitle || '',
+  userId: d.userId || '',
+  userName: d.userName || '',
+  submittedAt: fmtDate(d.submittedAt),
+  proofType: d.proofType || 'text',
+  proofContent: d.proofContent || '',
+  status: d.status || 'pending',
+  feedback: d.feedback || undefined,
+  rewardAmount: Number(d.rewardAmount ?? 0),
+  verifiedAt: d.reviewedAt ? fmtDate(d.reviewedAt) : undefined,
+  verifiedBy: d.reviewedBy || undefined,
+});
+
 const mapNotification = (id: string, d: any): NotificationItem => ({
   id,
   userId: d.userId,
@@ -270,14 +327,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [affiliationError, setAffiliationError] = useState(false);
 
   // Catalogues non personnels (démonstration, en attente des modules serveur).
-  const [tasks] = useState<Task[]>(INITIAL_TASKS);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [adminMissions, setAdminMissions] = useState<Task[]>([]);
+  const [submissions, setSubmissions] = useState<TaskSubmission[]>([]);
+  const [adminSubmissions, setAdminSubmissions] = useState<TaskSubmission[]>([]);
   const [courses, setCourses] = useState<Course[]>(
     INITIAL_COURSES.map(c => ({ ...c, enrolledUserIds: [] }))
   );
   const [vcfResources] = useState<VCFResource[]>(INITIAL_VCF_RESOURCES);
 
   // Modules sans stockage serveur : aucune donnée n'est inventée ni simulée.
-  const submissions: TaskSubmission[] = [];
   const posts: CommunityPost[] = [];
   const tickets: SupportTicket[] = [];
   const auditLogs: AuditLogItem[] = [];
@@ -287,6 +346,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isAILoading, setIsAILoading] = useState<boolean>(false);
 
   const authGeneration = useRef(0);
+
+  // Catalogue public des missions publiées (lecture libre, écriture serveur).
+  useEffect(() => {
+    const unsub = onSnapshot(
+      query(collection(db, 'missions'), where('status', '==', 'published'), limit(200)),
+      (snap) => {
+        setTasks(snap.docs.map(x => mapTask(x.id, x.data())).sort((a, b) => a.endDate.localeCompare(b.endDate)));
+      },
+      (err) => console.warn('Lecture des missions refusée:', err.code)
+    );
+    return () => unsub();
+  }, []);
 
   // Écoute temps réel : un seul abonnement par session, TOUS résiliés à chaque
   // changement d'utilisateur (sinon le profil d'un ancien compte pourrait
@@ -307,6 +378,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setAffiliationStats(null);
       setAffiliationCommissions([]);
       setAffiliationError(false);
+      setSubmissions([]);
+      setAdminSubmissions([]);
+      setAdminMissions([]);
       setCourses(INITIAL_COURSES.map(c => ({ ...c, enrolledUserIds: [] })));
     };
 
@@ -444,6 +518,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         },
         (err) => console.warn('Lecture des commissions refusée:', err.code)
       ));
+
+      unsubs.push(onSnapshot(
+        query(collection(db, 'submissions'), where('userId', '==', uid), limit(200)),
+        (snap) => {
+          if (generation !== authGeneration.current) return;
+          setSubmissions(snap.docs.map(x => mapSubmission(x.id, x.data())));
+        },
+        (err) => console.warn('Lecture des participations refusée:', err.code)
+      ));
+
+      if (MODERATION_ROLES.includes(claimRole)) {
+        unsubs.push(onSnapshot(
+          query(collection(db, 'submissions'), where('status', '==', 'pending'), limit(200)),
+          (snap) => {
+            if (generation !== authGeneration.current) return;
+            setAdminSubmissions(snap.docs.map(x => mapSubmission(x.id, x.data())));
+          },
+          (err) => console.warn('Lecture admin des participations refusée:', err.code)
+        ));
+      }
+
+      if (CONTENT_ROLES.includes(claimRole)) {
+        unsubs.push(onSnapshot(
+          query(collection(db, 'missions'), limit(300)),
+          (snap) => {
+            if (generation !== authGeneration.current) return;
+            setAdminMissions(snap.docs.map(x => mapTask(x.id, x.data())));
+          },
+          (err) => console.warn('Lecture admin des missions refusée:', err.code)
+        ));
+      }
 
       if (FINANCE_ROLES.includes(claimRole)) {
         unsubs.push(onSnapshot(
@@ -667,10 +772,73 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // ---- Modules sans serveur : aucune récompense, aucun point, aucun message simulé ----
-  const submitTaskProof = (_taskId: string, _proofType: 'url' | 'text' | 'screenshot', _content: string): ActionResult =>
-    NOT_AVAILABLE("L'envoi de missions rémunérées");
-  const reviewSubmissionAdmin = (): ActionResult => NOT_AVAILABLE('La validation des missions');
-  const createTaskAdmin = (): ActionResult => NOT_AVAILABLE('La création de missions');
+  const submitTaskProof: AppContextType['submitTaskProof'] = (taskId, proofType, content) => {
+    if (!currentUser) return { success: false, message: 'Connexion requise.' };
+    if (proofType === 'screenshot') {
+      return { success: false, message: "Les captures d'écran ne sont pas encore acceptées : envoyez un lien https ou un texte." };
+    }
+    void (async () => {
+      try {
+        const res = await submitMissionProofCallable({ missionId: taskId, proofType, proofContent: content });
+        window.alert(res.data.status === 'approved'
+          ? 'Mission validée : la récompense est ajoutée à votre solde.'
+          : 'Preuve reçue. Elle sera vérifiée avant le versement de la récompense.');
+      } catch (err) {
+        window.alert(fnError(err, "L'envoi de la preuve a échoué."));
+      }
+    })();
+    return { success: true, message: 'Envoi de la preuve en cours…' };
+  };
+
+  const reviewSubmissionAdmin: AppContextType['reviewSubmissionAdmin'] = async (submissionId, status, feedback) => {
+    if (!currentUser || !MODERATION_ROLES.includes(currentUser.role)) {
+      return { success: false, message: 'Action non autorisée.' };
+    }
+    try {
+      await adminReviewSubmissionCallable({
+        submissionId,
+        action: status === 'approved' ? 'approve' : 'reject',
+        feedback
+      });
+      return { success: true, message: status === 'approved' ? 'Participation validée et récompense créditée.' : 'Participation refusée.' };
+    } catch (err) {
+      return { success: false, message: fnError(err, 'La revue de la participation a échoué.') };
+    }
+  };
+
+  const createTaskAdmin: AppContextType['createTaskAdmin'] = async (m, missionId) => {
+    if (!currentUser || !CONTENT_ROLES.includes(currentUser.role)) {
+      return { success: false, message: 'Action non autorisée.' };
+    }
+    try {
+      await adminSaveMissionCallable({
+        missionId,
+        mission: {
+          title: m.title, category: m.category, description: m.description,
+          instructions: m.instructions, rewardAmount: m.rewardAmount, currency: m.currency,
+          quotaMax: m.quotaMax, requiredLevel: m.requiredLevel, countries: m.countries,
+          isPremiumOnly: m.isPremiumOnly, startDate: m.startDate, endDate: m.endDate,
+          targetPlatform: m.targetPlatform, targetUrl: m.targetUrl,
+          verificationType: m.verificationType, completionCode: m.completionCode, status: m.status
+        }
+      });
+      return { success: true, message: missionId ? 'Mission mise à jour.' : 'Mission enregistrée.' };
+    } catch (err) {
+      return { success: false, message: fnError(err, "L'enregistrement de la mission a échoué.") };
+    }
+  };
+
+  const setMissionStatusAdmin: AppContextType['setMissionStatusAdmin'] = async (missionId, status) => {
+    if (!currentUser || !CONTENT_ROLES.includes(currentUser.role)) {
+      return { success: false, message: 'Action non autorisée.' };
+    }
+    try {
+      await adminSetMissionStatusCallable({ missionId, status });
+      return { success: true, message: 'Statut de la mission mis à jour.' };
+    } catch (err) {
+      return { success: false, message: fnError(err, 'Le changement de statut a échoué.') };
+    }
+  };
 
   const enrollInCourse = (courseId: string) => {
     if (!currentUser) return;
@@ -784,10 +952,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       requestRetractionRefund,
       updateMonthlySpendingLimit,
       tasks,
+      adminMissions,
       submissions,
+      adminSubmissions,
       submitTaskProof,
       reviewSubmissionAdmin,
       createTaskAdmin,
+      setMissionStatusAdmin,
       courses,
       userCertificates,
       enrollInCourse,

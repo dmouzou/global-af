@@ -176,3 +176,46 @@ export const runAiToolCallable = httpsCallable<
   RunAiToolInput,
   { text: string; remaining: number; dailyLimit: number }
 >(functions, 'runAiTool', { timeout: 90000 });
+
+export interface SaveMissionInput {
+  missionId?: string;
+  mission: {
+    title: string;
+    category: string;
+    description: string;
+    instructions: string[];
+    rewardAmount: number;
+    currency: string;
+    quotaMax: number;
+    requiredLevel: string;
+    countries: string[];
+    isPremiumOnly: boolean;
+    startDate: string;
+    endDate: string;
+    targetPlatform?: string;
+    targetUrl?: string;
+    verificationType: string;
+    completionCode?: string;
+    status: string;
+  };
+}
+
+export const adminSaveMissionCallable = httpsCallable<SaveMissionInput, { missionId: string; status: string }>(
+  functions,
+  'adminSaveMission'
+);
+
+export const adminSetMissionStatusCallable = httpsCallable<{ missionId: string; status: string }, { missionId: string; status: string }>(
+  functions,
+  'adminSetMissionStatus'
+);
+
+export const submitMissionProofCallable = httpsCallable<
+  { missionId: string; proofType: string; proofContent: string },
+  { submissionId: string; status: 'pending' | 'approved' }
+>(functions, 'submitMissionProof');
+
+export const adminReviewSubmissionCallable = httpsCallable<
+  { submissionId: string; action: 'approve' | 'reject'; feedback?: string },
+  { submissionId: string; status: string }
+>(functions, 'adminReviewSubmission');

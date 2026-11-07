@@ -31,7 +31,6 @@ export const MissionsPage: React.FC<MissionsPageProps> = ({
   const { tasks, selectedCountry } = useApp();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [hoursPerDay, setHoursPerDay] = useState(2);
 
   const categories = [
     { id: 'all', label: 'Toutes les catégories' },
@@ -48,10 +47,6 @@ export const MissionsPage: React.FC<MissionsPageProps> = ({
                           task.description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCat && matchesSearch;
   });
-
-  // Simulator: average ~1500 FCFA per hour based on 3-4 tasks
-  const estimatedDaily = hoursPerDay * 1400;
-  const estimatedMonthly = estimatedDaily * 26;
 
   return (
     <div className="min-h-screen bg-slate-50 py-12">
@@ -154,6 +149,11 @@ export const MissionsPage: React.FC<MissionsPageProps> = ({
 
         {/* Task Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filteredTasks.length === 0 && (
+            <div className="col-span-full rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-600">
+              Aucune mission ouverte pour le moment. De nouvelles missions sont publiées régulièrement : créez votre compte pour les découvrir dès leur ouverture.
+            </div>
+          )}
           {filteredTasks.map((task) => (
             <div
               key={task.id}

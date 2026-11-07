@@ -19,7 +19,7 @@ import {
   Building2,
   Clock
 } from 'lucide-react';
-import { TaskCategory, UserLevel } from '../../types';
+import { Task, TaskCategory, UserLevel } from '../../types';
 import { BabiMascot } from '../common/BabiMascot';
 
 interface AdminDashboardProps {
@@ -39,9 +39,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     currentUser, 
     adminWithdrawals: withdrawals, 
     processWithdrawalAdmin, 
-    submissions, 
+    adminSubmissions: submissions,
     reviewSubmissionAdmin,
-    tasks,
+    adminMissions,
+    setMissionStatusAdmin,
     createTaskAdmin,
     auditLogs,
     riskAlerts,
@@ -112,17 +113,63 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [taskDesc, setTaskDesc] = useState('');
   const [taskInst1, setTaskInst1] = useState('');
   const [taskInst2, setTaskInst2] = useState('');
-  const [taskVerification, setTaskVerification] = useState<'automatic' | 'manual'>('manual');
+  const [taskVerification, setTaskVerification] = useState<'automatic' | 'manual' | 'hybrid'>('manual');
+  const [taskLevel, setTaskLevel] = useState<UserLevel>('Starter');
+  const [taskStart, setTaskStart] = useState(new Date().toISOString().slice(0, 10));
+  const [taskEnd, setTaskEnd] = useState(new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10));
+  const [taskCountries, setTaskCountries] = useState('CI');
+  const [taskPlatform, setTaskPlatform] = useState<'' | 'Web' | 'YouTube' | 'TikTok' | 'PlayStore' | 'Autre'>('');
+  const [taskUrl, setTaskUrl] = useState('');
+  const [taskCode, setTaskCode] = useState('');
+  const [taskPremium, setTaskPremium] = useState(false);
+  const [taskPublish, setTaskPublish] = useState(true);
+  const [editingMissionId, setEditingMissionId] = useState<string | null>(null);
+  const [isSavingTask, setIsSavingTask] = useState(false);
 
   // Withdrawal rejection reason prompt
   const [rejectId, setRejectId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState('');
 
-  const handleCreateTaskSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!taskTitle || !taskDesc) return;
+  const resetTaskForm = () => {
+    setIsCreatingTask(false);
+    setEditingMissionId(null);
+    setTaskTitle('');
+    setTaskDesc('');
+    setTaskInst1('');
+    setTaskInst2('');
+    setTaskUrl('');
+    setTaskCode('');
+    setTaskPlatform('');
+    setTaskPremium(false);
+  };
 
-    const created = createTaskAdmin({
+  const startEditMission = (m: Task) => {
+    setEditingMissionId(m.id);
+    setIsCreatingTask(true);
+    setTaskTitle(m.title);
+    setTaskCategory(m.category);
+    setTaskReward(m.rewardAmount);
+    setTaskQuota(m.quotaMax);
+    setTaskDesc(m.description);
+    setTaskInst1(m.instructions[0] || '');
+    setTaskInst2(m.instructions[1] || '');
+    setTaskVerification(m.verificationType);
+    setTaskLevel(m.requiredLevel);
+    setTaskStart(m.startDate);
+    setTaskEnd(m.endDate);
+    setTaskCountries(m.countries.join(', '));
+    setTaskPlatform(m.targetPlatform || '');
+    setTaskUrl(m.targetUrl || '');
+    setTaskCode('');
+    setTaskPremium(m.isPremiumOnly);
+    setTaskPublish(m.status === 'published');
+  };
+
+  const handleCreateTaskSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!taskTitle || !taskDesc || isSavingTask) return;
+    setIsSavingTask(true);
+    const created = await createTaskAdmin({
       title: taskTitle,
       category: taskCategory,
       description: taskDesc,
@@ -130,23 +177,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       rewardAmount: Number(taskReward),
       currency: selectedCountry.currency,
       quotaMax: Number(taskQuota),
-      requiredLevel: 'Starter' as UserLevel,
-      countries: ['CI'],
-      isPremiumOnly: false,
-      startDate: '2026-10-12',
-      endDate: '2026-11-12',
+      requiredLevel: taskLevel,
+      countries: taskCountries.split(/[\s,;]+/).map(c => c.trim().toUpperCase()).filter(Boolean) as Task['countries'],
+      isPremiumOnly: taskPremium,
+      startDate: taskStart,
+      endDate: taskEnd,
+      targetPlatform: taskPlatform || undefined,
+      targetUrl: taskUrl.trim() || undefined,
       verificationType: taskVerification,
-      status: 'published'
-    });
-    if (!created.success) {
-      alert(created.message);
-      return;
-    }
-
-    setIsCreatingTask(false);
-    setTaskTitle('');
-    setTaskDesc('');
-    
+      completionCode: taskVerification === 'manual' ? undefined : taskCode.trim() || undefined,
+      status: taskPublish ? 'published' : 'draft'
+    }, editingMissionId || undefined);
+    setIsSavingTask(false);
+    alert(created.message);
+    if (created.success) resetTaskForm();
   };
 
   const OPEN_STATUSES = ['reserved', 'approved', 'payout_initiated'];
@@ -406,7 +450,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
 
             <button
-              onClick={() => setIsCreatingTask(!isCreatingTask)}
+              onClick={() => (isCreatingTask ? resetTaskForm() : setIsCreatingTask(true))}
               className="px-3.5 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg flex items-center gap-1.5"
             >
               <PlusCircle className="w-4 h-4" />
@@ -417,7 +461,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           {/* Form to create mission */}
           {isCreatingTask && (
             <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
-              <h3 className="font-bold text-slate-900 text-sm">Publier un nouveau micro-job</h3>
+              <h3 className="font-bold text-slate-900 text-sm">{editingMissionId ? 'Modifier la mission' : 'Nouveau micro-job'}</h3>
               
               <form onSubmit={handleCreateTaskSubmit} className="space-y-4 text-xs">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -475,13 +519,70 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <label className="block font-semibold text-slate-700 mb-1">Mode de vérification</label>
                     <select
                       value={taskVerification}
-                      onChange={(e) => setTaskVerification(e.target.value as any)}
+                      onChange={(e) => setTaskVerification(e.target.value as 'automatic' | 'manual' | 'hybrid')}
                       className="w-full p-2 border border-slate-300 rounded-md bg-white"
                     >
                       <option value="manual">Vérification manuelle (équipe)</option>
-                      <option value="automatic">Automatique instantanée</option>
+                      <option value="automatic">Automatique (code de fin exact)</option>
+                      <option value="hybrid">Hybride (code exact, sinon revue)</option>
                     </select>
                   </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">Début</label>
+                    <input type="date" required value={taskStart} onChange={(e) => setTaskStart(e.target.value)} className="w-full p-2 border border-slate-300 rounded-md" />
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">Fin</label>
+                    <input type="date" required value={taskEnd} onChange={(e) => setTaskEnd(e.target.value)} className="w-full p-2 border border-slate-300 rounded-md" />
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">Pays (codes ISO, séparés par une virgule)</label>
+                    <input type="text" required value={taskCountries} onChange={(e) => setTaskCountries(e.target.value)} className="w-full p-2 border border-slate-300 rounded-md font-mono" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">Niveau requis</label>
+                    <select value={taskLevel} onChange={(e) => setTaskLevel(e.target.value as UserLevel)} className="w-full p-2 border border-slate-300 rounded-md bg-white">
+                      {['Starter', 'Bronze', 'Silver', 'Gold', 'Platinum'].map(l => <option key={l} value={l}>{l}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">Plateforme (facultatif)</label>
+                    <select value={taskPlatform} onChange={(e) => setTaskPlatform(e.target.value as typeof taskPlatform)} className="w-full p-2 border border-slate-300 rounded-md bg-white">
+                      <option value="">Aucune</option>
+                      {['Web', 'YouTube', 'TikTok', 'PlayStore', 'Autre'].map(l => <option key={l} value={l}>{l}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">Lien https (facultatif)</label>
+                    <input type="url" value={taskUrl} onChange={(e) => setTaskUrl(e.target.value)} placeholder="https://..." className="w-full p-2 border border-slate-300 rounded-md" />
+                  </div>
+                </div>
+
+                {taskVerification !== 'manual' && (
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      Code de fin (8 à 40 caractères : lettres, chiffres, tirets){editingMissionId ? ' — à ressaisir à chaque modification' : ''}
+                    </label>
+                    <input type="text" required value={taskCode} onChange={(e) => setTaskCode(e.target.value)} className="w-full p-2 border border-slate-300 rounded-md font-mono" />
+                    <p className="text-[11px] text-slate-500 mt-1">Le code n'est jamais visible par les membres : le serveur le compare à ce que le membre saisit.</p>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap gap-5">
+                  <label className="flex items-center gap-2 font-semibold text-slate-700">
+                    <input type="checkbox" checked={taskPremium} onChange={(e) => setTaskPremium(e.target.checked)} />
+                    Réservée aux abonnés Premium / Business
+                  </label>
+                  <label className="flex items-center gap-2 font-semibold text-slate-700">
+                    <input type="checkbox" checked={taskPublish} onChange={(e) => setTaskPublish(e.target.checked)} />
+                    Publier immédiatement (sinon brouillon)
+                  </label>
                 </div>
 
                 <div>
@@ -522,26 +623,64 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <div className="flex justify-end gap-2 pt-2">
                   <button
                     type="button"
-                    onClick={() => setIsCreatingTask(false)}
+                    onClick={resetTaskForm}
                     className="px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-100 rounded-md"
                   >
                     Annuler
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-md"
+                    disabled={isSavingTask}
+                    className="px-4 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 rounded-md"
                   >
-                    Publier la Mission
+                    {isSavingTask ? 'Enregistrement…' : editingMissionId ? 'Enregistrer les modifications' : 'Enregistrer la mission'}
                   </button>
                 </div>
               </form>
             </div>
           )}
 
+          {/* Missions list */}
+          <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-3">
+            <h3 className="font-bold text-slate-900 text-sm">Missions ({adminMissions.length})</h3>
+            {adminMissions.length === 0 && (
+              <p className="text-xs text-slate-500">Aucune mission pour le moment.</p>
+            )}
+            <div className="space-y-2">
+              {adminMissions.map(m => (
+                <div key={m.id} className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs flex flex-col md:flex-row md:items-center justify-between gap-2">
+                  <div>
+                    <div className="font-bold text-slate-900">{m.title}</div>
+                    <div className="text-[11px] text-slate-500">
+                      {m.rewardAmount.toLocaleString()} {m.currency} · {m.quotaCurrent}/{m.quotaMax} participations · {m.startDate} → {m.endDate} · {m.countries.join(', ')}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-200 text-slate-700">
+                      {m.status === 'published' ? 'Publiée' : m.status === 'draft' ? 'Brouillon' : m.status === 'paused' ? 'En pause' : 'Archivée'}
+                    </span>
+                    {m.status !== 'archived' && (
+                      <button onClick={() => startEditMission(m)} className="px-2 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-200 rounded">Modifier</button>
+                    )}
+                    {(m.status === 'draft' || m.status === 'paused') && (
+                      <button onClick={async () => { const r = await setMissionStatusAdmin(m.id, 'published'); if (!r.success) alert(r.message); }} className="px-2 py-1 text-[11px] font-semibold text-white bg-emerald-600 rounded">Publier</button>
+                    )}
+                    {m.status === 'published' && (
+                      <button onClick={async () => { const r = await setMissionStatusAdmin(m.id, 'paused'); if (!r.success) alert(r.message); }} className="px-2 py-1 text-[11px] font-semibold text-amber-800 bg-amber-100 rounded">Pause</button>
+                    )}
+                    {m.status !== 'archived' && (
+                      <button onClick={async () => { if (!window.confirm('Archiver cette mission ? Cette action est définitive.')) return; const r = await setMissionStatusAdmin(m.id, 'archived'); if (!r.success) alert(r.message); }} className="px-2 py-1 text-[11px] font-semibold text-rose-700 bg-rose-50 rounded">Archiver</button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Pending Submissions to Review */}
           <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
             <h3 className="font-bold text-slate-900 text-sm">
-              Preuves soumises par les membres ({submissions.length})
+              Preuves en attente de revue ({submissions.length})
             </h3>
 
             <div className="space-y-3">
@@ -579,13 +718,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     {sub.status === 'pending' && (
                       <div className="flex items-center gap-1.5">
                         <button
-                          onClick={() => reviewSubmissionAdmin(sub.id, 'approved', 'Preuve conforme.')}
+                          onClick={async () => { const r = await reviewSubmissionAdmin(sub.id, 'approved'); if (!r.success) alert(r.message); }}
                           className="px-2.5 py-1 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded"
                         >
                           Approuver
                         </button>
                         <button
-                          onClick={() => reviewSubmissionAdmin(sub.id, 'rejected', 'Justificatif non valide.')}
+                          onClick={async () => {
+                            const reason = prompt('Motif du refus (obligatoire) :');
+                            if (!reason || !reason.trim()) return;
+                            const r = await reviewSubmissionAdmin(sub.id, 'rejected', reason.trim());
+                            if (!r.success) alert(r.message);
+                          }}
                           className="px-2 py-1 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded"
                         >
                           Rejeter
