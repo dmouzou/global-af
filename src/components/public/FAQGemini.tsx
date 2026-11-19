@@ -32,7 +32,7 @@ const PREDEFINED_FAQS: FAQItem[] = [
     id: 'faq-4',
     category: 'Éthique',
     question: "Quelles sont les règles de rémunération des parrains ?",
-    answer: "Le programme d'affiliation repose uniquement sur des ventes réelles, sur 2 niveaux maximum (parrainage direct et indirect) ; les taux en vigueur sont affichés dans l'espace membre. Le simple recrutement de membres ne rapporte rien, ni l'activation seule. Aucun gain n'est garanti."
+    answer: "Le programme de parrainage direct récompense le parrain avec 10 % sur le Pass Membre activé par son filleul, puis 5 % sur la première commande réelle du filleul sur l'application. Aucun gain n'est garanti."
   },
   {
     id: 'faq-5',

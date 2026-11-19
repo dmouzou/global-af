@@ -37,19 +37,26 @@ import {
   Lock,
   Mail,
   Key,
-  Zap
+  Zap,
+  Menu,
+  X,
+  Globe,
+  LogOut
 } from 'lucide-react';
 import { Task, Course, VCFResource, TaskCategory } from '../../types';
 import { OperatorLogo } from '../common/OperatorLogo';
 import { BabiMascot } from '../common/BabiMascot';
+import { BrandLogo } from '../common/BrandLogo';
 
 interface MemberDashboardProps {
   onOpenAuth?: (mode: 'login' | 'signup') => void;
+  onNavigatePublic?: () => void;
 }
 
-export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) => {
+export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth, onNavigatePublic }) => {
   const { 
     currentUser, 
+    logout,
     updateProfile,
     selectedCountry, 
     wallet, 
@@ -89,6 +96,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
   const [activeTab, setActiveTab] = useState<
     'overview' | 'profile' | 'tasks' | 'wallet' | 'withdrawals' | 'team' | 'academy' | 'ai_tools' | 'vcf' | 'bonus' | 'notifications' | 'community' | 'support' | 'settings'
   >('overview');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Task selection & submission modal
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -351,11 +359,28 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
     setIsActivationModalOpen(true);
   };
 
+  const navItems = [
+    { id: 'overview' as const, label: 'Tableau de bord', icon: LayoutDashboard },
+    { id: 'profile' as const, label: 'Mon Profil Personnel', icon: UserIcon },
+    { id: 'tasks' as const, label: `Mes Micro-jobs (${tasks.length})`, icon: Briefcase },
+    { id: 'wallet' as const, label: 'Mon Wallet & Ledger', icon: WalletIcon },
+    { id: 'withdrawals' as const, label: 'Retraits Mobile Money', icon: Smartphone },
+    { id: 'team' as const, label: 'Mon Équipe & Affiliation', icon: Users },
+    { id: 'academy' as const, label: 'Digital Academy & Quiz', icon: BookOpen },
+    { id: 'ai_tools' as const, label: 'Outils IA & Rédaction', icon: Sparkles },
+    { id: 'vcf' as const, label: 'Ressources VCF Pro', icon: FolderDown },
+    { id: 'bonus' as const, label: 'Bonus Déterministes', icon: Gift },
+    { id: 'notifications' as const, label: 'Notifications', icon: Bell, badge: unreadCount },
+    { id: 'community' as const, label: 'Communauté', icon: MessageSquare },
+    { id: 'support' as const, label: 'Support & Aide', icon: LifeBuoy },
+    { id: 'settings' as const, label: 'Paramètres & Éthique', icon: Settings },
+  ];
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
       
-      {/* SIDEBAR NAVIGATION (Mobile-friendly & Desktop) */}
-      <aside className="w-full md:w-72 bg-white border-r border-slate-200 shrink-0 md:min-h-screen p-4 flex flex-col justify-between">
+      {/* DESKTOP SIDEBAR NAVIGATION */}
+      <aside className="hidden md:flex md:w-72 bg-white border-r border-slate-200 shrink-0 md:min-h-screen p-4 flex-col justify-between">
         <div className="space-y-5">
           
           {/* Member Card Mini Header with Côte d'Ivoire Colors */}
@@ -406,187 +431,52 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
             </div>
           </div>
 
-          {/* Navigation Menu (Section 7) */}
+          {/* Navigation Menu (Desktop) */}
           <nav className="space-y-1 text-xs">
-            <button
-              onClick={() => setActiveTab('overview')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg font-semibold transition-all ${
-                activeTab === 'overview' 
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-xs shadow-orange-500/20' 
-                  : 'text-slate-700 hover:bg-orange-50/70 hover:text-orange-700'
-              }`}
-            >
-              <LayoutDashboard className="w-4 h-4 shrink-0" />
-              <span>Tableau de bord</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('profile')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg font-semibold transition-all ${
-                activeTab === 'profile' 
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-xs shadow-orange-500/20' 
-                  : 'text-slate-700 hover:bg-orange-50/70 hover:text-orange-700'
-              }`}
-            >
-              <UserIcon className="w-4 h-4 shrink-0" />
-              <span>Mon Profil Personnel</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('tasks')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg font-semibold transition-all ${
-                activeTab === 'tasks' 
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-xs shadow-orange-500/20' 
-                  : 'text-slate-700 hover:bg-orange-50/70 hover:text-orange-700'
-              }`}
-            >
-              <Briefcase className="w-4 h-4 shrink-0" />
-              <span>Mes Micro-jobs ({tasks.length})</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('wallet')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg font-semibold transition-all ${
-                activeTab === 'wallet' 
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-xs shadow-orange-500/20' 
-                  : 'text-slate-700 hover:bg-orange-50/70 hover:text-orange-700'
-              }`}
-            >
-              <WalletIcon className="w-4 h-4 shrink-0" />
-              <span>Mon Wallet & Ledger</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('withdrawals')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg font-semibold transition-all ${
-                activeTab === 'withdrawals' 
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-xs shadow-orange-500/20' 
-                  : 'text-slate-700 hover:bg-orange-50/70 hover:text-orange-700'
-              }`}
-            >
-              <Smartphone className="w-4 h-4 shrink-0" />
-              <span>Retraits Mobile Money</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('team')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg font-semibold transition-all ${
-                activeTab === 'team' 
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-xs shadow-orange-500/20' 
-                  : 'text-slate-700 hover:bg-orange-50/70 hover:text-orange-700'
-              }`}
-            >
-              <Users className="w-4 h-4 shrink-0" />
-              <span>Mon Équipe & Affiliation</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('academy')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg font-semibold transition-all ${
-                activeTab === 'academy' 
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-xs shadow-orange-500/20' 
-                  : 'text-slate-700 hover:bg-orange-50/70 hover:text-orange-700'
-              }`}
-            >
-              <BookOpen className="w-4 h-4 shrink-0" />
-              <span>Digital Academy & Quiz</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('ai_tools')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg font-semibold transition-all ${
-                activeTab === 'ai_tools' 
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-xs shadow-orange-500/20' 
-                  : 'text-slate-700 hover:bg-orange-50/70 hover:text-orange-700'
-              }`}
-            >
-              <Sparkles className="w-4 h-4 shrink-0" />
-              <span>Outils IA & Rédaction</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('vcf')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg font-semibold transition-all ${
-                activeTab === 'vcf' 
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-xs shadow-orange-500/20' 
-                  : 'text-slate-700 hover:bg-orange-50/70 hover:text-orange-700'
-              }`}
-            >
-              <FolderDown className="w-4 h-4 shrink-0" />
-              <span>Ressources VCF Pro</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('bonus')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg font-semibold transition-all ${
-                activeTab === 'bonus' 
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-xs shadow-orange-500/20' 
-                  : 'text-slate-700 hover:bg-orange-50/70 hover:text-orange-700'
-              }`}
-            >
-              <Gift className="w-4 h-4 shrink-0" />
-              <span>Bonus Déterministes</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('notifications')}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-lg font-semibold transition-all ${
-                activeTab === 'notifications' 
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-xs shadow-orange-500/20' 
-                  : 'text-slate-700 hover:bg-orange-50/70 hover:text-orange-700'
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <Bell className="w-4 h-4 shrink-0" />
-                <span>Notifications</span>
-              </div>
-              {unreadCount > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-orange-600 text-white">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-
-            <button
-              onClick={() => setActiveTab('community')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg font-semibold transition-all ${
-                activeTab === 'community' 
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-xs shadow-orange-500/20' 
-                  : 'text-slate-700 hover:bg-orange-50/70 hover:text-orange-700'
-              }`}
-            >
-              <MessageSquare className="w-4 h-4 shrink-0" />
-              <span>Communauté</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('support')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg font-semibold transition-all ${
-                activeTab === 'support' 
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-xs shadow-orange-500/20' 
-                  : 'text-slate-700 hover:bg-orange-50/70 hover:text-orange-700'
-              }`}
-            >
-              <LifeBuoy className="w-4 h-4 shrink-0" />
-              <span>Support & Aide</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('settings')}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg font-semibold transition-all ${
-                activeTab === 'settings' 
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-xs shadow-orange-500/20' 
-                  : 'text-slate-700 hover:bg-orange-50/70 hover:text-orange-700'
-              }`}
-            >
-              <Settings className="w-4 h-4 shrink-0" />
-              <span>Paramètres & Éthique</span>
-            </button>
+            {navItems.map(item => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg font-semibold transition-all ${
+                    isActive 
+                      ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-xs shadow-orange-500/20' 
+                      : 'text-slate-700 hover:bg-orange-50/70 hover:text-orange-700'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Icon className="w-4 h-4 shrink-0" />
+                    <span>{item.label}</span>
+                  </div>
+                  {item.badge !== undefined && item.badge > 0 && (
+                    <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-orange-600 text-white">
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </nav>
         </div>
 
-        {/* Côte d'Ivoire Tricolor Footer Badge */}
+        {/* Desktop Sidebar Footer */}
         <div className="pt-4 border-t border-slate-100 space-y-2">
+          {onNavigatePublic && (
+            <button
+              type="button"
+              onClick={onNavigatePublic}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200/80 transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <Globe className="w-4 h-4 text-emerald-600" />
+                <span>Voir le site public</span>
+              </span>
+              <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
+            </button>
+          )}
+
           <div className="flex items-center gap-2 text-xs">
             <div className="flex items-center h-2.5 w-4 rounded-xs overflow-hidden border border-slate-200 shadow-2xs">
               <span className="w-1/3 h-full bg-[#FF7700]"></span>
@@ -600,6 +490,196 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
           </div>
         </div>
       </aside>
+
+      {/* MOBILE TOP BAR & QUICK TABS */}
+      <div className="md:hidden w-full sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
+        <div className="px-3.5 py-2.5 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0">
+            {onNavigatePublic ? (
+              <button onClick={onNavigatePublic} className="shrink-0 text-left" title="Accueil public">
+                <BrandLogo size="sm" />
+              </button>
+            ) : (
+              <BrandLogo size="sm" />
+            )}
+            <div className="h-4 w-px bg-slate-200 shrink-0" />
+            <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-orange-500 to-amber-400 text-white font-bold text-xs flex items-center justify-center shrink-0">
+              {currentUser.firstName.slice(0, 1)}
+            </div>
+            <div className="min-w-0">
+              <div className="font-bold text-slate-900 text-xs leading-tight truncate">
+                {currentUser.firstName} {currentUser.lastName}
+              </div>
+              <div className="text-[11px] text-emerald-700 font-extrabold font-mono">
+                {wallet.availableBalance.toLocaleString()} {wallet.currency}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            {onNavigatePublic && (
+              <button
+                onClick={onNavigatePublic}
+                className="px-2.5 py-1 text-[11px] font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors flex items-center gap-1"
+                title="Consulter le site public"
+              >
+                <Globe className="w-3 h-3 text-emerald-600" />
+                <span className="hidden xs:inline">Site public</span>
+              </button>
+            )}
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="p-1.5 text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg relative"
+              aria-label="Ouvrir le menu de navigation"
+            >
+              <Menu className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center ring-2 ring-white">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Quick Horizontal Tab Pills */}
+        <div className="overflow-x-auto no-scrollbar py-1.5 px-3 border-t border-slate-100 flex items-center gap-1.5 bg-slate-50/70">
+          {[
+            { id: 'overview' as const, label: 'Accueil' },
+            { id: 'tasks' as const, label: `Missions (${tasks.length})` },
+            { id: 'wallet' as const, label: 'Wallet' },
+            { id: 'withdrawals' as const, label: 'Retraits' },
+            { id: 'team' as const, label: 'Équipe' },
+            { id: 'academy' as const, label: 'Académie' },
+            { id: 'ai_tools' as const, label: 'Outils IA' },
+          ].map(tab => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`shrink-0 px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                  isActive
+                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-2xs'
+                    : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            className="shrink-0 px-2.5 py-1 rounded-full bg-slate-200/80 text-slate-700 text-xs font-bold hover:bg-slate-300"
+          >
+            ⋯ Plus
+          </button>
+        </div>
+      </div>
+
+      {/* MOBILE DRAWER MODAL */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 md:hidden bg-slate-900/60 backdrop-blur-sm flex justify-end animate-fadeIn">
+          <div className="w-[85vw] max-w-xs bg-white h-full p-4 overflow-y-auto flex flex-col justify-between shadow-2xl">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <span className="font-display font-extrabold text-sm text-slate-900">Espace Personnel</span>
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-1 text-slate-400 hover:text-slate-700 rounded-lg"
+                  aria-label="Fermer le menu"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Member Card Mini Header */}
+              <div className="p-3 rounded-xl border border-orange-200 bg-gradient-to-br from-orange-50/70 via-white to-emerald-50/40 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-xs text-slate-900 truncate">
+                    {currentUser.firstName} {currentUser.lastName}
+                  </span>
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                    currentUser.subscriptionPlan === 'premium' 
+                      ? 'bg-amber-100 text-amber-900' 
+                      : 'bg-emerald-100 text-emerald-900'
+                  }`}>
+                    {currentUser.subscriptionPlan === 'premium' ? 'VIP' : 'Membre'}
+                  </span>
+                </div>
+                <div className="text-[10px] text-slate-500 font-notable">
+                  {currentUser.memberNumber || '—'}
+                </div>
+                <div className="flex justify-between items-center text-xs pt-1 border-t border-slate-100">
+                  <span className="text-[10px] text-slate-500">Solde :</span>
+                  <strong className="text-orange-600 font-notable">
+                    {wallet.availableBalance.toLocaleString()} {wallet.currency}
+                  </strong>
+                </div>
+              </div>
+
+              {/* All 14 Navigation Buttons */}
+              <nav className="space-y-1 text-xs">
+                {navItems.map(item => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setActiveTab(item.id);
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-lg font-semibold transition-all ${
+                        isActive 
+                          ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-xs' 
+                          : 'text-slate-700 hover:bg-orange-50/70 hover:text-orange-700'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Icon className="w-4 h-4 shrink-0" />
+                        <span>{item.label}</span>
+                      </div>
+                      {item.badge !== undefined && item.badge > 0 && (
+                        <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-orange-600 text-white">
+                          {item.badge}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+
+            <div className="pt-4 border-t border-slate-100 space-y-2">
+              {onNavigatePublic && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    onNavigatePublic();
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 transition-colors"
+                >
+                  <Globe className="w-4 h-4 text-emerald-600" />
+                  <span>Voir le site public</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={async () => {
+                  setMobileMenuOpen(false);
+                  await logout();
+                }}
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-xs font-bold text-rose-600 transition-colors"
+              >
+                <LogOut className="w-4 h-4 text-rose-500" />
+                <span>Se déconnecter</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MAIN VIEWPORT */}
       <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-6xl">
@@ -1593,25 +1673,25 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                 <BabiMascot variant="waving" size="sm" />
                 <div>
                   <h1 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">
-                    Mon Réseau d'Affiliation Éthique (1 à 2 Niveaux)
+                    Mon Parrainage Direct (1 Niveau)
                   </h1>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Commissions sur ventes réelles uniquement, jamais sur le simple recrutement.
+                    10 % sur le Pass Membre activé + 5 % sur la 1ère commande réelle de chaque filleul.
                   </p>
                 </div>
               </div>
 
             </div>
 
-            {/* Recurring Commission Rule Banner (Demande 3) */}
+            {/* Direct Sponsorship Rule Banner */}
             <div className="p-4 bg-gradient-to-r from-emerald-500/10 via-white to-orange-500/10 rounded-2xl border border-emerald-200 flex items-start gap-3.5 shadow-2xs text-xs">
               <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
               <div className="space-y-1">
                 <strong className="text-slate-900 font-bold block">
-                  Règle de Continuité & Récurrence du Parrainage :
+                  Règles du Parrainage Direct :
                 </strong>
                 <p className="text-slate-600 text-[11px] leading-relaxed">
-                  Chaque achat éligible d'un filleul, y compris le renouvellement de son abonnement, ouvre une commission. Rien n'est automatique : une commission n'existe que si le filleul paie réellement. Le parrainage prend fin uniquement en cas de désactivation ou suppression de compte par l'une des parties.
+                  Vous touchez <strong>10 % sur le Pass Membre</strong> activé par vos filleuls directs, puis <strong>5 % sur leur première commande réelle</strong> sur l'application (abonnement VIP, formation, consultation). Les gains sont crédités sur votre portefeuille pour retrait Mobile Money.
                 </p>
               </div>
             </div>
@@ -1664,22 +1744,22 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-1">
-                <span className="text-xs text-slate-500 font-semibold">Niveau 1 (Direct)</span>
+                <span className="text-xs text-slate-500 font-semibold">Filleuls Directs (Niveau 1)</span>
                 <div className="text-2xl font-extrabold text-slate-900 font-mono">
                   {affiliation.stats ? `${affiliation.stats.level1.count} filleul${affiliation.stats.level1.count > 1 ? 's' : ''}` : affiliation.loading ? '…' : '—'}
                 </div>
                 <div className="text-[11px] text-slate-500">
-                  {affiliation.stats ? `${affiliation.stats.level1.activeCount} actif${affiliation.stats.level1.activeCount > 1 ? 's' : ''} · taux ${(affiliation.stats.rates.level1Bps / 100).toLocaleString('fr-FR')} % sur les ventes éligibles` : ' '}
+                  {affiliation.stats ? `${affiliation.stats.level1.activeCount} actif${affiliation.stats.level1.activeCount > 1 ? 's' : ''} · 10 % sur le Pass Membre` : ' '}
                 </div>
               </div>
 
               <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-1">
-                <span className="text-xs text-slate-500 font-semibold">Niveau 2 (Indirect)</span>
-                <div className="text-2xl font-extrabold text-slate-900 font-mono">
-                  {affiliation.stats ? `${affiliation.stats.level2.count} filleul${affiliation.stats.level2.count > 1 ? 's' : ''}` : affiliation.loading ? '…' : '—'}
+                <span className="text-xs text-slate-500 font-semibold">Premières Commandes Réelles</span>
+                <div className="text-2xl font-extrabold text-emerald-700 font-mono">
+                  5 % de commission
                 </div>
                 <div className="text-[11px] text-slate-500">
-                  {affiliation.stats ? `${affiliation.stats.level2.activeCount} actif${affiliation.stats.level2.activeCount > 1 ? 's' : ''} · taux ${(affiliation.stats.rates.level2Bps / 100).toLocaleString('fr-FR')} % sur les ventes éligibles` : ' '}
+                  Sur le 1er achat de chaque filleul (abonnement VIP, formation, etc.)
                 </div>
               </div>
             </div>
@@ -1883,7 +1963,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                     Assistants & Générateurs IA Réservés aux Membres
                   </h2>
                   <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-lg mx-auto">
-                    Générez des accroches percutantes pour WhatsApp & Facebook, des plans marketing pour Abidjan et des résumés de textes professionnels. Activez votre <strong>Pass Membre Standard (3 000 FCFA)</strong> ou débloquez l'usage illimité sans quota via <strong>VIP Premium (9 900 FCFA/mois)</strong>.
+                    Générez des accroches percutantes pour WhatsApp & Facebook, des plans marketing pour Abidjan et des résumés de textes professionnels. Activez votre <strong>Pass Membre Standard (3 essais/jour par outil)</strong> ou passez au <strong>VIP Premium (30 essais/jour par outil)</strong>.
                   </p>
                 </div>
                 <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -1904,7 +1984,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
                     }}
                     className="w-full sm:w-auto px-6 py-3 text-xs font-bold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 border border-emerald-300 rounded-xl transition-all"
                   >
-                    <span>VIP Premium (Outils IA Illimités)</span>
+                    <span>VIP Premium (30 essais/jour par outil)</span>
                   </button>
                 </div>
               </div>
@@ -2024,7 +2104,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth }) 
 
                   {aiRemaining !== null && !aiError && (
                     <p className="text-[11px] text-slate-500">
-                      Il vous reste {aiRemaining} génération{aiRemaining > 1 ? 's' : ''} aujourd'hui. Relisez toujours le texte : l'IA peut se tromper, et n'y ajoutez que des informations exactes.
+                      Il vous reste {aiRemaining} essai{aiRemaining > 1 ? 's' : ''} aujourd'hui pour cet outil. Relisez toujours le texte : l'IA peut se tromper, et n'y ajoutez que des informations exactes.
                     </p>
                   )}
                   {aiError && (

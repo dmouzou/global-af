@@ -73,19 +73,19 @@ export const runAiTool = onCall(
       }
       const limit = dailyAiQuota(access.plan, platform.aiDailyQuota);
 
-      // Réservation du quota AVANT l'appel (deux requêtes simultanées ne
+      // Réservation du quota par outil AVANT l'appel (deux requêtes simultanées ne
       // peuvent pas dépasser le plafond) ; rendue si l'appel échoue.
-      const usageRef = db.collection("aiUsage").doc(aiUsageId(uid, now));
+      const usageRef = db.collection("aiUsage").doc(aiUsageId(uid, tool, now));
       const used = await db.runTransaction(async (tx) => {
         const snap = await tx.get(usageRef);
         const count = (snap.data()?.count as number | undefined) ?? 0;
         if (count >= limit) {
           throw new DomainError("quota_exceeded",
-            `Quota quotidien atteint (${limit} génération(s) par jour pour ` +
+            `Quota quotidien atteint (${limit} essai(s) par jour pour cet outil avec ` +
             "votre offre). Revenez demain.");
         }
         tx.set(usageRef, {
-          userId: uid, day: now.toISOString().slice(0, 10),
+          userId: uid, tool, day: now.toISOString().slice(0, 10),
           count: count + 1, updatedAt: FieldValue.serverTimestamp(),
         });
         return count + 1;

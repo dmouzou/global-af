@@ -255,7 +255,7 @@ export const EXAM_QUESTIONS_CRS_001: QuizQuestion[] = [
   },
   {
     id: 'c1-q37',
-    question: 'Que permet l\'outil d\'intelligence artificielle Gemini intégré sur la plateforme GLOBAL-AF ?',
+    question: 'Que permet l\'outil d\'intelligence artificielle intégré sur la plateforme GLOBAL-AF ?',
     options: ['Générer automatiquement des accroches publicitaires WhatsApp et Facebook adaptées aux codes culturels ivoiriens en quelques secondes', 'Voler les mots de passe des utilisateurs', 'Prédire les numéros de la loterie', 'Remplacer l\'humain pour tout'],
     correctAnswerIndex: 0,
     explanation: 'L\'assistant IA aide les créateurs et commerçants à rédiger des textes percutants adaptés au marché ouest-africain.'

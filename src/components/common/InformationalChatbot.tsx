@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
-  Bot, Send, Sparkles, RotateCcw, Copy, Check, ThumbsUp, ThumbsDown, 
+  Send, Sparkles, RotateCcw, Copy, Check, ThumbsUp, ThumbsDown, 
   HelpCircle, ShieldCheck, ArrowRight, MessageSquare, X, Maximize2, Minimize2 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { BabiVector } from '../brand/BabiVector';
 
 export interface ChatMessage {
   id: string;
@@ -38,20 +39,20 @@ Aucun gain n'est garanti : le solde dépend uniquement des récompenses et commi
     ]
   },
   {
-    keywords: ['parrain', 'parrainage', 'affiliation', 'commission', 'filleul', 'niveaux', 'niveau 1', 'niveau 2'],
+    keywords: ['parrain', 'parrainage', 'affiliation', 'commission', 'filleul', 'bonus', 'inviter'],
     title: 'Parrainage',
-    answer: `Le parrainage de GLOBAL-AF repose sur des **ventes réelles**, jamais sur le simple recrutement :
+    answer: `Le programme de parrainage de GLOBAL-AF est simple, direct et transparent (1 niveau) :
 
-• **Deux niveaux au maximum** : vos filleuls directs (niveau 1) et les filleuls de vos filleuls (niveau 2). Il n'y a pas de niveau 3.
-• **Une commission n'existe que si un filleul achète réellement** un produit ou un service éligible. L'inscription, ou l'activation d'un compte seule, ne génère aucune commission.
-• **Taux :** les taux en vigueur sont affichés dans l'onglet « Équipe » de votre espace.
-• **Délai :** une commission est créditée après un délai de sécurité de 7 jours. Elle est calculée à chaque achat éligible, y compris à chaque renouvellement d'abonnement.
-• **Vos commissions** (en attente, créditées, annulées) sont visibles dans l'onglet « Équipe ».
+• **10 % sur le Pass Membre :** dès que votre filleul direct active son compte avec le Pass Membre, vous recevez 10 % du prix du Pass sur votre solde.
+• **5 % sur sa 1ère commande :** sur la première vente réelle de votre filleul sur l'application (abonnement VIP, formation payante, consultation ou prestation).
+• **1 seul niveau :** les commissions sont calculées uniquement sur vos filleuls directs.
+• **Suivi :** votre lien d'affiliation et l'historique de vos commissions sont disponibles en temps réel dans votre espace personnel.
+• **Retraits :** vos gains validés sont retirables directement vers votre compte Wave, Orange Money, MTN MoMo ou Moov Money dès le seuil atteint.
 
-Test simple : si plus personne ne s'inscrivait pendant un an, vous ne gagneriez que grâce aux achats réels de vos filleuls. Aucun gain n'est garanti.`,
+Aucun gain n'est garanti.`,
     suggestions: [
       "Comment retirer mes commissions ?",
-      "Quel est le délai de rétractation ?"
+      "Quel est le prix du Pass Membre ?"
     ],
     links: [
       { label: "Voir la page Affiliation", view: "affiliation" },
@@ -178,14 +179,14 @@ export const InformationalChatbot: React.FC<InformationalChatbotProps> = ({
     {
       id: 'welcome',
       role: 'bot',
-      text: "Bonjour ! Je suis l'**assistant automatique de GLOBAL-AF**.\n\nJe peux vous informer sur les **retraits**, le **parrainage**, les **moyens de paiement**, le **délai de rétractation** et les **offres**. Je ne remplace ni un conseil juridique, ni un conseil financier, et aucun gain n'est garanti.",
+      text: "Akwaba ! Moi c'est **Babi**, votre assistant officiel sur GLOBAL-AF 🐘.\n\nJe suis là pour vous orienter sur le fonctionnement de la plateforme, les **micro-jobs**, les **retraits Mobile Money**, les **outils IA**, l'**Académie** ou le **parrainage**.\n\nPosez-moi votre question ou cliquez sur une suggestion ci-dessous !",
       time: 'À l\'instant',
       suggestions: [
         "Comment retirer mes gains Mobile Money ?",
-        "Quelles sont les règles de rémunération des parrains ?",
-        "Où en sont les micro-jobs ?",
-        "Quel est le délai légal de rétractation ?",
-        "Quels sont les packs et tarifs ?"
+        "Comment fonctionne le parrainage ?",
+        "Combien coûtent le Pass Membre et le VIP ?",
+        "Comment fonctionnent les outils IA ?",
+        "Quel est le délai de rétractation du Pass ?"
       ]
     }
   ]);
@@ -214,12 +215,12 @@ export const InformationalChatbot: React.FC<InformationalChatbotProps> = ({
       {
         id: `welcome-${Date.now()}`,
         role: 'bot',
-        text: "La discussion a été réinitialisée. N'hésitez pas à poser une nouvelle question sur GLOBAL-AF !",
+        text: "La discussion a été réinitialisée ! Je suis **Babi**, posez-moi votre question ou choisissez une suggestion ci-dessous 🐘.",
         time: 'À l\'instant',
         suggestions: [
           "Comment retirer mes gains Mobile Money ?",
-          "Règles de rémunération des parrains",
-          "Où en sont les micro-jobs ?",
+          "Comment fonctionne le parrainage ?",
+          "Combien coûtent le Pass Membre et le VIP ?",
           "Rétractation du Pass d'entrée"
         ]
       }
@@ -328,23 +329,23 @@ export const InformationalChatbot: React.FC<InformationalChatbotProps> = ({
       <div className="px-5 py-4 bg-gradient-to-r from-slate-950 via-slate-900 to-orange-950/80 border-b border-slate-800 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-orange-500 to-amber-400 flex items-center justify-center text-white shadow-md shadow-orange-500/20">
-              <Bot className="w-5 h-5" />
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-orange-500/20 to-amber-400/20 border border-orange-500/30 flex items-center justify-center shadow-md shadow-orange-500/10">
+              <BabiVector mood="wave" size={32} />
             </div>
             <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-slate-900 animate-pulse" />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h3 className="font-bold text-sm sm:text-base text-white tracking-tight">
-                Assistant GLOBAL-AF
+                Babi
               </h3>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold hidden sm:inline-flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                Réponses automatiques
+                Assistant officiel
               </span>
             </div>
             <p className="text-[11px] text-slate-300">
-              Assistant automatique · informations générales, sans garantie de gain
+              Mascotte & Assistant GLOBAL-AF · Informations en direct
             </p>
           </div>
         </div>
@@ -377,8 +378,8 @@ export const InformationalChatbot: React.FC<InformationalChatbotProps> = ({
             className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             {msg.role === 'bot' && (
-              <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-500 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
-                <Bot className="w-4 h-4" />
+              <div className="w-7 h-7 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                <BabiVector mood="happy" size={22} />
               </div>
             )}
 
@@ -490,12 +491,12 @@ export const InformationalChatbot: React.FC<InformationalChatbotProps> = ({
         {/* Loading typing indicator */}
         {isLoading && (
           <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-xl bg-orange-500 text-white flex items-center justify-center shrink-0">
-              <Bot className="w-4 h-4 animate-bounce" />
+            <div className="w-7 h-7 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shrink-0">
+              <BabiVector mood="think" size={22} />
             </div>
             <div className="p-3.5 bg-slate-800/80 border border-slate-700 rounded-2xl rounded-tl-xs flex items-center gap-1.5 text-slate-400 text-xs">
               <span className="w-2 h-2 rounded-full bg-orange-400 animate-ping" />
-              <span className="text-[11px] text-slate-300">Le Chatbot analyse votre demande...</span>
+              <span className="text-[11px] text-slate-300">Babi prépare votre réponse...</span>
             </div>
           </div>
         )}
@@ -571,17 +572,17 @@ export const FloatingChatbotWidget: React.FC<{
       {/* Floating Toggle Button */}
       <div className="fixed bottom-4 right-4 z-50 sm:bottom-6 sm:right-6">
         <motion.button
-          aria-label="Ouvrir l'assistant d'information"
+          aria-label="Discuter avec Babi"
           onClick={() => setIsOpen(!isOpen)}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="flex items-center gap-2.5 px-4 py-3 bg-ink hover:bg-ink-soft text-white rounded-full shadow-2xl border-2 border-white/20 font-bold text-xs sm:text-sm"
+          className="flex items-center gap-2.5 px-4 py-2.5 bg-ink hover:bg-ink-soft text-white rounded-full shadow-2xl border-2 border-white/20 font-bold text-xs sm:text-sm"
         >
-          <div className="relative">
-            <Bot className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-orange-500 animate-pulse" />
+          <div className="relative shrink-0">
+            <BabiVector mood="wave" size={26} />
+            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-ink animate-pulse" />
           </div>
-          <span className="hidden sm:inline">Chatbot Info</span>
+          <span className="hidden sm:inline">Discuter avec Babi</span>
         </motion.button>
       </div>
 

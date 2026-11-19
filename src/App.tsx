@@ -51,6 +51,16 @@ function AppContent() {
     role: 'admin' | 'advertiser';
   } | null>(null);
 
+  // Espace personnel : au chargement ou redémarrage, un utilisateur connecté atterrit directement sur son dashboard
+  const [hasInitializedAuthView, setHasInitializedAuthView] = useState(false);
+
+  useEffect(() => {
+    if (currentUser && !hasInitializedAuthView) {
+      setCurrentView('dashboard');
+      setHasInitializedAuthView(true);
+    }
+  }, [currentUser, hasInitializedAuthView]);
+
   useEffect(() => {
     if (isAdminUser && currentUser) {
       setAdvertiserAuth({
@@ -281,7 +291,10 @@ function AppContent() {
 
         {currentView === 'dashboard' && (
           <ErrorBoundary>
-            <MemberDashboard onOpenAuth={handleOpenAuth} />
+            <MemberDashboard 
+              onOpenAuth={handleOpenAuth} 
+              onNavigatePublic={() => navigateToView('landing')}
+            />
           </ErrorBoundary>
         )}
 
@@ -302,20 +315,22 @@ function AppContent() {
         )}
       </main>
 
-      {/* Footer with multi-page and section routing */}
-      <Footer 
-        onNavigateSection={(sec) => {
-          if (['missions', 'academie', 'affiliation', 'outils', 'transparence', 'dashboard', 'cgu', 'confidentialite', 'cookies', 'mentions'].includes(sec)) {
-            navigateToView(sec as AppView);
-          } else {
-            setCurrentView('landing');
-            setTimeout(() => {
-              const el = document.getElementById(sec);
-              if (el) el.scrollIntoView({ behavior: 'smooth' });
-            }, 100);
-          }
-        }} 
-      />
+      {/* Footer : réservé au site public, masqué dans l'espace personnel applicatif */}
+      {currentView !== 'dashboard' && (
+        <Footer 
+          onNavigateSection={(sec) => {
+            if (['missions', 'academie', 'affiliation', 'outils', 'transparence', 'dashboard', 'cgu', 'confidentialite', 'cookies', 'mentions'].includes(sec)) {
+              navigateToView(sec as AppView);
+            } else {
+              setCurrentView('landing');
+              setTimeout(() => {
+                const el = document.getElementById(sec);
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }, 100);
+            }
+          }} 
+        />
+      )}
 
       {/* Auth & Onboarding Modal */}
       <AuthModal

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { ArrowRight, LogOut, Menu, X } from 'lucide-react';
+import { ArrowRight, Globe, LogOut, Menu, X } from 'lucide-react';
 import { AppView } from '../../types';
 import { BrandLogo } from '../common/BrandLogo';
 import { BabiVector } from '../brand/BabiVector';
@@ -27,6 +27,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, setCurrentView, onO
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
+  const isDashboard = currentView === 'dashboard';
   const unread = notifications.filter(n => !n.read).length;
 
   useEffect(() => {
@@ -53,83 +54,137 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, setCurrentView, onO
   const isActive = (l: typeof LINKS[number]) => currentView === l.view || !!l.aliases?.includes(currentView);
 
   return (
-    <header className="sticky top-0 z-40">
+    <header className={`sticky top-0 z-40 ${isDashboard ? 'hidden md:block' : ''}`}>
       <ScarfRibbon thin />
       <div className={`bg-white/90 backdrop-blur-xl transition-shadow ${scrolled ? 'shadow-[0_8px_30px_-18px_rgba(15,42,30,0.35)]' : ''} border-b border-ink/8`}>
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-4 sm:px-6 lg:px-8">
-          <button onClick={() => go('landing')} className="shrink-0 text-left" aria-label="GLOBAL-AF, accueil">
-            <BrandLogo size="md" />
-          </button>
-
-          <nav className="hidden items-center gap-1 lg:flex" aria-label="Navigation principale">
-            {LINKS.map(l => (
-              <button
-                key={l.view}
-                onClick={() => go(l.view)}
-                aria-current={isActive(l) ? 'page' : undefined}
-                className={`relative rounded-full px-3.5 py-2 text-[15px] font-semibold transition-colors ${
-                  isActive(l) ? 'bg-ink text-white' : 'text-ink/70 hover:bg-mist hover:text-ink'
-                }`}
-              >
-                {l.label}
-              </button>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-2">
-            {currentUser ? (
-              <>
-                <button
-                  onClick={() => go('dashboard')}
-                  className="relative inline-flex items-center gap-2 rounded-full bg-wax px-4 py-2 text-sm font-bold text-white shadow-[0_8px_20px_-8px_rgba(255,119,0,0.8)] transition hover:bg-wax-deep"
-                >
-                  Mon espace
-                  <span className="hidden text-white/85 sm:inline">· {currentUser.firstName}</span>
-                  {unread > 0 && (
-                    <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-ink px-1 text-[11px] font-bold text-white ring-2 ring-white">
-                      {unread > 9 ? '9+' : unread}
-                    </span>
-                  )}
-                </button>
-                <button
-                  onClick={() => setShowLogoutConfirm(true)}
-                  className="hidden rounded-full p-2.5 text-ink/50 transition hover:bg-rose-50 hover:text-rose-600 sm:block"
-                  aria-label="Déconnexion"
-                >
-                  <LogOut className="h-[18px] w-[18px]" />
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => onOpenAuth('login')}
-                  className="hidden rounded-full px-4 py-2 text-[15px] font-semibold text-ink/80 transition hover:bg-mist sm:block"
-                >
-                  Connexion
-                </button>
-                <button
-                  onClick={() => onOpenAuth('signup')}
-                  className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-wax px-4 py-2.5 text-sm font-bold text-white shadow-[0_8px_20px_-8px_rgba(255,119,0,0.8)] transition hover:bg-wax-deep"
-                >
-                  <span className="sm:hidden">S'inscrire</span>
-                  <span className="hidden sm:inline">Créer mon compte</span>
-                  <ArrowRight className="hidden h-4 w-4 sm:block" />
-                </button>
-              </>
-            )}
-            <button
-              onClick={() => setMenuOpen(o => !o)}
-              className="rounded-full p-2.5 text-ink transition hover:bg-mist lg:hidden"
-              aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
-              aria-expanded={menuOpen}
-            >
-              {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          
+          {/* Logo & badge d'état */}
+          <div className="flex items-center gap-3 shrink-0">
+            <button onClick={() => go('landing')} className="shrink-0 text-left" aria-label="GLOBAL-AF, accueil" title="Voir l'accueil du site">
+              <BrandLogo size="md" />
             </button>
+            {isDashboard && (
+              <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-800 border border-emerald-200">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                Espace Personnel
+              </span>
+            )}
           </div>
+
+          {/* Navigation marketing : affichée UNIQUEMENT sur le site public (masquée dans l'espace personnel) */}
+          {!isDashboard && (
+            <nav className="hidden items-center gap-1 lg:flex" aria-label="Navigation principale">
+              {LINKS.map(l => (
+                <button
+                  key={l.view}
+                  onClick={() => go(l.view)}
+                  aria-current={isActive(l) ? 'page' : undefined}
+                  className={`relative rounded-full px-3.5 py-2 text-[15px] font-semibold transition-colors ${
+                    isActive(l) ? 'bg-ink text-white' : 'text-ink/70 hover:bg-mist hover:text-ink'
+                  }`}
+                >
+                  {l.label}
+                </button>
+              ))}
+            </nav>
+          )}
+
+          {/* Barre d'action droite : adaptée selon le contexte */}
+          {isDashboard ? (
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => go('landing')}
+                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-bold text-slate-700 shadow-2xs hover:border-slate-300 hover:bg-slate-50 transition"
+                title="Consulter le site public"
+              >
+                <Globe className="h-3.5 w-3.5 text-emerald-600" />
+                <span>Voir le site public</span>
+              </button>
+
+              {currentUser && (
+                <div className="hidden sm:flex items-center gap-2 pl-3 border-l border-ink/10">
+                  <div className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-tr from-orange-500 to-amber-400 text-xs font-bold text-white shadow-2xs">
+                    {currentUser.firstName.slice(0, 1)}{currentUser.lastName.slice(0, 1)}
+                  </div>
+                  <div className="text-left">
+                    <div className="text-xs font-bold text-ink leading-tight truncate max-w-[120px]">
+                      {currentUser.firstName} {currentUser.lastName}
+                    </div>
+                    <div className="text-[10px] text-slate-500 font-notable">
+                      {currentUser.memberNumber || 'Membre CI'}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <button
+                onClick={() => setShowLogoutConfirm(true)}
+                className="rounded-full p-2 text-ink/50 transition hover:bg-rose-50 hover:text-rose-600"
+                aria-label="Déconnexion"
+                title="Se déconnecter"
+              >
+                <LogOut className="h-[18px] w-[18px]" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              {currentUser ? (
+                <>
+                  <button
+                    onClick={() => go('dashboard')}
+                    className="relative inline-flex items-center gap-2 rounded-full bg-wax px-4 py-2 text-sm font-bold text-white shadow-[0_8px_20px_-8px_rgba(255,119,0,0.8)] transition hover:bg-wax-deep"
+                  >
+                    Mon espace
+                    <span className="hidden text-white/85 sm:inline">· {currentUser.firstName}</span>
+                    {unread > 0 && (
+                      <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-ink px-1 text-[11px] font-bold text-white ring-2 ring-white">
+                        {unread > 9 ? '9+' : unread}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setShowLogoutConfirm(true)}
+                    className="hidden rounded-full p-2.5 text-ink/50 transition hover:bg-rose-50 hover:text-rose-600 sm:block"
+                    aria-label="Déconnexion"
+                  >
+                    <LogOut className="h-[18px] w-[18px]" />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => onOpenAuth('login')}
+                    className="hidden rounded-full px-4 py-2 text-[15px] font-semibold text-ink/80 transition hover:bg-mist sm:block"
+                  >
+                    Connexion
+                  </button>
+                  <button
+                    onClick={() => onOpenAuth('signup')}
+                    className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-wax px-4 py-2.5 text-sm font-bold text-white shadow-[0_8px_20px_-8px_rgba(255,119,0,0.8)] transition hover:bg-wax-deep"
+                  >
+                    <span className="sm:hidden">S'inscrire</span>
+                    <span className="hidden sm:inline">Créer mon compte</span>
+                    <ArrowRight className="hidden h-4 w-4 sm:block" />
+                  </button>
+                </>
+              )}
+              <button
+                onClick={() => setMenuOpen(o => !o)}
+                className="rounded-full p-2.5 text-ink transition hover:bg-mist lg:hidden"
+                aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+                aria-expanded={menuOpen}
+              >
+                {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      {menuOpen && (
+      {/* Menu mobile (uniquement actif sur le site public) */}
+      {menuOpen && !isDashboard && (
         <div className="fixed inset-x-0 bottom-0 top-[calc(4rem+4px)] z-30 overflow-y-auto bg-white lg:hidden">
           <div className="mx-auto flex min-h-full max-w-md flex-col px-5 pb-8 pt-4">
             <nav className="flex flex-col" aria-label="Navigation mobile">

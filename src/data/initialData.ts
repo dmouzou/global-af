@@ -443,7 +443,7 @@ Un client bien traité à Abidjan recommande immédiatement le service à sa fam
     id: 'crs-002',
     title: 'Maîtrise Professionnelle de l\'IA Générative Commerciale',
     category: 'Intelligence Artificielle',
-    description: 'Formation Premium avancée : devenez expert dans l\'utilisation des modèles d\'IA (Google Gemini, ChatGPT) pour automatiser la rédaction de propositions commerciales, le support client 24/7 et l\'analyse de marché en Afrique de l\'Ouest.',
+    description: 'Formation Premium avancée : devenez expert dans l\'utilisation des modèles d\'IA pour automatiser la rédaction de propositions commerciales, le support client 24/7 et l\'analyse de marché en Afrique de l\'Ouest.',
     level: 'Intermédiaire',
     durationHours: 24.0,
     isPremium: true,
@@ -456,7 +456,7 @@ Un client bien traité à Abidjan recommande immédiatement le service à sa fam
         title: 'Palier 1 : Ingénierie de Prompts & Structuration Avancée R-C-T-F-C',
         durationMinutes: 50,
         content: `### 1. Les fondations de l'ingénierie de prompt en contexte professionnel
-Pour obtenir des résultats d'élite avec un modèle d'intelligence artificielle comme Google Gemini, poser une simple question donne un résultat générique et fade. Les professionnels utilisent le framework R-C-T-F-C :
+Pour obtenir des résultats d'élite avec un modèle d'intelligence artificielle, poser une simple question donne un résultat générique et fade. Les professionnels utilisent le framework R-C-T-F-C :
 - **Rôle (R)** : Définir l'expertise exacte du modèle (ex: "Tu es un directeur marketing senior expert du marché d'Abidjan").
 - **Contexte (C)** : La situation réelle (ex: "Une PME de Treichville lance une gamme de cosmétiques naturels à 7 500 FCFA").
 - **Tâche (T)** : L'action précise demandée (ex: "Rédige 3 variantes d'annonces WhatsApp et un script d'accueil client").

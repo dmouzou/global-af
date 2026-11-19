@@ -17,8 +17,8 @@ import {
 import {AffiliationConfig, WithdrawalRules} from "../src/domain/types";
 
 const AFF: AffiliationConfig = {
-  level1Bps: 1000, level2Bps: 500, maxLevels: 2, maxTotalBps: 1500,
-  commissionableKinds: ["subscription", "course", "partner_campaign"],
+  level1Bps: 1000, level2Bps: 500, maxLevels: 1, maxTotalBps: 1000,
+  commissionableKinds: ["activation", "subscription", "course", "partner_campaign"],
 };
 const RULES: WithdrawalRules = {
   minAmount: 2000, maxAmount: null, feeBps: 150,
@@ -108,37 +108,39 @@ describe("retraits", () => {
 });
 
 describe("commissions", () => {
-  const sale = {buyerUid: "buyer", amount: 9900, kind: "subscription" as const};
-  it("10 % niveau 1 et 5 % niveau 2", () => {
-    const d = computeCommissions(sale,
-      {level1Uid: "a", level2Uid: "b"}, AFF);
+  it("10 % sur le Pass membre (activation)", () => {
+    const sale = {buyerUid: "buyer", amount: 3000, kind: "activation" as const};
+    const d = computeCommissions(sale, {level1Uid: "a", level2Uid: "b"}, AFF);
     expect(d).toEqual([
-      {level: 1, beneficiaryUid: "a", amount: 990, rateBps: 1000},
-      {level: 2, beneficiaryUid: "b", amount: 495, rateBps: 500},
+      {level: 1, beneficiaryUid: "a", amount: 300, rateBps: 1000},
     ]);
   });
-  it("aucune commission sur l'activation seule", () => {
-    expect(computeCommissions({...sale, kind: "activation"},
-      {level1Uid: "a", level2Uid: "b"}, AFF)).toEqual([]);
+  it("5 % sur la première vente réelle", () => {
+    const sale = {
+      buyerUid: "buyer", amount: 9900, kind: "subscription" as const, isFirstSale: true,
+    };
+    const d = computeCommissions(sale, {level1Uid: "a", level2Uid: "b"}, AFF);
+    expect(d).toEqual([
+      {level: 1, beneficiaryUid: "a", amount: 495, rateBps: 500},
+    ]);
   });
-  it("aucune commission sans parrain, ni niveau 3", () => {
-    expect(computeCommissions(sale,
-      {level1Uid: null, level2Uid: null}, AFF)).toEqual([]);
+  it("aucune commission sur les ventes suivantes (hors activation)", () => {
+    const sale = {
+      buyerUid: "buyer", amount: 9900, kind: "subscription" as const, isFirstSale: false,
+    };
+    expect(computeCommissions(sale, {level1Uid: "a", level2Uid: "b"}, AFF)).toEqual([]);
   });
-  it("exclut l'auto-parrainage et la double attribution", () => {
-    expect(computeCommissions(sale,
-      {level1Uid: "buyer", level2Uid: "b"}, AFF).map((d) => d.level))
-      .toEqual([2]);
-    expect(computeCommissions(sale,
-      {level1Uid: "a", level2Uid: "a"}, AFF).length).toBe(1);
+  it("aucune commission sans parrain", () => {
+    const sale = {buyerUid: "buyer", amount: 3000, kind: "activation" as const};
+    expect(computeCommissions(sale, {level1Uid: null, level2Uid: null}, AFF)).toEqual([]);
   });
-  it("ignore le niveau 2 quand un seul niveau est actif", () => {
-    expect(computeCommissions(sale, {level1Uid: "a", level2Uid: "b"},
-      {...AFF, maxLevels: 1}).length).toBe(1);
+  it("exclut l'auto-parrainage", () => {
+    const sale = {buyerUid: "buyer", amount: 3000, kind: "activation" as const};
+    expect(computeCommissions(sale, {level1Uid: "buyer", level2Uid: "b"}, AFF)).toEqual([]);
   });
-  it("refuse une configuration au-delà du plafond ou de 2 niveaux", () => {
+  it("refuse une configuration invalide", () => {
     expect(() => assertAffiliationConfig(AFF)).not.toThrow();
-    expect(() => assertAffiliationConfig({...AFF, maxTotalBps: 1000}))
+    expect(() => assertAffiliationConfig({...AFF, level1Bps: 1500, maxTotalBps: 1000}))
       .toThrow();
     expect(() => assertAffiliationConfig(
       {...AFF, maxLevels: 3 as never})).toThrow();

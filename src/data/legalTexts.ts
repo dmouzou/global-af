@@ -184,7 +184,7 @@ export const LEGAL_DOCS: Record<LegalDoc['id'], LegalDoc> = {
           '**Opérations financières** : soldes, historique des opérations, références de paiement et de retrait, moyen de paiement utilisé (opérateur Mobile Money ou carte). **Nous ne recevons ni ne conservons aucun numéro de carte.**',
           "**Adresse de facturation** : saisie uniquement pour un paiement par carte, transmise au prestataire de paiement.",
           '**Sécurité** : journaux techniques et d\'audit des actions sensibles, mesures anti-fraude (limitation des requêtes, détection des comptes multiples).',
-          "**Outils IA et assistant** : les textes que vous saisissez sont transmis à notre fournisseur d'IA (Google Gemini) pour produire la réponse ; nous ne les conservons pas, seul un compteur quotidien d'utilisation est enregistré. N'y saisissez aucune donnée personnelle ou financière.",
+          "**Outils IA et assistant** : les textes que vous saisissez sont transmis à notre prestataire d'IA pour produire la réponse ; nous ne les conservons pas, seul un compteur quotidien d'utilisation est enregistré. N'y saisissez aucune donnée personnelle ou financière.",
         ],
       },
       {
@@ -201,7 +201,7 @@ export const LEGAL_DOCS: Record<LegalDoc['id'], LegalDoc> = {
         list: [
           '**Hébergement et services techniques** : Google Cloud / Firebase (authentification, base de données, fonctions, hébergement).',
           '**Paiement** : CinetPay et les opérateurs ou banques concernés, pour traiter vos paiements.',
-          "**Assistant et outils de texte** : le fournisseur d'intelligence artificielle (Google Gemini), lorsque ces services sont actifs.",
+          "**Assistant et outils de texte** : le prestataire d'intelligence artificielle, lorsque ces services sont actifs.",
           '**Équipe habilitée** : personnels du support et de la finance, selon leur rôle, pour traiter vos demandes.',
           "**Autorités** : sur demande légale. **Nous ne vendons pas vos données.**",
         ],

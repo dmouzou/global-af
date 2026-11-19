@@ -115,25 +115,36 @@ export function buildAiRequest(tool: AiTool, input: string, tone: string):
 }
 
 /**
- * Clé du compteur quotidien (Côte d'Ivoire = UTC+0, sans changement d'heure).
+ * Clé du compteur quotidien par outil (Côte d'Ivoire = UTC+0).
  * @param {string} uid Membre.
- * @param {Date} now Instant courant.
+ * @param {string | Date} toolOrDate Outil IA ou date (pour rétrocompatibilité).
+ * @param {Date} [maybeDate] Instant courant si tool est passé en 2e argument.
  * @return {string} Identifiant du document de quota.
  */
-export function aiUsageId(uid: string, now: Date): string {
-  return `${uid}_${now.toISOString().slice(0, 10)}`;
+export function aiUsageId(uid: string, toolOrDate: string | Date, maybeDate?: Date): string {
+  if (typeof toolOrDate === "string") {
+    const d = maybeDate ?? new Date();
+    return `${uid}_${toolOrDate}_${d.toISOString().slice(0, 10)}`;
+  }
+  return `${uid}_${toolOrDate.toISOString().slice(0, 10)}`;
 }
 
 /**
- * Plafond quotidien d'appels IA selon l'offre effective (0 = pas d'accès).
+ * Plafond quotidien d'essais IA par outil selon l'offre :
+ * - Pass Standard (3 000 FCFA) : 3 essais / jour par outil.
+ * - VIP Premium / Business : 30 essais / jour par outil.
+ * - Sans pass : 0.
+ *
  * @param {string} plan Offre effective.
- * @param {Record<string, number>} quota Plafonds de la configuration.
- * @return {number} Nombre d'appels autorisés par jour.
+ * @param {Record<string, number>} [quota] Plafonds optionnels de la configuration.
+ * @return {number} Nombre d'essais autorisés par jour par outil.
  */
-export function dailyAiQuota(plan: string, quota: Record<string, number>):
-  number {
-  if (plan === "standard" || plan === "premium" || plan === "business") {
-    return Math.max(0, Math.trunc(quota[plan] ?? 0));
+export function dailyAiQuota(plan: string, quota?: Record<string, number>): number {
+  if (plan === "premium" || plan === "business") {
+    return quota?.[plan] ?? 30;
+  }
+  if (plan === "standard") {
+    return quota?.[plan] ?? 3;
   }
   return 0;
 }

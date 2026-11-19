@@ -3,7 +3,7 @@ import {percentOfBps} from "./money";
 import {AffiliationConfig, SaleKind} from "./types";
 
 export interface CommissionDraft {
-  level: 1 | 2;
+  level: 1;
   beneficiaryUid: string;
   amount: number;
   rateBps: number;
@@ -12,39 +12,47 @@ export interface CommissionDraft {
 export interface SponsorChain {
   /** Parrain direct de l'acheteur (niveau 1), sinon null. */
   level1Uid: string | null;
-  /** Parrain du parrain (niveau 2), sinon null. */
-  level2Uid: string | null;
+  /** Parrain du parrain (niveau 2) - conservé pour rétro-compatibilité. */
+  level2Uid?: string | null;
 }
 
 /**
- * Calcule les commissions d'une vente RÉELLE (section 9, condition 1).
- * - Aucune commission pour un type de vente non listé (dont "activation").
- * - Jamais pour l'acheteur lui-même (auto-parrainage).
- * - Jamais deux fois la même personne sur une vente (double attribution).
- * - Niveau 2 seulement si `maxLevels` vaut 2 ; niveau 3 inexistant.
- * - Plafond total par rapport au prix.
- * @param {object} sale Vente (acheteur, montant, type).
+ * Calcule les commissions d'affiliation sur ventes réelles :
+ * 1. Un seul niveau de parrainage (parrain direct uniquement).
+ * 2. 10 % sur le Pass membre (activation).
+ * 3. 5 % sur la PREMIÈRE vente réelle d'un filleul (abonnement, cours, etc.).
+ * 4. Jamais d'auto-parrainage.
+ *
+ * @param {object} sale Vente (acheteur, montant, type, premier achat ou non).
  * @param {SponsorChain} chain Chaîne de parrainage de l'acheteur.
  * @param {AffiliationConfig} config Règles d'affiliation.
  * @return {CommissionDraft[]} Commissions à créer (statut "pending").
  */
 export function computeCommissions(
-  sale: { buyerUid: string; amount: number; kind: SaleKind },
-  chain: SponsorChain, config: AffiliationConfig): CommissionDraft[] {
+  sale: { buyerUid: string; amount: number; kind: SaleKind; isFirstSale?: boolean },
+  chain: SponsorChain,
+  config: AffiliationConfig
+): CommissionDraft[] {
   if (!config.commissionableKinds.includes(sale.kind)) return [];
-  const drafts: CommissionDraft[] = [];
-  const seen = new Set<string>([sale.buyerUid]);
+  if (!chain.level1Uid || chain.level1Uid === sale.buyerUid) return [];
 
-  const push = (level: 1 | 2, uid: string | null, bps: number) => {
-    if (!uid || seen.has(uid)) return;
-    seen.add(uid);
-    const amount = percentOfBps(sale.amount, bps);
+  const drafts: CommissionDraft[] = [];
+
+  if (sale.kind === "activation") {
+    // 10 % sur le Pass Membre (indépendamment du prix du Pass)
+    const rateBps = config.level1Bps || 1000;
+    const amount = percentOfBps(sale.amount, rateBps);
     if (amount > 0) {
-      drafts.push({level, beneficiaryUid: uid, amount, rateBps: bps});
+      drafts.push({level: 1, beneficiaryUid: chain.level1Uid, amount, rateBps});
     }
-  };
-  push(1, chain.level1Uid, config.level1Bps);
-  if (config.maxLevels === 2) push(2, chain.level2Uid, config.level2Bps);
+  } else if (sale.isFirstSale) {
+    // 5 % sur la première vente de l'utilisateur parrainé
+    const rateBps = config.level2Bps || 500;
+    const amount = percentOfBps(sale.amount, rateBps);
+    if (amount > 0) {
+      drafts.push({level: 1, beneficiaryUid: chain.level1Uid, amount, rateBps});
+    }
+  }
 
   const total = drafts.reduce((sum, d) => sum + d.amount, 0);
   if (total > percentOfBps(sale.amount, config.maxTotalBps)) {
@@ -64,13 +72,12 @@ export function assertAffiliationConfig(c: AffiliationConfig): void {
   if (!ok(c.level1Bps) || !ok(c.level2Bps) || !ok(c.maxTotalBps)) {
     throw new DomainError("invalid_config", "Taux de commission invalide.");
   }
-  if (c.maxLevels !== 1 && c.maxLevels !== 2) {
+  if (c.maxLevels < 1 || c.maxLevels > 2) {
     throw new DomainError("invalid_config",
-      "Deux niveaux maximum au lancement (section 9).");
+      "Niveaux d'affiliation invalides.");
   }
-  const active = c.level1Bps + (c.maxLevels === 2 ? c.level2Bps : 0);
-  if (active > c.maxTotalBps) {
+  if (c.level1Bps > c.maxTotalBps) {
     throw new DomainError("invalid_config",
-      "La somme des taux dépasse le plafond.");
+      "Le taux de commission dépasse le plafond.");
   }
 }

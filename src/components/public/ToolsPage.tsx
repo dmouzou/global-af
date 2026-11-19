@@ -108,7 +108,7 @@ export const ToolsPage: React.FC<ToolsPageProps> = ({ onGoToDashboard, onOpenAut
           <div className="rounded-[2rem] bg-white p-7 ring-1 ring-ink/10 lg:col-span-5">
             <Eyebrow>Générateur d'annonces</Eyebrow>
             <p className="mt-3 text-[15px] leading-relaxed text-ink/65">
-              Avec un <strong>Pass actif</strong>, le texte est généré par Google Gemini. Sans Pass, vous obtenez une trame à compléter avec vos vrais éléments.
+              Avec un <strong>Pass actif</strong>, le texte est généré par notre <strong>Intelligence Artificielle</strong> (3 essais/jour par outil pour le Pass Standard, 30 essais/jour pour le VIP Premium). Sans Pass, vous obtenez une trame à compléter avec vos vrais éléments.
             </p>
             <div className="mt-5 space-y-4">
               <label className="block text-sm font-bold">Produit ou service

@@ -300,6 +300,7 @@ function makePaymentWebhook(providerId: PaymentProviderId,
         spentThisMonth?: number; spentMonth?: string;
         entryPass?: boolean; subscriptionPlan?: string | null;
         subscriptionExpiresAt?: unknown;
+        firstSaleCompleted?: boolean;
       };
       const grantsAccess = pmt.kind === "activation" ||
         pmt.kind === "subscription";
@@ -358,14 +359,15 @@ function makePaymentWebhook(providerId: PaymentProviderId,
         (retractable ? " Vous pouvez vous rétracter pendant " +
           `${platform.retractionDays} jours.` : ""));
 
-      // Commissions : seulement sur ventes réelles, comptes actifs.
+      // Commissions : 10 % sur le Pass membre (activation) et 5 % sur la 1ère vente réelle
       const isUserActive = user.status === "active" ||
         user.status === undefined;
       const sponsorIdentifier = user.referredByUid || user.referredBy;
       if (isUserActive && sponsorIdentifier) {
         const chain = await resolveSponsorChain(tx, user);
+        const isFirstSale = !user.firstSaleCompleted && pmt.kind !== "activation";
         const drafts = computeCommissions(
-          {buyerUid: pmt.userId, amount: pmt.amount, kind: pmt.kind},
+          {buyerUid: pmt.userId, amount: pmt.amount, kind: pmt.kind, isFirstSale},
           chain, platform.affiliation);
         for (const draft of drafts) {
           const commRef = db.collection("commissions").doc();
@@ -377,6 +379,9 @@ function makePaymentWebhook(providerId: PaymentProviderId,
             matureAt: Timestamp.fromDate(reserveUntil),
             createdAt: FieldValue.serverTimestamp(),
           });
+        }
+        if (pmt.kind !== "activation" && !user.firstSaleCompleted) {
+          tx.update(userRef, {firstSaleCompleted: true});
         }
       }
       return "processed";
