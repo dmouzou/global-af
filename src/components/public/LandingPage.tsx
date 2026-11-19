@@ -1,32 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { 
-  ShieldCheck, 
-  ArrowRight, 
-  Smartphone, 
-  Award, 
-  BookOpen, 
-  Sparkles, 
-  Users, 
-  Check, 
-  HelpCircle, 
-  ExternalLink, 
-  DollarSign, 
-  Briefcase, 
-  AlertTriangle, 
-  RotateCcw,
-  ChevronLeft,
-  ChevronRight,
-  Lock,
-  Zap,
-  TrendingUp,
-  Building,
-  CreditCard
-} from 'lucide-react';
+import { ArrowRight, BookOpen, Check, ChevronDown, Dices, Lock, Scale, ShieldCheck, Sparkles, UserCheck } from 'lucide-react';
 import { Task } from '../../types';
 import { OperatorLogo } from '../common/OperatorLogo';
-import { BabiMascot } from '../common/BabiMascot';
-import { FAQGemini } from './FAQGemini';
+import { BabiHero } from '../brand/BabiHero';
+import { BabiVector } from '../brand/BabiVector';
+import {
+  IlluAcademy, IlluAffiliation, IlluMissions, IlluPartners, IlluShield, IlluTools, IlluWallet,
+  ScarfRibbon, WaxPattern,
+} from '../brand/Illustrations';
 
 interface LandingPageProps {
   onGoToDashboard: () => void;
@@ -35,1064 +17,433 @@ interface LandingPageProps {
   onNavigatePage?: (page: string) => void;
 }
 
+const CATEGORY_LABEL: Record<string, string> = {
+  survey: 'Sondage',
+  app_test: "Test d'application",
+  social_visit: 'Découverte vidéo',
+  content_review: 'Revue de contenu',
+  partner_campaign: 'Campagne partenaire',
+  quiz_challenge: 'Quiz',
+};
+
+const FAQS = [
+  {
+    q: "Comment fonctionne la rémunération sur GLOBAL-AF ?",
+    a: "Les récompenses de missions et les commissions de parrainage sont fixées et publiées à l'avance ; aucun hasard n'intervient jamais. Les commissions ne portent que sur des ventes réelles (jamais sur l'inscription ni sur l'activation seule). L'ouverture des missions rémunérées est en cours : consultez votre espace pour l'état actuel. Aucun gain n'est garanti.",
+  },
+  {
+    q: "Le compte gratuit permet-il vraiment de gagner de l'argent et de retirer ?",
+    a: "L'inscription est gratuite. Pour participer aux missions rémunérées, suivre les formations et demander un retrait, un Pass actif est nécessaire : le Pass d'entrée (rétractation de 7 jours) ou un abonnement VIP Premium. Le prix et le contenu sont affichés avant tout paiement. Aucun gain n'est garanti : ne payez jamais dans l'espoir d'un revenu, ni en vous endettant.",
+  },
+  {
+    q: "Quels opérateurs Mobile Money sont acceptés en Côte d'Ivoire ?",
+    a: "Les paiements d'offres se font sur une page sécurisée (CinetPay) par Mobile Money (Wave, Orange Money, MTN MoMo, Moov Money) ou par carte bancaire Visa. Les retraits de gains se font vers un compte Mobile Money ; le montant minimum et les frais sont affichés avant validation.",
+  },
+  {
+    q: "Comment s'applique le droit de rétractation de 7 jours ?",
+    a: "Le Pass d'entrée (Standard) se rétracte pendant 7 jours à compter du paiement, depuis « Paramètres » : le remboursement, sous déduction des frais de transaction (3 %), est traité vers le moyen de paiement utilisé. L'abonnement VIP Premium n'est pas remboursable car l'accès aux fichiers et contacts VCF est immédiat et définitif.",
+  },
+  {
+    q: "Qu'est-ce que la charte éthique de GLOBAL-AF ?",
+    a: "Cinq engagements : commissions uniquement sur des ventes réelles et sur 2 niveaux maximum ; une offre payante correspond à un contenu décrit avant paiement ; aucune promesse de gain facile, avec des indicateurs réels publiés dès qu'ils existent ; interdiction des jeux de hasard et des tombolas ; protection des membres (18 ans minimum, plafond de dépense mensuel réglable).",
+  },
+];
+
+const Eyebrow: React.FC<{ children: React.ReactNode; dark?: boolean }> = ({ children, dark }) => (
+  <span className={`inline-flex items-center gap-2 text-[13px] font-bold uppercase tracking-[0.14em] ${dark ? 'text-sun' : 'text-leaf'}`}>
+    <span className="h-[3px] w-6 rounded-full bg-current" />
+    {children}
+  </span>
+);
+
 export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpenAuth, onSelectTask, onNavigatePage }) => {
-  const { selectedCountry, tasks, ethicalIndicators } = useApp();
-  const [faqOpenIndex, setFaqOpenIndex] = useState<number | null>(0);
-  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const [slideProgress, setSlideProgress] = useState(0);
-
-  useEffect(() => {
-    const SLIDE_DURATION = 6000;
-    const TICK = 50;
-    const interval = setInterval(() => {
-      setSlideProgress((prev) => {
-        if (prev >= 100) {
-          setCurrentSlideIndex((curr) => (curr + 1) % 4);
-          return 0;
-        }
-        return prev + (TICK / SLIDE_DURATION) * 100;
-      });
-    }, TICK);
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleSelectSlide = (idx: number) => {
-    setCurrentSlideIndex(idx);
-    setSlideProgress(0);
-  };
-
-  const faqs = [
-    {
-      q: "Comment fonctionne la rémunération sur GLOBAL-AF ?",
-      a: "Les récompenses de missions et les commissions de parrainage sont fixées et publiées à l'avance ; aucun hasard n'intervient jamais. Les commissions ne portent que sur des ventes réelles (jamais sur l'inscription ni sur l'activation seule). L'ouverture des missions rémunérées est en cours : consultez votre espace pour l'état actuel. Aucun gain n'est garanti."
-    },
-    {
-      q: "Qu'est-ce que la charte éthique et transparence de GLOBAL-AF ?",
-      a: "Nos engagements : 1. Commissions calculées exclusivement sur des ventes réelles, jamais sur le simple recrutement, sur 2 niveaux maximum. 2. Une offre payante correspond à un contenu décrit avant paiement ; le Pass d'entrée a 7 jours de rétractation (remboursement - 3 %), les abonnements VIP Premium ne sont pas remboursables (fichiers VCF immédiatement disponibles). 3. Aucune promesse de gain facile : nous publierons des indicateurs réels dès qu'ils existent. 4. Interdiction des jeux de hasard et des tombolas. 5. Protection des membres : âge minimum de 18 ans, plafond de dépense mensuel réglable."
-    },
-    {
-      q: "Quels opérateurs Mobile Money sont acceptés en Côte d'Ivoire ?",
-      a: "Les paiements d'offres se font sur une page sécurisée (CinetPay) par Mobile Money (Wave, Orange Money, MTN MoMo, Moov Money) ou par carte bancaire Visa. Les retraits de gains se font vers un compte Mobile Money ; le montant minimum et les frais sont affichés avant validation."
-    },
-    {
-      q: "Le compte gratuit permet-il vraiment de gagner de l'argent et de retirer ?",
-      a: "L'inscription est gratuite. Pour participer aux missions rémunérées, suivre les formations et demander un retrait, un Pass actif est nécessaire : le Pass d'entrée (rétractation de 7 jours) ou un abonnement VIP Premium. Le prix et le contenu sont affichés avant tout paiement. Aucun gain n'est garanti : ne payez jamais dans l'espoir d'un revenu, ni en vous endettant."
-    },
-    {
-      q: "Comment s'applique le droit de rétractation de 7 jours ?",
-      a: "Le Pass d'entrée (Standard) se rétracte pendant 7 jours à compter du paiement, depuis « Paramètres » : le remboursement, sous déduction des frais de transaction (3 %), est traité vers le moyen de paiement utilisé. L'abonnement VIP Premium n'est pas remboursable car l'accès aux fichiers et contacts VCF est immédiat et définitif."
-    }
-  ];
+  const { tasks, ethicalIndicators } = useApp();
+  const [faqOpen, setFaqOpen] = useState<number | null>(0);
+  const go = (page: string) => (onNavigatePage ? onNavigatePage(page) : onGoToDashboard());
+  const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
 
   return (
-    <div className="bg-slate-50 min-h-screen text-slate-900">
-      
-      {/* HERO SECTION WITH CINEMATIC BACKGROUND PHOTO CAROUSEL (Netflix / Lupin Aesthetic) */}
-      <section 
-        className="relative overflow-hidden min-h-[620px] sm:min-h-[680px] flex flex-col justify-between border-b border-slate-800 bg-slate-950 text-white select-none"
-      >
-        {/* Dynamic High-Contrast Background Photos - Vivid and clearly visible */}
-        <div className="absolute inset-0 z-0 overflow-hidden">
-          {[
-            '/images/hero-freelancers.jpg',
-            '/images/academy-student.jpg',
-            '/images/mobile-money-success.jpg',
-            '/images/support-agent.jpg'
-          ].map((bgImg, idx) => (
-            <img 
-              key={bgImg}
-              src={bgImg} 
-              alt="GLOBAL-AF Côte d'Ivoire" 
-              className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ease-in-out ${
-                currentSlideIndex === idx ? 'opacity-80 scale-100' : 'opacity-0 scale-105 pointer-events-none'
-              }`}
-            />
-          ))}
-          {/* Cinematic Scrim: Dark on the left for crisp text contrast, gentle fade out to reveal photos */}
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-slate-950/30" />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/40" />
-        </div>
-
-        {/* Carousel Content Container */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 pb-6 w-full my-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
-            
-            {/* Left Column: Dynamic Informative Slide Content with Maximum Space */}
-            <div className="lg:col-span-7 xl:col-span-7 space-y-6">
-              
-              {/* Slide 0: Plateforme Éthique de Micro-Jobs */}
-              {currentSlideIndex === 0 && (
-                <div className="space-y-4 text-left animate-fadeIn">
-                  <div className="flex items-center gap-2 text-xs font-semibold flex-wrap">
-                    <div className="flex items-center h-2.5 w-4 rounded-xs overflow-hidden border border-slate-400">
-                      <span className="w-1/3 h-full bg-[#FF7700]"></span>
-                      <span className="w-1/3 h-full bg-white"></span>
-                      <span className="w-1/3 h-full bg-[#009E49]"></span>
-                    </div>
-                    <span className="text-orange-400 font-bold uppercase tracking-wider text-[11px]">N°1 Écosystème Côte d'Ivoire (XOF)</span>
-                    <span className="text-slate-500">·</span>
-                    <span className="flex items-center gap-1 text-emerald-400 font-semibold text-xs">
-                      <ShieldCheck className="w-3.5 h-3.5" />
-                      Conforme ARTCI & Charte Éthique
-                    </span>
-                  </div>
-
-                  <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
-                    Plateforme éthique de <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-400 to-emerald-400">micro-jobs</span>, formation & outils digitaux
-                  </h1>
-
-                  <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal max-w-2xl">
-                    Réalisez des missions digitales rémunérées, monétisez vos compétences et retirez vos gains en toute sécurité via <strong className="text-white">Wave, Orange Money, MTN MoMo</strong> et <strong className="text-white">Moov Money</strong>.
-                  </p>
-
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
-                    <button
-                      onClick={() => onOpenAuth('signup')}
-                      className="px-6 py-3.5 text-xs sm:text-sm font-bold text-slate-950 bg-gradient-to-r from-orange-400 to-amber-400 hover:from-orange-500 hover:to-amber-500 rounded-xl shadow-lg shadow-orange-500/25 transition-all flex items-center justify-center gap-2 active:scale-95"
-                    >
-                      <span>Créer mon compte</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
-                    {onNavigatePage ? (
-                      <button
-                        onClick={() => onNavigatePage('missions')}
-                        className="px-6 py-3.5 text-xs sm:text-sm font-semibold text-white bg-white/15 hover:bg-white/25 border border-white/30 rounded-xl transition-colors text-center"
-                      >
-                        Découvrir les micro-jobs
-                      </button>
-                    ) : (
-                      <a
-                        href="#opportunites"
-                        className="px-6 py-3.5 text-xs sm:text-sm font-semibold text-white bg-white/15 hover:bg-white/25 border border-white/30 rounded-xl transition-colors text-center"
-                      >
-                        Découvrir les micro-jobs
-                      </a>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Slide 1: Digital Academy & 40 Questions Exams */}
-              {currentSlideIndex === 1 && (
-                <div className="space-y-4 text-left animate-fadeIn">
-                  <div className="flex items-center gap-2 text-xs font-semibold flex-wrap">
-                    <span className="px-2.5 py-0.5 rounded-full bg-orange-500/30 text-orange-300 font-bold border border-orange-500/40 text-[11px] uppercase tracking-wider">
-                      Digital Academy · Formations pratiques
-                    </span>
-                  </div>
-
-                  <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
-                    Des compétences concrètes avec des <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400">quiz de validation</span> à chaque module</h1>
-
-                  <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal max-w-2xl">
-                    Des parcours pratiques avec vidéos, documents et quiz de validation. La délivrance de points et d'attestations n'est pas encore ouverte.
-                  </p>
-
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
-                    {onNavigatePage && (
-                      <button
-                        onClick={() => onNavigatePage('academie')}
-                        className="px-6 py-3.5 text-xs sm:text-sm font-bold text-slate-950 bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-500 hover:to-orange-500 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95"
-                      >
-                        <span>Découvrir l'Académie</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
-                    )}
-                    <button
-                      onClick={() => onOpenAuth('signup')}
-                      className="px-6 py-3.5 text-xs sm:text-sm font-semibold text-white bg-white/15 hover:bg-white/25 border border-white/30 rounded-xl transition-colors text-center"
-                    >
-                      S'inscrire pour étudier
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Slide 2: Mobile Money Direct Payments */}
-              {currentSlideIndex === 2 && (
-                <div className="space-y-4 text-left animate-fadeIn">
-                  <div className="flex items-center gap-2 text-xs font-semibold flex-wrap">
-                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/30 text-emerald-300 font-bold border border-emerald-500/40 text-[11px] uppercase tracking-wider">
-                      Retraits Mobile Money · Wave, OM, MTN & Moov
-                    </span>
-                  </div>
-
-                  <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
-                    Vos gains retirables <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400">directement</span> sur votre numéro mobile
-                  </h1>
-
-                  <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal max-w-2xl">
-                    Demandez un virement vers votre compte Mobile Money : montant minimum, frais et montant net affichés avant validation, contrôle avant paiement, e-mail confirmé requis. Aucun gain n'est garanti.
-                  </p>
-
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
-                    <button
-                      onClick={() => onOpenAuth('signup')}
-                      className="px-6 py-3.5 text-xs sm:text-sm font-bold text-slate-950 bg-gradient-to-r from-emerald-400 to-teal-400 hover:from-emerald-500 hover:to-teal-500 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95"
-                    >
-                      <span>Créer mon compte</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
-                    {onNavigatePage && (
-                      <button
-                        onClick={() => onNavigatePage('transparence')}
-                        className="px-6 py-3.5 text-xs sm:text-sm font-semibold text-white bg-white/15 hover:bg-white/25 border border-white/30 rounded-xl transition-colors text-center"
-                      >
-                        Consulter la Charte Éthique
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Slide 3: Espace Partenaire & Entreprise */}
-              {currentSlideIndex === 3 && (
-                <div className="space-y-4 text-left animate-fadeIn">
-                  <div className="flex items-center gap-2 text-xs font-semibold flex-wrap">
-                    <span className="px-2.5 py-0.5 rounded-full bg-blue-500/30 text-blue-300 font-bold border border-blue-500/40 text-[11px] uppercase tracking-wider">
-                      Espace Partenaire · Recrutement & Campagnes Entreprises
-                    </span>
-                  </div>
-
-                  <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
-                    Entreprises : <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400">Déléguez vos micro-tâches</span> à des membres
-                  </h1>
-
-                  <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal max-w-2xl">
-                    Études d'usage, tests d'ergonomie, enquêtes terrain ou avis produits : bénéficiez d'une communauté ivoirienne active et suivez vos résultats en temps réel sur votre tableau de bord dédié.
-                  </p>
-
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
-                    {onNavigatePage && (
-                      <button
-                        onClick={() => onNavigatePage('partenaire')}
-                        className="px-6 py-3.5 text-xs sm:text-sm font-bold text-slate-950 bg-gradient-to-r from-blue-400 to-indigo-400 hover:from-blue-500 hover:to-indigo-500 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 active:scale-95"
-                      >
-                        <Building className="w-4 h-4" />
-                        <span>Accéder à l'Espace Partenaire</span>
-                      </button>
-                    )}
-                    <button
-                      onClick={() => onOpenAuth('signup')}
-                      className="px-6 py-3.5 text-xs sm:text-sm font-semibold text-white bg-white/15 hover:bg-white/25 border border-white/30 rounded-xl transition-colors text-center"
-                    >
-                      Créer un compte
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Right Column: 3D Mascot & Speech Bubble */}
-            <div className="lg:col-span-5 xl:col-span-5 relative flex items-center justify-center lg:justify-end py-6">
-              <div className="animate-fadeIn">
-                <BabiMascot 
-                  variant={
-                    currentSlideIndex === 0 ? 'welcome' :
-                    currentSlideIndex === 1 ? 'academic' :
-                    currentSlideIndex === 2 ? 'wallet' : 'security'
-                  }
-                  size="xl"
-                  speechText={
-                    currentSlideIndex === 0 ? "Akwaba ! L'inscription est gratuite ; un Pass est requis pour les missions et les retraits." :
-                    currentSlideIndex === 1 ? "Des formations pratiques avec des quiz de validation !" :
-                    currentSlideIndex === 2 ? "Zéro jeu de hasard. Montant minimum et frais affichés avant chaque retrait." :
-                    "Inscrivez votre entreprise avec RCCM pour lancer vos missions !"
-                  }
-                />
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        {/* Bottom Carousel Progress Gauges & Controls */}
-        <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-5 flex items-center justify-between w-full">
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-semibold text-slate-300 font-mono">
-              0{currentSlideIndex + 1} <span className="text-slate-500">/ 04</span>
-            </span>
-            <div className="flex items-center gap-2">
-              {[0, 1, 2, 3].map((idx) => {
-                const isCurrent = currentSlideIndex === idx;
-                const isPast = currentSlideIndex > idx;
-                const fillWidth = isCurrent ? `${slideProgress}%` : isPast ? '100%' : '0%';
-                return (
-                  <button
-                    key={idx}
-                    onClick={() => handleSelectSlide(idx)}
-                    className="py-2 flex items-center group cursor-pointer"
-                    aria-label={`Slide ${idx + 1}`}
-                  >
-                    <div className="w-10 sm:w-16 h-1.5 bg-white/20 rounded-full overflow-hidden relative">
-                      <div
-                        className="h-full bg-gradient-to-r from-orange-400 via-amber-400 to-emerald-400 rounded-full"
-                        style={{
-                          width: fillWidth,
-                          transition: isCurrent ? 'width 50ms linear' : 'width 200ms ease'
-                        }}
-                      />
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => handleSelectSlide(currentSlideIndex === 0 ? 3 : currentSlideIndex - 1)}
-              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center text-white transition-colors"
-              aria-label="Slide précédent"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => handleSelectSlide(currentSlideIndex === 3 ? 0 : currentSlideIndex + 1)}
-              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center text-white transition-colors"
-              aria-label="Slide suivant"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* PARTENAIRES DE PAIEMENT EN BAS DE L'ENTÊTE / EN HAUT DE PARCOURS TRANSPARENT */}
-      <section className="bg-slate-900 border-b border-slate-800/80 py-4 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5 text-xs text-slate-300">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span className="font-semibold uppercase tracking-wider text-[11px] text-slate-200">
-              Partenaires de paiement & Mobile Money en Côte d'Ivoire
-            </span>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6">
-            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-              <img src="/logos/wave.svg" alt="Wave" className="w-5 h-5 object-contain" />
-              <span className="text-xs font-bold text-white">Wave</span>
-            </div>
-            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-              <img src="/logos/orange-money.svg" alt="Orange Money" className="w-5 h-5 object-contain" />
-              <span className="text-xs font-bold text-[#FF7900]">Orange Money</span>
-            </div>
-            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-              <img src="/logos/mtn-momo.png" alt="MTN MoMo" className="w-5 h-5 object-contain" />
-              <span className="text-xs font-bold text-amber-300">MTN MoMo</span>
-            </div>
-            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-              <img src="/logos/moov-africa.svg" alt="Moov Africa" className="w-5 h-5 object-contain" />
-              <span className="text-xs font-bold text-blue-300">Moov Money</span>
-            </div>
-            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-              <CreditCard className="w-4 h-4 text-emerald-400" />
-              <span className="text-xs font-bold text-slate-200">Carte Visa</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* BANDEAU ACCÈS TRANSPARENCE & CHARTE */}
-      <section className="py-5 bg-emerald-50/80 border-b border-emerald-200/80">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shrink-0 shadow-2xs">
-              <ShieldCheck className="w-4 h-4 text-white" />
-            </div>
-            <div>
-              <span className="font-bold text-emerald-950">Transparence des gains :</span>
-              <span className="text-emerald-800 ml-1">Indicateurs publiés dès qu'ils reposent sur des retraits réels ; aucun chiffre estimé. Zéro jeu de hasard.</span>
-            </div>
-          </div>
-          {onNavigatePage && (
-            <button
-              onClick={() => onNavigatePage('transparence')}
-              className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl transition-all flex items-center gap-1.5 shrink-0 shadow-2xs"
-            >
-              <span>Consulter les indicateurs réels</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
-      </section>
-
-      {/* COMMENT ÇA MARCHE EN 4 ÉTAPES AVEC MASCOTTES VECTORIELLES 3D */}
-      <section className="py-16 border-b border-slate-200 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <span className="text-xs font-bold text-orange-600 uppercase tracking-wider">Parcours Transparent</span>
-            <h2 className="text-2xl sm:text-3xl font-display font-extrabold text-slate-900 mt-1">
-              Comment fonctionne GLOBAL-AF en 4 étapes
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            
-            <div className="p-5 bg-slate-50/80 rounded-2xl border border-slate-200/80 space-y-3 relative hover:shadow-md transition-all">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-orange-500/10 border border-orange-500/25 text-orange-600 font-extrabold text-xs flex items-center justify-center font-mono shrink-0">
-                  01
-                </div>
-                <h3 className="font-bold text-slate-900 text-sm">Inscription & Activation</h3>
-              </div>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Créez votre compte en quelques instants. Activez votre Pass Membre pour débloquer l'accès complet à tous nos services rémunérés.
-              </p>
-            </div>
-
-            <div className="p-5 bg-slate-50/80 rounded-2xl border border-slate-200/80 space-y-3 relative hover:shadow-md transition-all">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-orange-500/10 border border-orange-500/25 text-orange-600 font-extrabold text-xs flex items-center justify-center font-mono shrink-0">
-                  02
-                </div>
-                <h3 className="font-bold text-slate-900 text-sm">Réalisation de Micro-jobs</h3>
-              </div>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Participez aux sondages, tests d'applications locales et missions partenaires. Récompense indiquée à l'avance pour chaque mission, sans tirage au sort (ouverture en cours).
-              </p>
-            </div>
-
-            <div className="p-5 bg-slate-50/80 rounded-2xl border border-slate-200/80 space-y-3 relative hover:shadow-md transition-all">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-orange-500/10 border border-orange-500/25 text-orange-600 font-extrabold text-xs flex items-center justify-center font-mono shrink-0">
-                  03
-                </div>
-                <h3 className="font-bold text-slate-900 text-sm">Formation & Certifications</h3>
-              </div>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Suivez des formations pratiques et validez vos acquis par des quiz. Les attestations seront délivrées à l'ouverture du module de certification.
-              </p>
-            </div>
-
-            <div className="p-5 bg-slate-50/80 rounded-2xl border border-slate-200/80 space-y-3 relative hover:shadow-md transition-all">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-orange-500/10 border border-orange-500/25 text-orange-600 font-extrabold text-xs flex items-center justify-center font-mono shrink-0">
-                  04
-                </div>
-                <h3 className="font-bold text-slate-900 text-sm">Retrait Mobile Money</h3>
-              </div>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Demandez le retrait de vos gains disponibles vers Wave, Orange Money ou MTN MoMo dès 2 000 FCFA avec validation sécurisée par email.
-              </p>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* OPPORTUNITÉS & MICRO-JOBS DIRECTORY */}
-      <section id="opportunites" className="py-16 border-b border-slate-200 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-            <div>
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Missions Actuelles</span>
-              <h2 className="text-2xl sm:text-3xl font-anton text-slate-900 mt-1 tracking-wide">
-                Micro-jobs & Missions Rémunérées
-              </h2>
-            </div>
-            <button
-              onClick={() => onNavigatePage ? onNavigatePage('missions') : onGoToDashboard()}
-              className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 self-start"
-            >
-              <span>Voir toutes les missions disponibles</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tasks.map((task) => (
-              <div key={task.id} className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between hover:border-slate-300 transition-colors">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-500 font-medium">
-                      {task.category === 'survey' && 'Sondage & Habitudes'}
-                      {task.category === 'app_test' && 'Test d\'application'}
-                      {task.category === 'social_visit' && 'Sensibilisation & Vidéo'}
-                      {task.category === 'content_review' && 'Revue de contenu'}
-                      {task.category === 'partner_campaign' && 'Campagne Partenaire'}
-                    </span>
-                    <span className="font-extrabold text-emerald-700 font-mono text-sm tabular-nums">
-                      +{task.rewardAmount.toLocaleString()} {task.currency}
-                    </span>
-                  </div>
-
-                  <h3 className="font-bold text-slate-900 text-sm leading-snug">
-                    {task.title}
-                  </h3>
-
-                  <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
-                    {task.description}
-                  </p>
-                </div>
-
-                <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs">
-                  <div className="text-[11px] text-slate-500">
-                    Quota : {task.quotaCurrent} / {task.quotaMax}
-                  </div>
-                  <button
-                    onClick={() => {
-                      onSelectTask(task);
-                    }}
-                    className="px-3 py-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-md transition-colors"
-                  >
-                    Participer
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-        </div>
-      </section>
-
-      {/* ACADÉMIE & OUTILS IA */}
-      <section id="academie" className="py-16 border-b border-slate-200 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            
-            <div className="space-y-6">
-              <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Digital Academy & Outils IA
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 leading-tight">
-                Développez des compétences utiles et rentables
-              </h2>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                GLOBAL-AF intègre des formations pratiques conçues pour le marché ivoirien et des assistants d'intelligence artificielle pour vos créations de contenus, devis et plans marketing.
-              </p>
-
-              <div className="space-y-3 text-xs">
-                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-start gap-3">
-                  <BookOpen className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
-                  <div>
-                    <h4 className="font-bold text-slate-900">Formations orientées résultats concrets</h4>
-                    <p className="text-slate-500 mt-0.5">Marketing digital UEMOA, e-commerce rentable avec Wave, et création de vidéos percutantes.</p>
-                  </div>
-                </div>
-
-                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-start gap-3">
-                  <Sparkles className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
-                  <div>
-                    <h4 className="font-bold text-slate-900">Assistants IA intégrés</h4>
-                    <p className="text-slate-500 mt-0.5">Rédacteur publicitaire, générateur d'idées marketing locales et résumeur de documents d'affaires.</p>
-                  </div>
-                </div>
-
-                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-start gap-3">
-                  <Award className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
-                  <div>
-                    <h4 className="font-bold text-slate-900">Quiz & Certifications internes</h4>
-                    <p className="text-slate-500 mt-0.5">Validez vos acquis à la fin des modules (la délivrance de points et d'attestations n'est pas encore ouverte).</p>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <button
-                  onClick={() => onNavigatePage ? onNavigatePage('academie') : onGoToDashboard()}
-                  className="px-5 py-2.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-all shadow-sm flex items-center gap-2 hover:scale-105 active:scale-95"
-                >
-                  <span>Explorer l'Académie Digitale</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Visual preview box with real photo + Apple Liquid Glass Overlay */}
-            <div className="relative rounded-3xl overflow-hidden border border-slate-200 shadow-xl group">
-              <img
-                src="/images/academy-student.jpg"
-                alt="Apprenante de l'Académie Digitale GLOBAL-AF"
-                className="w-full h-[380px] sm:h-[420px] object-cover group-hover:scale-105 transition-transform duration-700"
-              />
-
-              {/* Babi Academy Badge */}
-              <div className="absolute top-3 right-3 flex items-center gap-2 bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/20 shadow-lg text-white">
-                <BabiMascot variant="academic" size="xs" />
-                <div className="text-left">
-                  <div className="text-[10px] text-amber-400 font-bold uppercase">Babi Académie</div>
-                  <div className="text-[11px] font-bold">Quiz de validation</div>
-                </div>
-              </div>
-              <div className="absolute inset-x-3 bottom-3 liquid-glass p-4 rounded-2xl border border-white/80 shadow-xl space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-900 font-mono">
-                    Module pratique
-                  </span>
-                  <span className="text-[11px] font-bold text-emerald-800">
-                    Niveau Débutant & Pro
-                  </span>
-                </div>
-                <h3 className="text-sm font-bold text-slate-900 leading-snug">
-                  « Vendre efficacement avec WhatsApp & Wave en Côte d'Ivoire »
-                </h3>
-                <p className="text-[11px] text-slate-700 leading-relaxed">
-                  Méthode pas-à-pas pour convertir des contacts en clients fidèles avec des flux d'encaissement Mobile Money transparents.
-                </p>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* PROGRAMME D'AFFILIATION : RÈGLES DE RÉMUNÉRATION DES PARRAINS */}
-      <section id="affiliation" className="py-16 border-b border-slate-200 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="max-w-3xl mx-auto text-center space-y-4 mb-12 flex flex-col items-center">
-            <BabiMascot 
-              variant="wallet" 
-              size="md" 
-              speechBubble="Commissions uniquement sur les ventes réelles de vos filleuls, sur 2 niveaux. Aucun gain n'est garanti." 
-            />
-            <div>
-              <span className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">
-                Programme Partenaire & Affiliation
+    <div className="bg-white text-ink">
+      {/* ───────────── HERO ───────────── */}
+      <section className="relative overflow-hidden">
+        <WaxPattern tone="light" className="pointer-events-none absolute inset-0 [mask-image:radial-gradient(60%_70%_at_82%_35%,black,transparent)]" />
+        <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 pb-16 pt-10 sm:px-6 lg:grid-cols-12 lg:gap-6 lg:px-8 lg:pb-24 lg:pt-16">
+          <div className="lg:col-span-7">
+            <p className="inline-flex items-center gap-2.5 rounded-full border border-ink/10 bg-white px-3.5 py-1.5 text-sm font-semibold text-ink/80 shadow-sm">
+              <span className="flex h-3 w-5 overflow-hidden rounded-[3px] ring-1 ring-ink/15" aria-hidden="true">
+                <i className="h-full w-1/3 bg-wax" /><i className="h-full w-1/3 bg-white" /><i className="h-full w-1/3 bg-leaf" />
               </span>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">
-                Règles de Rémunération des Parrains
-              </h2>
-            </div>
-            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-2xl">
-              Un système de commissions clair et éthique, calculé exclusivement sur les ventes réelles de services et produits utiles. Aucune commission sur l'inscription ni sur l'activation seule.
+              Lancement en Côte d'Ivoire
             </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
-            
-            {/* Niveau 1 */}
-            <div className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between space-y-4">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">
-                    Niveau 1 · Direct
-                  </span>
-                  <span className="text-2xl font-black text-emerald-600 font-mono">10%</span>
-                </div>
-                <h3 className="font-bold text-slate-900 text-lg">
-                  Parrainage Direct sur Ventes Réelles
-                </h3>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Percevez <strong>10% de commission nette</strong> sur chaque achat effectué par les membres que vous avez directement recommandés.
-                </p>
-                <div className="p-3.5 bg-emerald-50 rounded-xl border border-emerald-200/80 text-xs text-emerald-950 space-y-1">
-                  <div className="font-semibold text-emerald-900">Exemple concret :</div>
-                  <p className="text-[11px] text-emerald-800 leading-relaxed">
-                    Votre filleul achète une formation ou un pack à <strong>10 000 FCFA</strong> → Vous recevez <strong>1 000 FCFA</strong> crédités après validation du délai de rétractation (7 jours).
-                  </p>
-                </div>
-              </div>
-
-              <div className="pt-2 border-t border-slate-100 text-[11px] text-slate-500">
-                ✓ Retirable dès 2 000 FCFA sur Wave, Orange Money, MTN MoMo ou Moov Money
-              </div>
-            </div>
-
-            {/* Niveau 2 */}
-            <div className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between space-y-4">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold">
-                    Niveau 2 · Indirect
-                  </span>
-                  <span className="text-2xl font-black text-blue-600 font-mono">5%</span>
-                </div>
-                <h3 className="font-bold text-slate-900 text-lg">
-                  Parrainage Indirect de Réseau
-                </h3>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Percevez <strong>5% de commission nette</strong> sur l'ensemble des achats effectués par les membres recommandés par vos filleuls de niveau 1.
-                </p>
-                <div className="p-3.5 bg-blue-50 rounded-xl border border-blue-200/80 text-xs text-blue-950 space-y-1">
-                  <div className="font-semibold text-blue-900">Exemple concret :</div>
-                  <p className="text-[11px] text-blue-800 leading-relaxed">
-                    Un membre recommandé par votre filleul direct souscrit un service à <strong>10 000 FCFA</strong> → Vous recevez <strong>500 FCFA</strong> sans effort supplémentaire.
-                  </p>
-                </div>
-              </div>
-
-              <div className="pt-2 border-t border-slate-100 text-[11px] text-slate-500">
-                ✓ Plafonnement strict à 2 niveaux
-              </div>
-            </div>
-
-          </div>
-
-          {/* Conditions & Principes de Transparence */}
-          <div className="mt-8 p-6 bg-white rounded-2xl border border-slate-200 shadow-xs grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
-            <div className="space-y-1.5">
-              <div className="font-bold text-slate-900 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                Ventes réelles uniquement
-              </div>
-              <p className="text-slate-600 leading-relaxed text-[11px]">
-                Les commissions proviennent exclusivement de formations et d'outils réels achetés par les utilisateurs.
-              </p>
-            </div>
-            <div className="space-y-1.5">
-              <div className="font-bold text-slate-900 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                Zéro gain sur le recrutement
-              </div>
-              <p className="text-slate-600 leading-relaxed text-[11px]">
-                L'inscription est gratuite et ne génère aucune commission. Le spam et le recrutement trompeur sont strictement interdits.
-              </p>
-            </div>
-            <div className="space-y-1.5">
-              <div className="font-bold text-slate-900 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                Retraits contrôlés avant paiement
-              </div>
-              <p className="text-slate-600 leading-relaxed text-[11px]">
-                Vos commissions sont immédiatement cumulées et retirables dès 2 000 FCFA par Mobile Money (Wave, Orange, MTN, Moov).
-              </p>
-            </div>
-          </div>
-
-          {/* CTA Link to Transparence */}
-          {onNavigatePage && (
-            <div className="text-center mt-8">
+            <h1 className="mt-6 text-balance font-display text-[clamp(2.4rem,5vw,3.9rem)] font-extrabold leading-[1.02] text-ink">
+              Missions, formations et retraits Mobile Money, au même endroit.
+            </h1>
+            <p className="mt-6 max-w-xl text-pretty text-lg leading-relaxed text-ink/70">
+              Créez un compte gratuit et explorez la plateforme. Un Pass débloque la participation aux missions rémunérées, l'Académie et les retraits vers Wave, Orange Money, MTN MoMo et Moov Money. Aucun gain n'est garanti.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-3">
               <button
-                onClick={() => onNavigatePage('transparence')}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 hover:bg-orange-600 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm active:scale-95"
+                onClick={() => onOpenAuth('signup')}
+                className="inline-flex items-center gap-2 rounded-full bg-wax px-7 py-4 text-base font-bold text-white shadow-[0_16px_30px_-12px_rgba(255,119,0,0.85)] transition hover:-translate-y-0.5 hover:bg-wax-deep"
               >
-                <span>Consulter la Charte de Transparence & Barème Complet</span>
-                <ArrowRight className="w-4 h-4" />
+                Créer mon compte gratuit <ArrowRight className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => scrollTo('comment-ca-marche')}
+                className="rounded-full border-2 border-ink/15 bg-white px-6 py-3.5 text-base font-bold text-ink transition hover:border-ink/40"
+              >
+                Comment ça marche
               </button>
             </div>
+            <ul className="mt-9 grid max-w-xl gap-3 text-[15px] font-semibold text-ink/80 sm:grid-cols-3">
+              {[
+                { icon: Dices, text: 'Aucun jeu de hasard' },
+                { icon: Scale, text: 'Commissions sur ventes réelles' },
+                { icon: UserCheck, text: 'Rétractation de 7 jours sur le Pass' },
+              ].map(({ icon: Icon, text }) => (
+                <li key={text} className="flex items-start gap-2.5">
+                  <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-leaf/10 text-leaf"><Icon className="h-4 w-4" /></span>
+                  <span className="leading-snug">{text}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Scène Babi */}
+          <div className="relative mx-auto w-full max-w-[28rem] lg:col-span-5 lg:max-w-none">
+            <div className="relative mx-auto aspect-square w-full max-w-[30rem]">
+              <div className="absolute inset-[6%] rounded-full bg-[radial-gradient(circle_at_35%_30%,#FFD27A_0%,#FF9A2E_45%,#FF7700_100%)]" />
+              <div className="absolute inset-[1%] rounded-full border-2 border-dashed border-wax/35" />
+              <div className="absolute inset-x-[9%] bottom-[6%] top-[4%]">
+                <BabiHero className="mt-[6%]" />
+              </div>
+
+              <div className="drift-a absolute -left-1 top-[22%] hidden sm:block w-[11.5rem] rounded-2xl bg-white p-3.5 shadow-[0_18px_40px_-18px_rgba(15,42,30,0.45)] ring-1 ring-ink/8 sm:-left-8">
+                <div className="flex items-center gap-2.5">
+                  <span className="grid h-8 w-8 place-items-center rounded-full bg-leaf text-white"><Check className="h-4 w-4" strokeWidth={3} /></span>
+                  <div className="min-w-0">
+                    <p className="truncate text-[13px] font-bold text-ink">Mission validée</p>
+                    <p className="text-[11px] text-ink/55">Récompense fixée à l'avance</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="drift-b absolute -right-1 top-[46%] hidden sm:block w-[11rem] rounded-2xl bg-white p-3.5 shadow-[0_18px_40px_-18px_rgba(15,42,30,0.45)] ring-1 ring-ink/8 sm:-right-6">
+                <div className="flex items-center gap-2 text-[13px] font-bold text-ink"><BookOpen className="h-4 w-4 text-leaf" /> Académie</div>
+                <div className="mt-2 h-2 overflow-hidden rounded-full bg-mist"><div className="h-full w-2/5 rounded-full bg-leaf" /></div>
+                <p className="mt-1.5 text-[11px] text-ink/55">Module 2 sur 5</p>
+              </div>
+
+              <div className="drift-a absolute bottom-[4%] left-[2%] hidden sm:block w-[12.5rem] rounded-2xl bg-ink p-3.5 text-white shadow-[0_18px_40px_-14px_rgba(15,42,30,0.7)] sm:-left-4">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-white/55">Retrait · Wave</p>
+                <p className="mt-1 text-[13px] font-bold leading-snug">Frais et net affichés avant validation</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ───────────── OPÉRATEURS ───────────── */}
+      <section aria-label="Opérateurs Mobile Money" className="border-y border-ink/8 bg-mist">
+        <div className="mx-auto flex max-w-7xl flex-col items-center gap-4 px-4 py-6 sm:px-6 md:flex-row md:justify-between lg:px-8">
+          <p className="text-center text-[15px] font-semibold text-ink/70 md:text-left">Payez et retirez avec les opérateurs que vous utilisez déjà</p>
+          <div className="flex flex-wrap items-center justify-center gap-2.5">
+            <OperatorLogo operator="Wave" size="sm" variant="pill" />
+            <OperatorLogo operator="Orange Money" size="sm" variant="pill" />
+            <OperatorLogo operator="MTN MoMo" size="sm" variant="pill" />
+            <OperatorLogo operator="Moov Money" size="sm" variant="pill" />
+          </div>
+        </div>
+      </section>
+
+      {/* ───────────── COMMENT ÇA MARCHE ───────────── */}
+      <section id="comment-ca-marche" className="mx-auto max-w-7xl scroll-mt-24 px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+        <div className="max-w-2xl">
+          <Eyebrow>Comment ça marche</Eyebrow>
+          <h2 className="mt-4 text-balance font-display text-4xl font-extrabold leading-[1.08] sm:text-5xl">Quatre étapes, aucune surprise.</h2>
+          <p className="mt-4 text-lg text-ink/65">Chaque prix, chaque frais et chaque condition est affiché avant que vous ne payiez ou ne retiriez.</p>
+        </div>
+        <ol className="relative mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+          {[
+            { t: 'Créez votre compte', d: 'Gratuit. Une adresse e-mail, votre numéro Mobile Money, 18 ans minimum.', c: 'bg-wax' },
+            { t: 'Activez votre Pass', d: '3 000 FCFA, contenu décrit avant paiement. Rétractation possible pendant 7 jours.', c: 'bg-leaf' },
+            { t: 'Participez et apprenez', d: 'Missions à récompense fixée à l’avance, Académie et outils IA à votre rythme.', c: 'bg-ink' },
+            { t: 'Retirez sur Mobile Money', d: 'Dès 2 000 FCFA. Chaque demande est contrôlée avant paiement.', c: 'bg-sun !text-ink' },
+          ].map((s, i) => (
+            <li key={s.t} className="relative rounded-3xl border border-ink/10 bg-white p-6 shadow-[0_1px_0_rgba(15,42,30,0.04)]">
+              <span className={`grid h-11 w-11 place-items-center rounded-2xl font-display text-xl font-extrabold text-white ${s.c}`}>{i + 1}</span>
+              <h3 className="mt-5 font-display text-xl font-bold">{s.t}</h3>
+              <p className="mt-2 text-[15px] leading-relaxed text-ink/65">{s.d}</p>
+              {i === 0 && <div className="pointer-events-none absolute -top-12 right-3 hidden lg:block"><BabiVector mood="wave" size={78} /></div>}
+              {i === 3 && <div className="pointer-events-none absolute -top-[52px] right-3 hidden lg:block"><BabiVector mood="cheer" prop="coin" size={78} /></div>}
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {/* ───────────── FONCTIONNALITÉS (bento) ───────────── */}
+      <section id="fonctionnalites" className="relative bg-mist py-20 lg:py-28">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="max-w-2xl">
+            <Eyebrow>Tout-en-un</Eyebrow>
+            <h2 className="mt-4 text-balance font-display text-4xl font-extrabold leading-[1.08] sm:text-5xl">Une seule plateforme pour apprendre, participer et être payé.</h2>
+          </div>
+          <div className="mt-12 grid gap-5 lg:grid-cols-6">
+            <article className="group relative overflow-hidden rounded-[2rem] bg-white p-7 ring-1 ring-ink/8 lg:col-span-4 lg:flex lg:items-center lg:gap-6">
+              <div className="lg:w-1/2">
+                <span className="rounded-full bg-wax/12 px-3 py-1 text-xs font-bold uppercase tracking-wider text-wax-deep">Micro-jobs</span>
+                <h3 className="mt-4 font-display text-3xl font-extrabold leading-tight">Des missions courtes, à récompense fixée à l'avance.</h3>
+                <p className="mt-3 text-[15px] leading-relaxed text-ink/65">Sondages, tests d'applications, quiz, découvertes. Le montant est connu avant de commencer, jamais tiré au sort.</p>
+                <button onClick={() => go('missions')} className="mt-5 inline-flex items-center gap-2 font-bold text-wax-deep hover:gap-3 transition-all">
+                  {tasks.length > 0 ? `${tasks.length} mission${tasks.length > 1 ? 's' : ''} ouverte${tasks.length > 1 ? 's' : ''}` : 'Voir les missions'} <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+              <IlluMissions className="mx-auto mt-6 w-full max-w-xs lg:mt-0 lg:w-1/2 lg:max-w-none" />
+            </article>
+
+            <article className="relative overflow-hidden rounded-[2rem] bg-leaf p-7 text-white lg:col-span-2">
+              <IlluAcademy className="mx-auto w-full max-w-[15rem]" />
+              <h3 className="mt-3 font-display text-2xl font-extrabold">Digital Academy</h3>
+              <p className="mt-2 text-[15px] leading-relaxed text-white/85">Marketing digital, création de contenu, IA, e-commerce. Des modules et des quiz, à votre rythme.</p>
+              <button onClick={() => go('academie')} className="mt-4 inline-flex items-center gap-2 font-bold text-white hover:gap-3 transition-all">Découvrir <ArrowRight className="h-4 w-4" /></button>
+            </article>
+
+            <article className="rounded-[2rem] bg-white p-7 ring-1 ring-ink/8 lg:col-span-2">
+              <IlluAffiliation className="mx-auto w-full max-w-[14rem]" />
+              <h3 className="mt-3 font-display text-2xl font-extrabold">Affiliation sur ventes réelles</h3>
+              <p className="mt-2 text-[15px] leading-relaxed text-ink/65">10 % au niveau 1, 5 % au niveau 2. Le simple recrutement ne rapporte rien : seules les ventes comptent.</p>
+              <button onClick={() => go('affiliation')} className="mt-4 inline-flex items-center gap-2 font-bold text-leaf-deep hover:gap-3 transition-all">Voir les règles <ArrowRight className="h-4 w-4" /></button>
+            </article>
+
+            <article className="rounded-[2rem] bg-white p-7 ring-1 ring-ink/8 lg:col-span-2">
+              <IlluTools className="mx-auto w-full max-w-[14rem]" />
+              <h3 className="mt-3 font-display text-2xl font-extrabold">Outils IA</h3>
+              <p className="mt-2 text-[15px] leading-relaxed text-ink/65">Rédaction, idées marketing, résumés, prompts. Des quotas clairs selon votre offre.</p>
+              <button onClick={() => go('outils')} className="mt-4 inline-flex items-center gap-2 font-bold text-leaf-deep hover:gap-3 transition-all">Essayer <ArrowRight className="h-4 w-4" /></button>
+            </article>
+
+            <article className="rounded-[2rem] bg-ink p-7 text-white lg:col-span-2">
+              <IlluWallet className="mx-auto w-full max-w-[14rem]" />
+              <h3 className="mt-3 font-display text-2xl font-extrabold">Un portefeuille traçable</h3>
+              <p className="mt-2 text-[15px] leading-relaxed text-white/75">Solde disponible, en attente, commissions : chaque opération est enregistrée et ne s'efface jamais.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      {/* ───────────── MISSIONS OUVERTES ───────────── */}
+      <section id="opportunites" className="mx-auto max-w-7xl scroll-mt-24 px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
+        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+          <div>
+            <Eyebrow>Missions du moment</Eyebrow>
+            <h2 className="mt-4 font-display text-4xl font-extrabold leading-[1.08] sm:text-5xl">Ouvertes en ce moment</h2>
+          </div>
+          <button onClick={() => go('missions')} className="inline-flex items-center gap-2 self-start font-bold text-leaf-deep hover:gap-3 transition-all md:self-auto">
+            Toutes les missions <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+
+        {tasks.length === 0 ? (
+          <div className="mt-10 grid items-center gap-6 rounded-[2rem] border-2 border-dashed border-ink/15 bg-mist p-8 sm:grid-cols-[auto_1fr] sm:p-10">
+            <BabiVector mood="think" prop="book" size={130} className="mx-auto" />
+            <div className="text-center sm:text-left">
+              <h3 className="font-display text-2xl font-bold">Les premières missions arrivent.</h3>
+              <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-ink/65">
+                Aucune mission n'est ouverte pour le moment. Créez votre compte et commencez par l'Académie : vous retrouverez les missions dans votre espace dès leur publication.
+              </p>
+              <button onClick={() => onOpenAuth('signup')} className="mt-5 rounded-full bg-wax px-6 py-3 font-bold text-white hover:bg-wax-deep">Créer mon compte gratuit</button>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            {tasks.slice(0, 6).map(task => {
+              const pct = task.quotaMax > 0 ? Math.min(100, Math.round((task.quotaCurrent / task.quotaMax) * 100)) : 0;
+              return (
+                <article key={task.id} className="flex flex-col justify-between rounded-3xl border border-ink/10 bg-white p-6 transition hover:-translate-y-1 hover:shadow-[0_24px_40px_-24px_rgba(15,42,30,0.4)]">
+                  <div>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="rounded-full bg-mist px-3 py-1 text-xs font-bold text-ink/70">{CATEGORY_LABEL[task.category] ?? 'Mission'}</span>
+                      <span className="font-display text-lg font-extrabold text-leaf-deep">{task.rewardAmount.toLocaleString('fr-FR')} {task.currency === 'XOF' ? 'FCFA' : task.currency}</span>
+                    </div>
+                    <h3 className="mt-4 font-display text-xl font-bold leading-snug">{task.title}</h3>
+                    <p className="mt-2 line-clamp-2 text-[15px] leading-relaxed text-ink/65">{task.description}</p>
+                  </div>
+                  <div className="mt-6">
+                    <div className="h-2 overflow-hidden rounded-full bg-mist"><div className="h-full rounded-full bg-leaf" style={{ width: `${pct}%` }} /></div>
+                    <div className="mt-2 flex items-center justify-between text-[13px] text-ink/55">
+                      <span>{task.quotaCurrent} / {task.quotaMax} participants</span>
+                      <button onClick={() => onSelectTask(task)} className="rounded-full bg-ink px-4 py-2 text-sm font-bold text-white hover:bg-ink-soft">Participer</button>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      {/* ───────────── TARIFS ───────────── */}
+      <section id="tarifs" className="scroll-mt-24 bg-mist py-20 lg:py-28">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center">
+            <Eyebrow>Tarifs et activation</Eyebrow>
+            <h2 className="mt-4 text-balance font-display text-4xl font-extrabold leading-[1.08] sm:text-5xl">Le prix, le contenu et les conditions, avant de payer.</h2>
+            <p className="mt-4 text-lg text-ink/65">Un Pass ne garantit aucun gain. Ne payez jamais dans l'espoir d'un revenu, ni en vous endettant.</p>
+          </div>
+          <div className="mt-12 grid items-stretch gap-5 lg:grid-cols-3">
+            <div className="flex flex-col rounded-[2rem] bg-white p-8 ring-1 ring-ink/10">
+              <h3 className="font-display text-2xl font-bold">Compte gratuit</h3>
+              <p className="mt-4 font-display text-5xl font-extrabold">0 <span className="text-xl font-bold text-ink/50">FCFA</span></p>
+              <ul className="mt-6 space-y-3 text-[15px] text-ink/75">
+                {['Créer et vérifier son compte', 'Explorer son espace personnel', 'Consulter le catalogue des missions et de l’Académie'].map(x => (
+                  <li key={x} className="flex gap-3"><Check className="mt-0.5 h-5 w-5 shrink-0 text-leaf" strokeWidth={3} />{x}</li>
+                ))}
+              </ul>
+              <button onClick={() => onOpenAuth('signup')} className="mt-auto rounded-full border-2 border-ink/15 py-3.5 font-bold text-ink hover:border-ink/40 mt-8">Créer mon compte</button>
+            </div>
+
+            <div className="relative flex flex-col rounded-[2rem] bg-white p-8 ring-2 ring-wax">
+              <span className="absolute -top-3 left-8 rounded-full bg-wax px-3 py-1 text-xs font-bold uppercase tracking-wider text-white">Pass d'entrée</span>
+              <h3 className="font-display text-2xl font-bold">Pass membre</h3>
+              <p className="mt-4 font-display text-5xl font-extrabold">3 000 <span className="text-xl font-bold text-ink/50">FCFA</span></p>
+              <ul className="mt-6 space-y-3 text-[15px] text-ink/75">
+                {['Participation aux missions rémunérées dès leur ouverture', 'Formations de l’Académie', 'Retraits Mobile Money dès 2 000 FCFA', 'Commissions de parrainage sur ventes réelles (10 % N1, 5 % N2)'].map(x => (
+                  <li key={x} className="flex gap-3"><Check className="mt-0.5 h-5 w-5 shrink-0 text-leaf" strokeWidth={3} />{x}</li>
+                ))}
+              </ul>
+              <p className="mt-5 rounded-2xl bg-leaf/10 p-3.5 text-[13px] leading-relaxed text-leaf-deep">Rétractation de 7 jours, remboursement déduction faite des frais de transaction (3 %).</p>
+              <button onClick={() => onOpenAuth('signup')} className="mt-6 rounded-full bg-wax py-3.5 font-bold text-white shadow-[0_14px_26px_-12px_rgba(255,119,0,0.85)] hover:bg-wax-deep">Activer mon Pass</button>
+            </div>
+
+            <div className="relative flex flex-col overflow-hidden rounded-[2rem] bg-ink p-8 text-white">
+              <WaxPattern tone="dark" className="pointer-events-none absolute inset-0 opacity-70" />
+              <div className="relative flex h-full flex-col">
+                <h3 className="font-display text-2xl font-bold">VIP Premium</h3>
+                <p className="mt-4 font-display text-5xl font-extrabold">9 900 <span className="text-xl font-bold text-white/55">FCFA / mois</span></p>
+                <ul className="mt-6 space-y-3 text-[15px] text-white/85">
+                  {['Tous les avantages du Pass membre', 'Contenu exact détaillé avant paiement', 'Fonctions Premium (outils IA, répertoires VCF, attestations) en cours d’ouverture'].map(x => (
+                    <li key={x} className="flex gap-3"><Check className="mt-0.5 h-5 w-5 shrink-0 text-sun" strokeWidth={3} />{x}</li>
+                  ))}
+                </ul>
+                <p className="mt-5 rounded-2xl bg-white/10 p-3.5 text-[13px] leading-relaxed text-white/75">Non remboursable : l'accès aux fichiers et contacts est immédiat et définitif.</p>
+                <button onClick={() => onOpenAuth('signup')} className="mt-6 rounded-full bg-sun py-3.5 font-bold text-ink hover:bg-[#FFD459]">Devenir membre VIP</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ───────────── CHARTE ÉTHIQUE ───────────── */}
+      <section id="charte" className="relative overflow-hidden bg-ink py-20 text-white lg:py-28">
+        <WaxPattern tone="dark" className="pointer-events-none absolute inset-0 opacity-60" />
+        <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-12 lg:px-8">
+          <div className="lg:col-span-5">
+            <Eyebrow dark>Charte éthique</Eyebrow>
+            <h2 className="mt-4 text-balance font-display text-4xl font-extrabold leading-[1.08] sm:text-5xl">Cinq engagements qui priment sur toute règle commerciale.</h2>
+            <IlluShield className="mt-8 w-full max-w-sm" />
+          </div>
+          <ul className="grid gap-3 lg:col-span-7">
+            {[
+              { icon: Scale, t: 'Commissions sur ventes réelles', d: 'Jamais sur le simple recrutement. Deux niveaux au maximum, plafonnés par rapport au prix du produit.' },
+              { icon: Lock, t: 'Un prix, un contenu, avant paiement', d: 'Une offre payante correspond à un bien identifiable. Rétractation de 7 jours sur le Pass.' },
+              { icon: Sparkles, t: 'Aucune promesse de gain facile', d: 'Pas de slogan « gagne X par jour ». Des indicateurs réels sont publiés dès qu’ils existent.' },
+              { icon: Dices, t: 'Zéro jeu de hasard', d: 'Ni roue, ni loterie, ni tirage au sort, ni loot box, gratuits ou payants.' },
+              { icon: ShieldCheck, t: 'Protection des membres', d: '18 ans minimum, plafond de dépense mensuel réglable, aide pour une pause ou la clôture du compte.' },
+            ].map(({ icon: Icon, t, d }) => (
+              <li key={t} className="flex gap-4 rounded-3xl bg-ink-soft p-5 ring-1 ring-white/10">
+                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-sun text-ink"><Icon className="h-6 w-6" /></span>
+                <div>
+                  <h3 className="font-display text-xl font-bold">{t}</h3>
+                  <p className="mt-1 text-[15px] leading-relaxed text-white/70">{d}</p>
+                </div>
+              </li>
+            ))}
+            <li>
+              <button onClick={() => go('transparence')} className="mt-2 inline-flex items-center gap-2 font-bold text-sun hover:gap-3 transition-all">
+                Lire la charte et les indicateurs <ArrowRight className="h-4 w-4" />
+              </button>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      {/* ───────────── INDICATEURS RÉELS ───────────── */}
+      <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-24">
+        <div className="rounded-[2rem] border border-ink/10 bg-white p-8 sm:p-10">
+          <Eyebrow>Indicateurs réels</Eyebrow>
+          {ethicalIndicators ? (
+            <div className="mt-6 grid gap-6 sm:grid-cols-3">
+              <div><p className="font-display text-4xl font-extrabold">{ethicalIndicators.medianMonthlyIncomeXOF.toLocaleString('fr-FR')} <span className="text-lg text-ink/50">FCFA</span></p><p className="mt-1 text-[15px] text-ink/65">Revenu mensuel médian des membres actifs</p></div>
+              <div><p className="font-display text-4xl font-extrabold">{ethicalIndicators.percentUnwithdrawnMembers} %</p><p className="mt-1 text-[15px] text-ink/65">Des membres n'ont encore rien retiré</p></div>
+              <div><p className="font-display text-4xl font-extrabold">{ethicalIndicators.averageDaysToFirstPayout} jours</p><p className="mt-1 text-[15px] text-ink/65">Délai moyen avant un premier retrait</p></div>
+            </div>
+          ) : (
+            <div className="mt-4 grid items-center gap-6 sm:grid-cols-[auto_1fr]">
+              <BabiVector mood="think" size={100} className="mx-auto" />
+              <div>
+                <h3 className="font-display text-2xl font-bold">Nous publierons la réalité, même quand elle est modeste.</h3>
+                <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-ink/65">
+                  Revenu médian des membres actifs, part des membres n'ayant encore rien retiré, délai avant un premier retrait : ces trois chiffres seront affichés ici dès que les premiers retraits auront eu lieu. Tant qu'ils n'existent pas, nous ne les inventons pas.
+                </p>
+              </div>
+            </div>
           )}
-
         </div>
       </section>
 
-      {/* TARIFS & ACTIVATION : TICKET D'ENTRÉE & ABONNEMENT VIP PREMIUM */}
-      <section id="tarifs" className="py-16 border-b border-slate-200 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-          
-          <div className="text-center max-w-3xl mx-auto space-y-4 flex flex-col items-center">
-            <BabiMascot 
-              variant="waving" 
-              size="md" 
-              speechBubble="Des montants adaptés à la réalité ivoirienne et rentabilisés dès vos premières missions !" 
-            />
-            <div>
-              <span className="text-xs font-semibold text-orange-600 uppercase tracking-wider">
-                Grille Tarifaire Transparente (XOF)
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">
-                Choisissez votre formule selon vos ambitions
-              </h2>
-            </div>
-            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-2xl">
-              L'inscription crée votre compte gratuitement. L'accès aux missions rémunérées et aux formations est débloqué par le <strong className="text-slate-800">Pass Membre Standard (Ticket d'Entrée)</strong>. L'abonnement <strong className="text-slate-800">VIP Premium</strong> multiplie vos gains et vos opportunités.
-            </p>
+      {/* ───────────── ENTREPRISES ───────────── */}
+      <section id="partenaires" className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8 lg:pb-28">
+        <div className="grid items-center gap-8 overflow-hidden rounded-[2rem] bg-[#FFF1D6] p-8 sm:p-12 lg:grid-cols-2">
+          <div>
+            <Eyebrow>Entreprises</Eyebrow>
+            <h2 className="mt-4 text-balance font-display text-4xl font-extrabold leading-[1.08]">Touchez une audience mobile, avec des campagnes validées.</h2>
+            <p className="mt-4 text-[15px] leading-relaxed text-ink/70">Bannières, contenus sponsorisés, missions partenaires. Chaque campagne est relue avant publication ; les mécanismes de hasard et la promotion de paris sont refusés.</p>
+            <button onClick={() => go('partenaire')} className="mt-6 inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3.5 font-bold text-white hover:bg-ink-soft">Espace entreprises <ArrowRight className="h-4 w-4" /></button>
           </div>
+          <IlluPartners className="mx-auto w-full max-w-sm" />
+        </div>
+      </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-            
-            {/* PALIER 1 : COMPTE DÉCOUVERTE */}
-            <div className="bg-slate-50/80 rounded-2xl border border-slate-200 p-6 flex flex-col justify-between hover:border-slate-300 transition-all">
-              <div className="space-y-4">
-                <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">
-                    Découverte
-                  </span>
-                  <h3 className="font-bold text-slate-900 text-lg mt-2">Compte Gratuit</h3>
-                  <p className="text-xs text-slate-500">Pour créer son profil et explorer la plateforme</p>
-                </div>
-
-                <div className="text-3xl font-black text-slate-900 font-anton">
-                  0 XOF
-                  <span className="text-xs font-normal text-slate-500 block font-sans">Sans aucun engagement</span>
-                </div>
-
-                <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-[11px] leading-relaxed">
-                  <span className="font-bold block mb-0.5 flex items-center gap-1">
-                    <Lock className="w-3.5 h-3.5 text-amber-700" />
-                    Accès en mode consultation :
-                  </span>
-                  L'accès actif aux missions rémunérées, examens certifiants et retraits Mobile Money nécessite le règlement du Pass Membre Initial.
-                </div>
-
-                <ul className="text-xs text-slate-600 space-y-2 pt-2 border-t border-slate-200">
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Création du profil membre sécurisé</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Consultation du catalogue des micro-jobs</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Consultation des résumés de cours</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Lien de parrainage éthique actif</span>
-                  </li>
-                </ul>
-              </div>
-
-              <div className="pt-6">
+      {/* ───────────── FAQ ───────────── */}
+      <section id="faq" className="mx-auto max-w-4xl scroll-mt-24 px-4 pb-20 sm:px-6 lg:pb-28">
+        <div className="text-center">
+          <Eyebrow>Questions fréquentes</Eyebrow>
+          <h2 className="mt-4 font-display text-4xl font-extrabold leading-[1.08] sm:text-5xl">On répond avant que vous payiez.</h2>
+        </div>
+        <div className="mt-10 divide-y divide-ink/10 overflow-hidden rounded-3xl border border-ink/10 bg-white">
+          {FAQS.map((f, i) => (
+            <div key={f.q}>
+              <h3>
                 <button
-                  onClick={() => onOpenAuth('signup')}
-                  className="w-full py-2.5 px-4 text-xs font-semibold text-slate-800 bg-white hover:bg-slate-100 border border-slate-300 rounded-xl transition-colors shadow-2xs hover:shadow-xs active:scale-95"
+                  onClick={() => setFaqOpen(faqOpen === i ? null : i)}
+                  aria-expanded={faqOpen === i}
+                  className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left font-display text-lg font-bold hover:bg-mist/70"
                 >
-                  Créer un Compte Gratuit
+                  {f.q}
+                  <ChevronDown className={`h-5 w-5 shrink-0 text-leaf transition-transform ${faqOpen === i ? 'rotate-180' : ''}`} />
                 </button>
-              </div>
-            </div>
-
-            {/* PALIER 2 : PASS MEMBRE STANDARD (TICKET D'ENTRÉE) */}
-            <div className="bg-white rounded-2xl border-2 border-orange-500 p-6 flex flex-col justify-between shadow-md relative">
-              <div className="absolute -top-3 right-6 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold text-[10px] uppercase tracking-wider py-0.5 px-3 rounded-full shadow-2xs">
-                Ticket d'Entrée
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-100 text-orange-900">
-                    Accès Complet Actif
-                  </span>
-                  <h3 className="font-bold text-slate-900 text-lg mt-2">Pass Membre Standard</h3>
-                  <p className="text-xs text-slate-500">Le sésame pour débloquer l'ensemble de nos services</p>
-                </div>
-
-                <div className="text-3xl font-black text-orange-600 font-anton">
-                  3 000 XOF
-                  <span className="text-xs font-normal text-slate-600 block font-sans">
-                    Paiement unique d'activation à vie
-                  </span>
-                </div>
-
-                <ul className="text-xs text-slate-700 space-y-2 pt-2 border-t border-slate-100">
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    <span><strong>Accès complet et immédiat</strong> aux micro-jobs rémunérés</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    <span>Accès aux 4 formations approfondies de l'Académie</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    <span>Wallet & Retraits Mobile Money dès <strong>2 000 XOF</strong></span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    <span>Commissions de parrainage (10% N1 + 5% N2)</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    <span>Support membre par ticket</span>
-                  </li>
-                </ul>
-
-                <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-[11px] text-slate-700 flex items-start gap-2">
-                  <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                  <span>Pass d'entrée : accès aux missions et aux retraits ; rétractation de 7 jours (remboursement déduction faite des frais de 3 %).</span>
-                </div>
-              </div>
-
-              <div className="pt-6">
-                <button
-                  onClick={() => onOpenAuth('signup')}
-                  className="w-full py-3 px-4 text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <Zap className="w-4 h-4" />
-                  <span>Activer mon Pass (3 000 FCFA)</span>
-                </button>
-              </div>
-            </div>
-
-            {/* PALIER 3 : MEMBRE VIP PREMIUM */}
-            <div className="bg-slate-900 text-white rounded-2xl border-2 border-emerald-400 p-6 flex flex-col justify-between shadow-xl relative">
-              <div className="absolute -top-3 right-6 bg-emerald-400 text-slate-950 font-bold text-[10px] uppercase tracking-wider py-0.5 px-3 rounded-full shadow-2xs">
-                Recommandé VIP
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-500/40">
-                    Abonnement Mensuel
-                  </span>
-                  <h3 className="font-bold text-white text-lg mt-2">Membre VIP Premium</h3>
-                  <p className="text-xs text-slate-400">Pour créateurs et entrepreneurs exigeant le meilleur</p>
-                </div>
-
-                <div className="text-3xl font-black text-white font-anton">
-                  9 900 XOF
-                  <span className="text-xs font-normal text-emerald-400 block font-sans">
-                    30 jours · renouvellement manuel, sans prélèvement automatique
-                  </span>
-                </div>
-
-                <ul className="text-xs text-slate-300 space-y-2 pt-2 border-t border-slate-800">
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    <span>Tous les avantages du Pass Membre Standard</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    <span><strong className="text-emerald-300">Contenu de l'offre détaillé avant paiement</strong> (aucune majoration de gains promise)</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                    <span>Fonctions en cours d'ouverture (outils IA, répertoires VCF, attestations) : le contenu exact est affiché avant paiement</span>
-                  </li>
-                </ul>
-
-                <div className="p-2.5 bg-slate-800/90 rounded-xl border border-slate-700 text-[11px] text-slate-300 flex items-start gap-2">
-                  <RotateCcw className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                  <span>Abonnement VIP Premium : accès immédiat aux fichiers et contacts VCF, outils IA illimités ; non remboursable.</span>
-                </div>
-              </div>
-
-              <div className="pt-6">
-                <button
-                  onClick={() => onOpenAuth('signup')}
-                  className="w-full py-3 px-4 text-xs font-bold text-slate-950 bg-emerald-400 hover:bg-emerald-300 rounded-xl transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <Award className="w-4 h-4" />
-                  <span>Devenir Membre VIP (9 900 FCFA/m)</span>
-                </button>
-              </div>
-            </div>
-
-          </div>
-
-          {/* BANNER : PARTENAIRES & ENTREPRISES */}
-          <div className="p-6 sm:p-8 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white rounded-3xl border border-slate-700 flex flex-col md:flex-row items-center justify-between gap-6 shadow-lg">
-            <div className="space-y-2 max-w-2xl text-left">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-bold">
-                <Building className="w-3.5 h-3.5" />
-                <span>Pour Entreprises, Marques & PME</span>
-              </div>
-              <h3 className="text-xl sm:text-2xl font-bold">
-                Vous souhaitez déposer des micro-jobs et recruter des testeurs ?
               </h3>
-              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                Créez votre compte entreprise avec votre RCCM. Une fois votre compte validé par nos équipes administratives, diffusez vos campagnes et suivez vos retombées en temps réel sur votre Espace Partenaire dédié.
-              </p>
+              {faqOpen === i && <p className="px-6 pb-6 text-[15px] leading-relaxed text-ink/70">{f.a}</p>}
             </div>
-
-            <div className="shrink-0 flex items-center gap-4">
-              {onNavigatePage ? (
-                <button
-                  onClick={() => onNavigatePage('partenaire')}
-                  className="px-6 py-3.5 bg-white hover:bg-slate-100 text-slate-900 font-bold rounded-xl text-xs sm:text-sm shadow-md transition-all active:scale-95 flex items-center gap-2"
-                >
-                  <span>Accéder à l'Espace Partenaire</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              ) : (
-                <button
-                  onClick={() => onOpenAuth('signup')}
-                  className="px-6 py-3.5 bg-white hover:bg-slate-100 text-slate-900 font-bold rounded-xl text-xs sm:text-sm shadow-md transition-all active:scale-95 flex items-center gap-2"
-                >
-                  <span>Inscrire mon entreprise</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          </div>
-
+          ))}
         </div>
       </section>
 
-      {/* CHARTE ÉTHIQUE & SÉCURITÉ */}
-      <section id="ethique" className="py-16 border-b border-slate-200 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="max-w-3xl mx-auto text-center space-y-3 mb-12">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              Gouvernance & Sécurité
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-              Les 5 Engagements Éthiques Inviolables
-            </h2>
-            <p className="text-xs text-slate-600">
-              Ces conditions priment sur toute considération commerciale et font l'objet d'un audit continu.
-            </p>
+      {/* ───────────── APPEL FINAL ───────────── */}
+      <section className="relative overflow-hidden bg-wax text-white">
+        <WaxPattern tone="orange" className="pointer-events-none absolute inset-0 opacity-70" />
+        <div className="relative mx-auto grid max-w-7xl items-center gap-6 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_auto] lg:px-8 lg:py-20">
+          <div>
+            <h2 className="max-w-2xl text-balance font-display text-4xl font-extrabold leading-[1.05] sm:text-5xl">Prêt à découvrir GLOBAL-AF ?</h2>
+            <p className="mt-4 max-w-xl text-lg text-white/90">Créez votre compte gratuit en quelques minutes. Vous décidez ensuite, en toute connaissance de cause, de ce que vous activez.</p>
+            <button onClick={() => onOpenAuth('signup')} className="mt-8 inline-flex items-center gap-2 rounded-full bg-ink px-8 py-4 text-base font-bold text-white shadow-[0_18px_30px_-14px_rgba(15,42,30,0.9)] transition hover:-translate-y-0.5 hover:bg-ink-soft">
+              Créer mon compte gratuit <ArrowRight className="h-5 w-5" />
+            </button>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-xs">
-            
-            <div className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all space-y-2.5">
-              <div className="font-bold text-slate-900 text-sm flex items-center gap-2.5">
-                <span className="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200/60 flex items-center justify-center font-extrabold text-xs shadow-2xs">1</span>
-                <span>Ventes réelles uniquement</span>
-              </div>
-              <p className="text-slate-600 leading-relaxed text-[11px]">
-                Aucune commission n'est versée sur les frais d'entrée d'autres membres. Rémunération liée exclusivement à des services utiles vendus à de vrais clients.
-              </p>
-            </div>
-
-            <div className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all space-y-2.5">
-              <div className="font-bold text-slate-900 text-sm flex items-center gap-2.5">
-                <span className="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200/60 flex items-center justify-center font-extrabold text-xs shadow-2xs">2</span>
-                <span>Biens réels & transparence</span>
-              </div>
-              <p className="text-slate-600 leading-relaxed text-[11px]">
-                Toute activation payante donne accès à un bien identifiable (formations, outils IA, répertoires). Pass d'entrée : rétractation de 7 jours, remboursement sous déduction des frais de transaction (3 %). Abonnements VIP Premium : non remboursables (fichiers VCF immédiatement disponibles).
-              </p>
-            </div>
-
-            <div className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all space-y-2.5">
-              <div className="font-bold text-slate-900 text-sm flex items-center gap-2.5">
-                <span className="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200/60 flex items-center justify-center font-extrabold text-xs shadow-2xs">3</span>
-                <span>Honnêteté sur les gains</span>
-              </div>
-              <p className="text-slate-600 leading-relaxed text-[11px]">
-                Interdiction des promesses trompeuses et des faux montages. Publication des indicateurs réels (revenu médian, délai du premier virement) dès qu'ils existent ; aucun chiffre estimé.
-              </p>
-            </div>
-
-            <div className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all space-y-2.5">
-              <div className="font-bold text-slate-900 text-sm flex items-center gap-2.5">
-                <span className="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200/60 flex items-center justify-center font-extrabold text-xs shadow-2xs">4</span>
-                <span>Interdiction absolue des jeux de hasard</span>
-              </div>
-              <p className="text-slate-600 leading-relaxed text-[11px]">
-                Suppression totale des roues de la chance, loteries, tirages au sort et coffres aléatoires. Toutes les récompenses sont 100% déterministes.
-              </p>
-            </div>
-
-            <div className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all space-y-2.5">
-              <div className="font-bold text-slate-900 text-sm flex items-center gap-2.5">
-                <span className="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200/60 flex items-center justify-center font-extrabold text-xs shadow-2xs">5</span>
-                <span>Protection des membres</span>
-              </div>
-              <p className="text-slate-600 leading-relaxed text-[11px]">
-                Plafonds de dépense mensuels configurables, conformité aux CGU, validation éthique et mécanismes de suspension volontaire en cas de besoin.
-              </p>
-            </div>
-
-            <div className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md transition-all space-y-2.5">
-              <div className="font-bold text-slate-900 text-sm flex items-center gap-2.5">
-                <span className="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200/60 flex items-center justify-center font-extrabold text-xs shadow-2xs">6</span>
-                <span>Conformité ARTCI Côte d'Ivoire</span>
-              </div>
-              <p className="text-slate-600 leading-relaxed text-[11px]">
-                Respect de la réglementation ivoirienne relative à la protection des données personnelles, au commerce électronique et à la traçabilité financière.
-              </p>
-            </div>
-
-          </div>
-
+          <div className="mx-auto hidden w-60 lg:block"><BabiHero bubble={false} /></div>
         </div>
       </section>
-
-      {/* COMPOSANT CHATBOT INFORMATIONNEL & FAQ */}
-      <FAQGemini onNavigateView={onNavigatePage} />
-
+      <ScarfRibbon />
     </div>
   );
 };

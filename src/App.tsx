@@ -224,7 +224,7 @@ function AppContent() {
         )}
 
         {currentView === 'affiliation' && (
-          <TransparencePage 
+          <AffiliationPage 
             onGoToDashboard={() => {
               if (currentUser) {
                 navigateToView('dashboard');

@@ -1,32 +1,52 @@
 @import "tailwindcss";
+@import "@fontsource-variable/bricolage-grotesque";
+@import "@fontsource-variable/figtree";
 
 @theme {
-  --font-mono: 'Anton SC', sans-serif;
-  --font-anton: 'Anton SC', sans-serif;
-  --font-notable: 'Anton SC', sans-serif;
+  --font-sans: 'Figtree Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', 'Figtree Variable', ui-sans-serif, system-ui, sans-serif;
+  /* Anciennes familles conservées comme alias : les écrans non refondus restent lisibles. */
+  --font-mono: 'Bricolage Grotesque Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-anton: 'Bricolage Grotesque Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-notable: 'Bricolage Grotesque Variable', ui-sans-serif, system-ui, sans-serif;
+
+  /* Identité GLOBAL-AF : tricolore ivoirien + vert forêt profond pour les aplats sombres. */
+  --color-wax: #FF7700;
+  --color-wax-deep: #E56A00;
+  --color-leaf: #009E49;
+  --color-leaf-deep: #006B32;
+  --color-ink: #0F2A1E;
+  --color-ink-soft: #1B3A2B;
+  --color-mist: #F2F7F3;
+  --color-sun: #FFC933;
+  --color-elephant: #A7B0B8;
 }
 
 @layer base {
+  html { scroll-behavior: smooth; }
   body {
-    font-family: 'Tuffy', -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    letter-spacing: -0.005em;
+    color: #17261e;
   }
-  p, span, li, button, input, textarea, select, label, td, th {
-    font-family: 'Tuffy', -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+  p, span, li, button, input, textarea, select, label, td, th, a {
+    font-family: var(--font-sans);
   }
   h1, h2, h3, h4, .font-display {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro", "Tuffy", "Inter", system-ui, sans-serif;
-    letter-spacing: -0.02em;
+    font-family: var(--font-display);
+    letter-spacing: -0.025em;
+    font-variation-settings: 'opsz' 48;
   }
-  code, pre, .font-mono, [data-mono] {
-    font-family: 'Anton SC', sans-serif !important;
-    letter-spacing: 0.04em;
+  code, pre, .font-mono, [data-mono], .font-notable, .font-anton, [data-notable], [data-anton] {
+    font-family: var(--font-display) !important;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
   }
-  .font-notable, .font-anton, [data-notable], [data-anton] {
-    font-family: 'Anton SC', sans-serif;
-    letter-spacing: 0.04em;
+  :focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--color-wax) 70%, white);
+    outline-offset: 2px;
+    border-radius: 6px;
   }
 }
 
@@ -126,3 +146,80 @@
 }
 
 
+
+
+/* ==========================================================================
+   Refonte GLOBAL-AF — rubans, mascotte et mouvement
+   ========================================================================== */
+
+/* Le ruban du foulard de Babi : motif structurant du site. */
+.scarf-ribbon {
+  height: 10px;
+  background: repeating-linear-gradient(115deg,
+    #FF7700 0 14px, #FFFFFF 14px 18px, #009E49 18px 32px, #FFFFFF 32px 36px);
+}
+.scarf-ribbon-thin { height: 4px; }
+
+.text-balance { text-wrap: balance; }
+.text-pretty { text-wrap: pretty; }
+
+/* Babi 3D : respiration douce, saut au clic. */
+@keyframes babi-float {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50% { transform: translateY(-10px) rotate(1deg); }
+}
+@keyframes babi-hop {
+  0% { transform: translateY(0) scale(1, 1); }
+  18% { transform: translateY(0) scale(1.07, 0.9); }
+  45% { transform: translateY(-34px) scale(0.95, 1.07); }
+  72% { transform: translateY(0) scale(1.06, 0.93); }
+  100% { transform: translateY(0) scale(1, 1); }
+}
+.babi-float { animation: babi-float 4.8s ease-in-out infinite; }
+.babi-hop { animation: babi-hop 0.7s cubic-bezier(.3,.7,.4,1); }
+
+/* Babi vectoriel : clignement, oreilles, trompe, bras. */
+@keyframes babi-blink {
+  0%, 92%, 100% { transform: scaleY(0); }
+  95%, 97% { transform: scaleY(1); }
+}
+@keyframes babi-ear-l { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-7deg); } }
+@keyframes babi-ear-r { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(7deg); } }
+@keyframes babi-trunk { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(5deg); } }
+@keyframes babi-wave { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(14deg); } }
+@keyframes babi-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes babi-cheer { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+
+.babi-v .babi-lid { transform-box: fill-box; transform-origin: 50% 0%; transform: scaleY(0); }
+.babi-v.is-alive .babi-lid { animation: babi-blink 5s infinite; }
+.babi-v.is-alive .babi-lid-r { animation-delay: 0.03s; }
+.babi-v .babi-ear-l, .babi-v .babi-ear-r, .babi-v .babi-trunk, .babi-v .babi-arm-wave {
+  transform-box: view-box;
+}
+.babi-v .babi-ear-l { transform-origin: 112px 110px; }
+.babi-v .babi-ear-r { transform-origin: 188px 110px; }
+.babi-v .babi-trunk { transform-origin: 150px 146px; }
+.babi-v .babi-arm-wave { transform-origin: 84px 206px; }
+.babi-v.is-alive .babi-ear-l { animation: babi-ear-l 3.6s ease-in-out infinite; }
+.babi-v.is-alive .babi-ear-r { animation: babi-ear-r 3.6s ease-in-out infinite 0.4s; }
+.babi-v.is-alive .babi-trunk { animation: babi-trunk 3.2s ease-in-out infinite; }
+.babi-v.is-alive .babi-arm-wave { animation: babi-wave 1.1s ease-in-out infinite; }
+.babi-v.is-alive .babi-body { animation: babi-bob 3.4s ease-in-out infinite; }
+.babi-v.is-alive.mood-cheer .babi-body { animation: babi-cheer 0.9s ease-in-out infinite; }
+
+/* Pièces flottantes autour de la mascotte. */
+@keyframes drift-a { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(0, -9px); } }
+@keyframes drift-b { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(0, 8px); } }
+.drift-a { animation: drift-a 5.5s ease-in-out infinite; }
+.drift-b { animation: drift-b 6.5s ease-in-out infinite 0.8s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .babi-float, .babi-hop, .drift-a, .drift-b,
+  .babi-v.is-alive .babi-lid, .babi-v.is-alive .babi-ear-l, .babi-v.is-alive .babi-ear-r,
+  .babi-v.is-alive .babi-trunk, .babi-v.is-alive .babi-arm-wave, .babi-v.is-alive .babi-body {
+    animation: none !important;
+  }
+  html { scroll-behavior: auto; }
+}
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }

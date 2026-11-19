@@ -1,109 +1,76 @@
 import React from 'react';
-import { Mail, MapPin, AlertCircle, Lock } from 'lucide-react';
+import { Mail, MapPin, AlertCircle } from 'lucide-react';
 import { OperatorLogo } from '../common/OperatorLogo';
 import { BrandLogo } from '../common/BrandLogo';
+import { BabiVector } from '../brand/BabiVector';
+import { ScarfRibbon, WaxPattern } from '../brand/Illustrations';
 
 interface FooterProps {
   onNavigateSection?: (sectionId: string) => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({ onNavigateSection }) => {
-  const handleNav = (sec: string) => {
-    if (onNavigateSection) {
-      onNavigateSection(sec);
-    }
-  };
+  const nav = (sec: string) => onNavigateSection?.(sec);
+  const link = 'text-left text-white/70 transition-colors hover:text-white';
 
   return (
-    <footer className="bg-slate-900 text-slate-300 border-t border-slate-800 text-sm">
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          
-          {/* Brand & Market context */}
-          <div className="lg:col-span-2 space-y-4">
+    <footer className="relative bg-ink text-sm text-white/80">
+      <ScarfRibbon />
+      <WaxPattern tone="dark" className="pointer-events-none absolute inset-0 opacity-35" />
+      <div className="relative mx-auto max-w-7xl px-4 pb-8 pt-14 sm:px-6 lg:px-8">
+        <div className="grid gap-12 lg:grid-cols-12">
+          <div className="space-y-5 lg:col-span-5">
             <BrandLogo size="md" variant="white" />
-            <p className="text-xs text-slate-400 leading-relaxed max-w-sm">
-              Plateforme ouest-africaine de valorisation des compétences numériques, de micro-missions rémunérées et d'affiliation éthique. Conçue pour un lancement en Côte d'Ivoire avec intégration native Wave, Orange Money, MTN MoMo et Moov Money.
+            <p className="max-w-md text-[15px] leading-relaxed text-white/70">
+              Missions numériques, Académie, outils IA et affiliation sur ventes réelles, avec un portefeuille relié au Mobile Money. Lancement en Côte d'Ivoire.
             </p>
-            <div className="pt-2 text-xs text-slate-400 space-y-1.5">
-              <div className="flex items-center gap-2">
-                <MapPin className="w-3.5 h-3.5 text-orange-400 shrink-0" />
-                <span>Plateau / Cocody, Abidjan, Côte d'Ivoire</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Mail className="w-3.5 h-3.5 text-orange-400 shrink-0" />
-                <span>contact@global-af.ci</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick links */}
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200 mb-3">
-              Pages & Fonctionnalités
-            </h4>
-            <ul className="space-y-2 text-xs text-slate-400">
-              <li>
-                <button onClick={() => handleNav('missions')} className="hover:text-white transition-colors text-left">
-                  Micro-jobs & Missions
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNav('academie')} className="hover:text-white transition-colors text-left">
-                  Digital Academy
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNav('affiliation')} className="hover:text-white transition-colors text-left">
-                  Affiliation (1-2 Niveaux)
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNav('outils')} className="hover:text-white transition-colors text-left">
-                  Outils IA & Rédaction
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNav('transparence')} className="hover:text-white transition-colors text-left">
-                  Transparence & Statistiques
-                </button>
-              </li>
+            <ul className="space-y-2 text-white/70">
+              <li className="flex items-center gap-2"><MapPin className="h-4 w-4 text-wax" /> Plateau / Cocody, Abidjan, Côte d'Ivoire</li>
+              <li className="flex items-center gap-2"><Mail className="h-4 w-4 text-wax" /> contact@global-af.ci</li>
             </ul>
           </div>
 
-          {/* Mobile Money Operators */}
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200 mb-3">
-              Paiements Supportés
-            </h4>
-            <div className="space-y-2">
-              <OperatorLogo operator="Wave" size="sm" variant="pill" className="bg-slate-800/80 border-slate-700 text-slate-200" />
-              <OperatorLogo operator="Orange Money" size="sm" variant="pill" className="bg-slate-800/80 border-slate-700 text-slate-200" />
-              <OperatorLogo operator="MTN MoMo" size="sm" variant="pill" className="bg-slate-800/80 border-slate-700 text-slate-200" />
-              <OperatorLogo operator="Moov Money" size="sm" variant="pill" className="bg-slate-800/80 border-slate-700 text-slate-200" />
+          <div className="lg:col-span-3">
+            <h4 className="mb-4 font-display text-base font-bold text-white">Découvrir</h4>
+            <ul className="space-y-2.5 text-[15px]">
+              <li><button onClick={() => nav('missions')} className={link}>Micro-jobs et missions</button></li>
+              <li><button onClick={() => nav('academie')} className={link}>Digital Academy</button></li>
+              <li><button onClick={() => nav('affiliation')} className={link}>Affiliation sur ventes réelles</button></li>
+              <li><button onClick={() => nav('outils')} className={link}>Outils IA</button></li>
+              <li><button onClick={() => nav('partenaire')} className={link}>Espace entreprises</button></li>
+              <li><button onClick={() => nav('transparence')} className={link}>Transparence et charte</button></li>
+            </ul>
+          </div>
+
+          <div className="lg:col-span-4">
+            <h4 className="mb-4 font-display text-base font-bold text-white">Paiements Mobile Money</h4>
+            <div className="grid max-w-xs grid-cols-2 gap-2.5">
+              <OperatorLogo operator="Wave" size="sm" variant="pill" className="bg-white border-white" />
+              <OperatorLogo operator="Orange Money" size="sm" variant="pill" className="bg-white border-white" />
+              <OperatorLogo operator="MTN MoMo" size="sm" variant="pill" className="bg-white border-white" />
+              <OperatorLogo operator="Moov Money" size="sm" variant="pill" className="bg-white border-white" />
             </div>
           </div>
-
         </div>
 
-        {/* Bottom Disclaimer */}
-        <div className="mt-10 pt-6 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <div className="flex flex-wrap items-center gap-4">
+        <div className="mt-12 flex flex-col gap-5 border-t border-white/12 pt-6 text-[13px] text-white/60 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-2">
             <p>© 2026 GLOBAL-AF. Tous droits réservés.</p>
-          
-            <nav aria-label="Informations légales" className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
-              <button type="button" onClick={() => handleNav('cgu')} className="hover:text-white transition-colors">Conditions générales</button>
-              <button type="button" onClick={() => handleNav('confidentialite')} className="hover:text-white transition-colors">Confidentialité</button>
-              <button type="button" onClick={() => handleNav('cookies')} className="hover:text-white transition-colors">Cookies</button>
-              <button type="button" onClick={() => handleNav('mentions')} className="hover:text-white transition-colors">Mentions légales</button>
+            <nav aria-label="Informations légales" className="flex flex-wrap gap-x-5 gap-y-1">
+              <button type="button" onClick={() => nav('cgu')} className="hover:text-white">Conditions générales</button>
+              <button type="button" onClick={() => nav('confidentialite')} className="hover:text-white">Confidentialité</button>
+              <button type="button" onClick={() => nav('cookies')} className="hover:text-white">Cookies</button>
+              <button type="button" onClick={() => nav('mentions')} className="hover:text-white">Mentions légales</button>
             </nav>
           </div>
-          <div className="flex items-center gap-2 text-[11px] text-slate-400">
-            <AlertCircle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            <span>Aucune promesse de gain garanti. Les résultats dépendent du travail réel.</span>
-          </div>
+          <p className="flex items-start gap-2 md:max-w-sm md:text-right">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-sun" />
+            Aucune promesse de gain garanti. Les résultats dépendent du travail réel.
+          </p>
         </div>
+      </div>
+      <div className="pointer-events-none absolute -top-[112px] left-6 hidden sm:block sm:left-[55%]" aria-hidden="true">
+        <BabiVector mood="wave" size={110} />
       </div>
     </footer>
   );
