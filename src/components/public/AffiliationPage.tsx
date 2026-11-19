@@ -1,213 +1,156 @@
 import React, { useState } from 'react';
-import { 
-  Users, 
-  ShieldCheck, 
-  CheckCircle2, 
-  XCircle, 
-  TrendingUp, 
-  ArrowRight, 
-  Calculator,
-  Lock,
-  Sparkles
-} from 'lucide-react';
+import { ArrowRight, Ban, Check, X } from 'lucide-react';
+import { useApp } from '../../context/AppContext';
+import { BabiVector } from '../brand/BabiVector';
+import { IlluAffiliation, ScarfRibbon } from '../brand/Illustrations';
+import { CtaBand, Eyebrow, GhostButton, PageHero, PrimaryButton } from '../ui/kit';
 
 interface AffiliationPageProps {
   onGoToDashboard: () => void;
   onOpenAuth: (mode: 'login' | 'signup') => void;
 }
 
-export const AffiliationPage: React.FC<AffiliationPageProps> = ({ onGoToDashboard, onOpenAuth }) => {
-  const [level1Referrals, setLevel1Referrals] = useState(1);
-  const [level2Referrals, setLevel2Referrals] = useState(0);
-  const [averageBasket, setAverageBasket] = useState(10000); // exemple de panier, modifiable
+const L1 = 0.10;
+const L2 = 0.05;
+const fmt = (n: number) => Math.round(n).toLocaleString('fr-FR');
 
-  // Commissions: 10% on level 1, 5% on level 2
-  const level1Earnings = level1Referrals * (averageBasket * 0.10);
-  const level2Earnings = level2Referrals * (averageBasket * 0.05);
-  const totalCommission = level1Earnings + level2Earnings;
+export const AffiliationPage: React.FC<AffiliationPageProps> = ({ onGoToDashboard, onOpenAuth }) => {
+  const { currentUser } = useApp();
+  const [price, setPrice] = useState(9900);
+  const safePrice = Number.isFinite(price) && price > 0 ? price : 0;
+
+  const start = () => (currentUser ? onGoToDashboard() : onOpenAuth('signup'));
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-        
-        {/* Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 text-orange-800 text-xs font-bold">
-            <Users className="w-4 h-4" />
-            <span>Programme de Partenariat Vertueux</span>
+    <div className="bg-white text-ink">
+      <PageHero
+        eyebrow="Affiliation"
+        title="Des commissions sur de vraies ventes, jamais sur le simple recrutement."
+        subtitle="Deux niveaux au maximum, des taux publiés et des commissions plafonnées par rapport au prix du produit vendu. Inscrire quelqu'un ne rapporte rien : seule une vente réelle compte."
+        actions={
+          <>
+            <PrimaryButton onClick={start}>{currentUser ? 'Mon lien d\'affilié' : 'Créer mon compte gratuit'} <ArrowRight className="h-5 w-5" /></PrimaryButton>
+            <GhostButton onClick={() => document.getElementById('calcul')?.scrollIntoView({ behavior: 'smooth' })}>Comprendre le calcul</GhostButton>
+          </>
+        }
+        illustration={<IlluAffiliation className="w-full" title="Illustration : un parrain, deux niveaux de filleuls" />}
+      />
+
+      {/* Niveaux */}
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
+        <Eyebrow>Les niveaux</Eyebrow>
+        <h2 className="mt-4 max-w-2xl text-balance font-display text-3xl font-extrabold leading-tight sm:text-4xl">Deux niveaux, pas un de plus.</h2>
+        <div className="mt-10 grid gap-5 md:grid-cols-3">
+          <div className="rounded-[2rem] bg-wax p-7 text-white">
+            <p className="text-sm font-bold uppercase tracking-wider text-white/80">Niveau 1</p>
+            <p className="mt-3 font-display text-6xl font-extrabold">10 %</p>
+            <p className="mt-3 text-[15px] leading-relaxed text-white/90">Sur chaque vente réelle faite à une personne que vous avez parrainée directement.</p>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-            Affiliation Éthique sur Ventes Réelles
-          </h1>
-          <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-            Un modèle transparent limité à 2 niveaux maximum. Aucune prime au recrutement : vos gains proviennent uniquement de la valeur apportée et des achats utiles de vos filleuls.
-          </p>
-        </div>
-
-        {/* Interactive Commission Calculator */}
-        <div className="bg-gradient-to-br from-slate-900 to-orange-950 rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-orange-500/20">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            
-            <div className="lg:col-span-7 space-y-5">
-              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-orange-500/20 border border-orange-500/30 text-orange-300 text-xs font-semibold">
-                <Calculator className="w-3.5 h-3.5" />
-                <span>Simulateur de Commissions sur 2 Niveaux</span>
-              </div>
-              
-              <h2 className="text-xl sm:text-2xl font-bold text-white">
-                Simulez vos commissions d'affiliation
-              </h2>
-              
-              <div className="space-y-4 pt-2">
-                {/* Level 1 Slider */}
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-slate-300">Filleuls directs Niveau 1 (10% commission) :</span>
-                    <span className="text-orange-400 font-bold">{level1Referrals} acheteurs</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="1"
-                    max="30"
-                    value={level1Referrals}
-                    onChange={(e) => setLevel1Referrals(parseInt(e.target.value))}
-                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-orange-500"
-                  />
-                </div>
-
-                {/* Level 2 Slider */}
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-slate-300">Filleuls indirects Niveau 2 (5% commission) :</span>
-                    <span className="text-orange-400 font-bold">{level2Referrals} acheteurs</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="80"
-                    value={level2Referrals}
-                    onChange={(e) => setLevel2Referrals(parseInt(e.target.value))}
-                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-orange-500"
-                  />
-                </div>
-
-                {/* Average Basket */}
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-slate-300">Panier moyen d'achat utile :</span>
-                    <span className="text-emerald-400 font-notable font-bold">{averageBasket.toLocaleString()} FCFA</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="5000"
-                    max="50000"
-                    step="5000"
-                    value={averageBasket}
-                    onChange={(e) => setAverageBasket(parseInt(e.target.value))}
-                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-500"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Total Results */}
-            <div className="lg:col-span-5 bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 space-y-4 text-center">
-              <div className="text-xs uppercase tracking-wider text-orange-300 font-bold">
-                Exemple de calcul (hypothétique)
-              </div>
-              <div className="space-y-1">
-                <div className="text-3xl sm:text-4xl font-extrabold text-white font-notable">
-                  {totalCommission.toLocaleString()} FCFA
-                </div>
-                <div className="text-[11px] text-slate-300">Illustration : aucun gain n'est garanti. Le montant dépend des achats réels de vos filleuls ; les taux en vigueur sont affichés dans l'espace membre.</div>
-              </div>
-
-              <div className="pt-3 border-t border-white/10 grid grid-cols-2 gap-2 text-xs text-left">
-                <div className="p-2.5 rounded-lg bg-black/20">
-                  <div className="text-slate-400 text-[10px]">Niveau 1 (10%)</div>
-                  <div className="font-bold text-orange-400 font-notable text-xs sm:text-sm">{level1Earnings.toLocaleString()} FCFA</div>
-                </div>
-                <div className="p-2.5 rounded-lg bg-black/20">
-                  <div className="text-slate-400 text-[10px]">Niveau 2 (5%)</div>
-                  <div className="font-bold text-emerald-400 font-notable text-xs sm:text-sm">{level2Earnings.toLocaleString()} FCFA</div>
-                </div>
-              </div>
-
-              <button
-                onClick={() => onOpenAuth('signup')}
-                className="w-full py-2.5 px-4 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold text-xs shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
-              >
-                <span>Obtenir mon lien d'affilié</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-
+          <div className="rounded-[2rem] bg-leaf p-7 text-white">
+            <p className="text-sm font-bold uppercase tracking-wider text-white/80">Niveau 2</p>
+            <p className="mt-3 font-display text-6xl font-extrabold">5 %</p>
+            <p className="mt-3 text-[15px] leading-relaxed text-white/90">Sur les ventes réelles faites aux personnes parrainées par vos filleuls directs.</p>
+          </div>
+          <div className="rounded-[2rem] border-2 border-dashed border-ink/20 p-7">
+            <p className="text-sm font-bold uppercase tracking-wider text-ink/50">Niveau 3</p>
+            <p className="mt-3 flex items-center gap-3 font-display text-4xl font-extrabold text-ink/40"><Ban className="h-9 w-9" /> Désactivé</p>
+            <p className="mt-3 text-[15px] leading-relaxed text-ink/60">Il n'existe pas. Son ajout éventuel nécessiterait une validation explicite au regard de la charte éthique.</p>
           </div>
         </div>
+        <p className="mt-6 max-w-3xl text-[15px] leading-relaxed text-ink/65">
+          Les commissions portent sur les ventes réelles : abonnements, formations et campagnes partenaires payées. L'activation du compte, à elle seule, ne génère aucune commission. Les taux en vigueur sont modifiables par GLOBAL-AF et toujours affichés dans votre espace.
+        </p>
+      </section>
 
-        {/* Ethical Comparison Table: GLOBAL-AF vs Illegal Pyramidal Schemes */}
-        <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-xs space-y-6">
-          <div className="max-w-2xl">
-            <h2 className="text-2xl font-bold text-slate-900">
-              Pourquoi ce modèle est conçu pour être éthique
-            </h2>
-            <p className="text-xs text-slate-500 mt-1">
-              Comprendre la différence fondamentale entre notre affiliation vertueuse et les montages pyramidaux frauduleux.
+      {/* Calcul */}
+      <section id="calcul" className="scroll-mt-24 bg-mist py-16 lg:py-20">
+        <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
+          <div>
+            <Eyebrow>Le calcul</Eyebrow>
+            <h2 className="mt-4 text-balance font-display text-3xl font-extrabold leading-tight sm:text-4xl">Comprendre une commission, sur une seule vente.</h2>
+            <p className="mt-4 text-[15px] leading-relaxed text-ink/65">
+              Cet exemple montre la règle de calcul pour <strong>une</strong> vente. Il ne représente pas un revenu attendu : tout dépend de ventes réelles à de vrais clients.
+            </p>
+            <label className="mt-6 block">
+              <span className="text-sm font-bold">Prix du produit vendu (FCFA)</span>
+              <input
+                type="number"
+                min={0}
+                step={100}
+                value={price}
+                onChange={e => setPrice(Number(e.target.value))}
+                className="mt-2 w-full max-w-xs rounded-2xl border border-ink/15 bg-white px-4 py-3 font-display text-xl font-bold outline-none focus:border-wax"
+              />
+              <span className="mt-1 block text-xs text-ink/50">Par exemple 9 900 FCFA, le prix du VIP Premium.</span>
+            </label>
+          </div>
+          <div className="rounded-[2rem] bg-white p-7 ring-1 ring-ink/10">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-2xl bg-wax/10 p-5">
+                <p className="text-xs font-bold uppercase tracking-wider text-wax-deep">Filleul niveau 1 achète</p>
+                <p className="mt-2 font-display text-4xl font-extrabold">{fmt(safePrice * L1)} <span className="text-lg text-ink/50">FCFA</span></p>
+                <p className="mt-1 text-sm text-ink/60">10 % du prix</p>
+              </div>
+              <div className="rounded-2xl bg-leaf/10 p-5">
+                <p className="text-xs font-bold uppercase tracking-wider text-leaf-deep">Filleul niveau 2 achète</p>
+                <p className="mt-2 font-display text-4xl font-extrabold">{fmt(safePrice * L2)} <span className="text-lg text-ink/50">FCFA</span></p>
+                <p className="mt-1 text-sm text-ink/60">5 % du prix</p>
+              </div>
+            </div>
+            <p className="mt-5 text-[13px] leading-relaxed text-ink/55">
+              Une commission est créditée une fois la vente définitive. Elle est annulée si la vente est remboursée.
             </p>
           </div>
+        </div>
+      </section>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-slate-200">
-                  <th className="py-3 px-4 font-bold text-slate-900 bg-slate-50 rounded-l-xl">Critère de vérification</th>
-                  <th className="py-3 px-4 font-bold text-emerald-700 bg-emerald-50/60">GLOBAL-AF (Éthique & Légal)</th>
-                  <th className="py-3 px-4 font-bold text-rose-700 bg-rose-50/60 rounded-r-xl">Système Pyramidal (Illégal)</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                <tr>
-                  <td className="py-3.5 px-4 font-semibold text-slate-800">Origine des commissions</td>
-                  <td className="py-3.5 px-4 text-emerald-800 font-medium">Ventes réelles de cours et d'outils digitaux</td>
-                  <td className="py-3.5 px-4 text-rose-800">Droit d'entrée payé par les nouveaux arrivants</td>
-                </tr>
-                <tr>
-                  <td className="py-3.5 px-4 font-semibold text-slate-800">Gain sur le simple recrutement</td>
-                  <td className="py-3.5 px-4 text-emerald-800 font-medium">0 FCFA (Strictement aucun gain)</td>
-                  <td className="py-3.5 px-4 text-rose-800">Rémunération par tête recrutée</td>
-                </tr>
-                <tr>
-                  <td className="py-3.5 px-4 font-semibold text-slate-800">Nombre de niveaux d'affiliation</td>
-                  <td className="py-3.5 px-4 text-emerald-800 font-medium">2 niveaux maximum (Plafonné)</td>
-                  <td className="py-3.5 px-4 text-rose-800">Niveaux infinis (Ponzi / Pyramide)</td>
-                </tr>
-                <tr>
-                  <td className="py-3.5 px-4 font-semibold text-slate-800">Inscription et accès</td>
-                  <td className="py-3.5 px-4 text-emerald-800 font-medium">Inscription gratuite ; un Pass est requis pour les missions et les retraits</td>
-                  <td className="py-3.5 px-4 text-rose-800">Non, achat obligatoire pour participer</td>
-                </tr>
-                <tr>
-                  <td className="py-3.5 px-4 font-semibold text-slate-800">Droit de rétractation</td>
-                  <td className="py-3.5 px-4 text-emerald-800 font-medium">Pass d'entrée : 7 jours, remboursement sous déduction des frais (3 %)</td>
-                  <td className="py-3.5 px-4 text-rose-800">Fonds bloqués sans aucun recours</td>
-                </tr>
-              </tbody>
-            </table>
+      {/* Test de contrôle */}
+      <section className="mx-auto max-w-4xl px-4 py-16 text-center sm:px-6 lg:py-20">
+        <BabiVector mood="think" size={110} className="mx-auto" />
+        <Eyebrow className="mt-4">Notre test de contrôle</Eyebrow>
+        <blockquote className="mt-4 text-balance font-display text-2xl font-extrabold leading-snug sm:text-3xl">
+          « Si plus personne ne s'inscrivait pendant un an, le parrain gagnerait-il encore grâce à de vrais clients ? »
+        </blockquote>
+        <p className="mt-4 text-[15px] text-ink/65">Si la réponse est non, le mécanisme est à corriger. C'est écrit dans notre charte.</p>
+      </section>
+
+      {/* Ce que nous faisons / refusons */}
+      <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8 lg:pb-20">
+        <Eyebrow>Nos règles</Eyebrow>
+        <h2 className="mt-4 max-w-2xl text-balance font-display text-3xl font-extrabold leading-tight sm:text-4xl">Ce que nous faisons, et ce que nous refusons.</h2>
+        <div className="mt-8 overflow-hidden rounded-3xl border border-ink/10">
+          <div className="hidden grid-cols-[1.1fr_1.4fr_1.4fr] bg-mist px-6 py-3 text-sm font-bold md:grid">
+            <span>Sujet</span><span className="text-leaf-deep">Chez GLOBAL-AF</span><span className="text-rose-700">Ce que nous refusons</span>
           </div>
+          {[
+            ['Origine des commissions', 'Ventes réelles : abonnements, formations, campagnes payées.', 'Droits d\'entrée payés par les nouveaux arrivants.'],
+            ['Gain sur le simple recrutement', 'Aucun.', 'Une prime par personne recrutée.'],
+            ['Niveaux', '2 au maximum, commissions plafonnées par rapport au prix.', 'Des niveaux illimités.'],
+            ['Faux comptes et auto-parrainage', 'Aucune commission, comptes suspendus.', 'Tolérés tant qu\'ils rapportent.'],
+            ['Droit de rétractation', 'Pass : 7 jours, remboursement sous déduction des frais de transaction (3 %).', 'Fonds bloqués, sans recours.'],
+          ].map(([topic, ours, theirs]) => (
+            <div key={topic} className="grid gap-1 border-t border-ink/10 px-6 py-4 first:border-t-0 md:grid-cols-[1.1fr_1.4fr_1.4fr] md:gap-4">
+              <p className="font-display text-base font-bold">{topic}</p>
+              <p className="flex gap-2 text-[15px] text-ink/80"><Check className="mt-0.5 h-5 w-5 shrink-0 text-leaf" strokeWidth={3} />{ours}</p>
+              <p className="flex gap-2 text-[15px] text-ink/55"><X className="mt-0.5 h-5 w-5 shrink-0 text-rose-500" strokeWidth={3} />{theirs}</p>
+            </div>
+          ))}
         </div>
-
-        {/* Bottom CTA */}
-        <div className="text-center py-4">
-          <button
-            onClick={() => onOpenAuth('signup')}
-            className="px-8 py-3.5 bg-slate-900 hover:bg-orange-600 text-white font-bold text-sm rounded-xl transition-all shadow-md active:scale-95 inline-flex items-center gap-2"
-          >
-            <span>Rejoindre le réseau de partenaires</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
+        <div className="mt-8 rounded-3xl bg-ink p-7 text-white">
+          <h3 className="font-display text-xl font-bold">Règles de communication pour les affiliés</h3>
+          <p className="mt-2 max-w-3xl text-[15px] leading-relaxed text-white/75">
+            Pas de slogan du type « gagne X par jour », pas de mise en scène d'argent, pas de formulation « jusqu'à » trompeuse. Les affiliés et partenaires s'engagent par écrit à respecter la charte, et des sanctions sont prévues en cas de manquement.
+          </p>
         </div>
+      </section>
 
-      </div>
+      <CtaBand
+        title="Parrainez en toute transparence."
+        text="Votre lien d'affiliation est disponible dans votre espace, avec le détail de chaque commission : en attente, validée ou annulée."
+        cta={currentUser ? 'Aller à mon espace' : 'Créer mon compte gratuit'}
+        onClick={start}
+      />
+      <ScarfRibbon />
     </div>
   );
 };

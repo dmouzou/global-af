@@ -569,18 +569,19 @@ export const FloatingChatbotWidget: React.FC<{
   return (
     <>
       {/* Floating Toggle Button */}
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-4 right-4 z-50 sm:bottom-6 sm:right-6">
         <motion.button
+          aria-label="Ouvrir l'assistant d'information"
           onClick={() => setIsOpen(!isOpen)}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="flex items-center gap-2.5 px-4 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-full shadow-2xl border-2 border-white/20 font-bold text-xs sm:text-sm"
+          className="flex items-center gap-2.5 px-4 py-3 bg-ink hover:bg-ink-soft text-white rounded-full shadow-2xl border-2 border-white/20 font-bold text-xs sm:text-sm"
         >
           <div className="relative">
             <Bot className="w-5 h-5" />
             <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-orange-500 animate-pulse" />
           </div>
-          <span>Chatbot Info</span>
+          <span className="hidden sm:inline">Chatbot Info</span>
         </motion.button>
       </div>
 

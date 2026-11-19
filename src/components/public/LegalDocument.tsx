@@ -45,15 +45,15 @@ interface LegalDocumentProps {
 export const LegalDocument: React.FC<LegalDocumentProps> = ({ doc, compact = false }) => {
   const d = LEGAL_DOCS[doc];
   return (
-    <article className="space-y-5 text-sm text-slate-700 leading-relaxed">
+    <article className="space-y-5 text-[15px] leading-relaxed text-ink/80">
       {!compact && (
         <header className="space-y-2">
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{d.title}</h1>
-          <p className="text-xs text-slate-500">Version du {LEGAL_VERSION_DATE}</p>
+          <h1 className="font-display text-3xl font-extrabold text-ink sm:text-4xl">{d.title}</h1>
+          <p className="text-sm text-ink/50">Version du {LEGAL_VERSION_DATE}</p>
         </header>
       )}
       {!LEGAL_REVIEWED && (
-        <div role="note" className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900">
+        <div role="note" className="rounded-2xl border border-sun/60 bg-sun/15 p-4 text-sm text-ink">
           <strong>Version provisoire.</strong> Ce texte est en cours de validation juridique ; les mentions signalées
           « à renseigner » seront complétées avant sa version définitive.
         </div>
@@ -61,7 +61,7 @@ export const LegalDocument: React.FC<LegalDocumentProps> = ({ doc, compact = fal
       <p>{renderInline(d.intro)}</p>
       {d.sections.map((s) => (
         <section key={s.title} className="space-y-2">
-          <h2 className="text-base font-bold text-slate-900">{s.title}</h2>
+          <h2 className="font-display text-xl font-bold text-ink">{s.title}</h2>
           {s.paragraphs?.map((p, i) => <p key={i}>{renderInline(p)}</p>)}
           {s.list && (
             <ul className="list-disc pl-5 space-y-1.5">
