@@ -122,12 +122,7 @@ interface AppContextType {
   submissions: TaskSubmission[];
   /** Participations en attente de revue (modération / administration). */
   adminSubmissions: TaskSubmission[];
-  /**
-   * Envoie la preuve au serveur. Retour immédiat (l'écran ferme son formulaire) ;
-   * le résultat réel est annoncé à la fin de l'appel.
-   * À remplacer par un retour asynchrone dès que le tableau de bord est découpé par onglet.
-   */
-  submitTaskProof: (taskId: string, proofType: 'url' | 'text' | 'screenshot', content: string) => ActionResult;
+  submitTaskProof: (taskId: string, proofType: 'url' | 'text', content: string) => Promise<ActionResult>;
   reviewSubmissionAdmin: (submissionId: string, status: 'approved' | 'rejected', feedback?: string) => Promise<ActionResult>;
   createTaskAdmin: (newTask: NewMission, missionId?: string) => Promise<ActionResult>;
   setMissionStatusAdmin: (missionId: string, status: Task['status']) => Promise<ActionResult>;
@@ -178,7 +173,7 @@ interface AppContextType {
   ethicalIndicators: EthicalIndicators | null;
 }
 
-const AppContext = createContext<AppContextType | undefined>(undefined);
+export const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const OPERATOR_MAP: Record<OperatorLabel, ServerOperator> = {
   'Wave': 'wave',
@@ -772,22 +767,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // ---- Modules sans serveur : aucune récompense, aucun point, aucun message simulé ----
-  const submitTaskProof: AppContextType['submitTaskProof'] = (taskId, proofType, content) => {
+  const submitTaskProof: AppContextType['submitTaskProof'] = async (taskId, proofType, content) => {
     if (!currentUser) return { success: false, message: 'Connexion requise.' };
-    if (proofType === 'screenshot') {
-      return { success: false, message: "Les captures d'écran ne sont pas encore acceptées : envoyez un lien https ou un texte." };
-    }
-    void (async () => {
-      try {
-        const res = await submitMissionProofCallable({ missionId: taskId, proofType, proofContent: content });
-        window.alert(res.data.status === 'approved'
+    try {
+      const res = await submitMissionProofCallable({ missionId: taskId, proofType, proofContent: content });
+      return {
+        success: true,
+        message: res.data.status === 'approved'
           ? 'Mission validée : la récompense est ajoutée à votre solde.'
-          : 'Preuve reçue. Elle sera vérifiée avant le versement de la récompense.');
-      } catch (err) {
-        window.alert(fnError(err, "L'envoi de la preuve a échoué."));
-      }
-    })();
-    return { success: true, message: 'Envoi de la preuve en cours…' };
+          : 'Preuve reçue. Elle sera vérifiée avant le versement de la récompense.'
+      };
+    } catch (err) {
+      return { success: false, message: fnError(err, "L'envoi de la preuve a échoué.") };
+    }
   };
 
   const reviewSubmissionAdmin: AppContextType['reviewSubmissionAdmin'] = async (submissionId, status, feedback) => {

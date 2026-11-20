@@ -570,7 +570,7 @@ export const FloatingChatbotWidget: React.FC<{
   return (
     <>
       {/* Floating Toggle Button */}
-      <div className="fixed bottom-4 right-4 z-50 sm:bottom-6 sm:right-6">
+      <div className="chatbot-fab fixed bottom-4 right-4 z-50 sm:bottom-6 sm:right-6">
         <motion.button
           aria-label="Discuter avec Babi"
           onClick={() => setIsOpen(!isOpen)}
