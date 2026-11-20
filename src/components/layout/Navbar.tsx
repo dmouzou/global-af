@@ -61,7 +61,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, setCurrentView, onO
           
           {/* Logo & badge d'état */}
           <div className="flex items-center gap-3 shrink-0">
-            <button onClick={() => go('landing')} className="shrink-0 text-left" aria-label="GLOBAL-AF, accueil" title="Voir l'accueil du site">
+            <button onClick={() => go('landing')} className="shrink-0 text-left" aria-label="AH GLOBAL, accueil" title="Voir l'accueil du site">
               <BrandLogo size="md" />
             </button>
             {isDashboard && (

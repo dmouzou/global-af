@@ -50,7 +50,7 @@ export const AdvertiserAdminLogin: React.FC<AdvertiserAdminLoginProps> = ({
 
       const sessionData = {
         email: cred.user.email || email.trim(),
-        companyName: 'GLOBAL-AF Direction Générale',
+        companyName: 'AH GLOBAL Direction Générale',
         role: 'admin' as const
       };
 
@@ -208,7 +208,7 @@ export const AdvertiserAdminLogin: React.FC<AdvertiserAdminLoginProps> = ({
       {/* Footer Info */}
       <div className="w-full max-w-md text-center mt-6 text-xs text-slate-500 space-y-1">
         <p>Déploiement certifié : <span className="font-mono text-slate-400">global-af-dev-admin</span></p>
-        <p>© 2026 GLOBAL-AF. Tous droits réservés.</p>
+        <p>© 2026 AH GLOBAL. Tous droits réservés.</p>
       </div>
     </div>
   );

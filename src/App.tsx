@@ -65,7 +65,7 @@ function AppContent() {
     if (isAdminUser && currentUser) {
       setAdvertiserAuth({
         email: currentUser.email,
-        companyName: 'GLOBAL-AF Direction Générale',
+        companyName: 'AH GLOBAL Direction Générale',
         role: 'admin'
       });
     } else if (!isAdminUser) {

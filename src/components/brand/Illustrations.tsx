@@ -1,7 +1,7 @@
 import React, { useId } from 'react';
 
 /**
- * Jeu d'illustrations vectorielles GLOBAL-AF : mêmes formes arrondies,
+ * Jeu d'illustrations vectorielles AH GLOBAL : mêmes formes arrondies,
  * même palette (orange wax, vert feuille, vert forêt, soleil) que Babi.
  */
 const C = {

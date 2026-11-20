@@ -50,7 +50,7 @@ export async function getCountryConfig(code: string,
   const snap = tx ? await tx.get(ref) : await ref.get();
   if (!snap.exists || (snap.data() as CountryConfig).enabled !== true) {
     throw new DomainError("country_unavailable",
-      "GLOBAL-AF n'est pas encore disponible dans ce pays.");
+      "AH GLOBAL n'est pas encore disponible dans ce pays.");
   }
   return snap.data() as CountryConfig;
 }

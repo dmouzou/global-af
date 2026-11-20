@@ -28,129 +28,6 @@ export const COUNTRIES_CONFIG: Record<string, CountryConfig> = {
   }
 };
 
-export const INITIAL_TASKS: Task[] = [
-  {
-    id: 'tsk-001',
-    title: 'Étude d\'usage du Mobile Money en Côte d\'Ivoire',
-    category: 'survey',
-    description: 'Partagez vos habitudes d\'utilisation de Wave, Orange Money et MTN MoMo pour les transactions quotidiennes.',
-    instructions: [
-      'Répondre consciencieusement aux 10 questions du formulaire sécurisé.',
-      'Indiquer la fréquence réelle de vos recharges et transferts.',
-      'Valider la dernière étape pour générer votre code de complétion.'
-    ],
-    rewardAmount: 600,
-    currency: 'XOF',
-    quotaMax: 1000,
-    quotaCurrent: 642,
-    requiredLevel: 'Starter',
-    countries: ['CI'],
-    isPremiumOnly: false,
-    startDate: '2026-10-01',
-    endDate: '2026-10-31',
-    targetPlatform: 'Web',
-    targetUrl: 'https://survey.global-af.ci/momo-habits',
-    verificationType: 'automatic',
-    status: 'published'
-  },
-  {
-    id: 'tsk-002',
-    title: 'Test UX & Ergonomie d\'une application de livraison abidjanaise',
-    category: 'app_test',
-    description: 'Testez la fluidité du parcours de commande d\'une application locale partenaire et signalez 2 pistes d\'amélioration concrètes.',
-    instructions: [
-      'Télécharger l\'application partenaire sur le Play Store ou tester la version web.',
-      'Simuler une commande fictive jusqu\'à l\'étape du récapitulatif.',
-      'Rédiger un avis constructif de 3 à 5 lignes avec une capture d\'écran.'
-    ],
-    rewardAmount: 1500,
-    currency: 'XOF',
-    quotaMax: 200,
-    quotaCurrent: 89,
-    requiredLevel: 'Bronze',
-    countries: ['CI'],
-    isPremiumOnly: false,
-    startDate: '2026-10-05',
-    endDate: '2026-10-25',
-    targetPlatform: 'PlayStore',
-    targetUrl: 'https://play.google.com/store/apps/details?id=ci.livraison.express',
-    verificationType: 'manual',
-    status: 'published'
-  },
-  {
-    id: 'tsk-003',
-    title: 'Découverte d\'un tutoriel sur la cybersécurité des comptes Mobile Money',
-    category: 'social_visit',
-    description: 'Visionnez une vidéo de sensibilisation de 4 minutes contre le hameçonnage par SMS et répondez aux 2 questions clés.',
-    instructions: [
-      'Regarder la vidéo éducative complète (pas de faux clic ni manipulation).',
-      'Identifier les 2 réflexes pour protéger son code secret Wave / MoMo.',
-      'Soumettre les 2 réponses pour validation immédiate.'
-    ],
-    rewardAmount: 400,
-    currency: 'XOF',
-    quotaMax: 1500,
-    quotaCurrent: 1120,
-    requiredLevel: 'Starter',
-    countries: ['CI'],
-    isPremiumOnly: false,
-    startDate: '2026-10-08',
-    endDate: '2026-11-08',
-    targetPlatform: 'YouTube',
-    targetUrl: 'https://youtube.com/watch?v=globalaf-cyber-protection',
-    verificationType: 'automatic',
-    status: 'published'
-  },
-  {
-    id: 'tsk-004',
-    title: 'Analyse d\'une fiche produit e-commerce (Artisanat d\'Afrique de l\'Ouest)',
-    category: 'content_review',
-    description: 'Vérifiez la clarté des descriptions et le prix affiché d\'une sélection de 3 produits artisanaux.',
-    instructions: [
-      'Consulter les 3 fiches produits sur la plateforme partenaire.',
-      'Vérifier que les informations de livraison pour Abidjan et l\'intérieur sont explicites.',
-      'Noter si les dimensions et la matière sont conformes.'
-    ],
-    rewardAmount: 850,
-    currency: 'XOF',
-    quotaMax: 300,
-    quotaCurrent: 142,
-    requiredLevel: 'Bronze',
-    countries: ['CI'],
-    isPremiumOnly: false,
-    startDate: '2026-10-02',
-    endDate: '2026-10-28',
-    targetPlatform: 'Web',
-    targetUrl: 'https://artisanat-ci.store/eval-produits',
-    verificationType: 'manual',
-    status: 'published'
-  },
-  {
-    id: 'tsk-005',
-    title: 'Mission Réservée Premium : Audit de conversion pour marque locale',
-    category: 'partner_campaign',
-    description: 'Mission approfondie : Réalisez un retour qualitatif complet sur l\'entonnoir d\'inscription d\'un service fintech partenaire.',
-    instructions: [
-      'Analyser le temps de chargement et la lisibilité des tarifs.',
-      'Proposer un résumé synthétique de 150 mots avec vos recommandations.',
-      'Rémunération majorée réservée aux membres ayant activé le pack Premium.'
-    ],
-    rewardAmount: 3200,
-    currency: 'XOF',
-    quotaMax: 100,
-    quotaCurrent: 24,
-    requiredLevel: 'Silver',
-    countries: ['CI'],
-    isPremiumOnly: true,
-    startDate: '2026-10-10',
-    endDate: '2026-10-30',
-    targetPlatform: 'Web',
-    targetUrl: 'https://fintech-audit.ci/onboarding-check',
-    verificationType: 'manual',
-    status: 'published'
-  }
-];
-
 export const INITIAL_COURSES: Course[] = [
   {
     id: 'crs-001',
@@ -244,7 +121,7 @@ Une annonce performante contient impérativement 3 éléments visibles dès le p
 2. **Le Prix net en FCFA et modalité de livraison** : Préciser le tarif et la zone de livraison couverte (Abidjan : Cocody, Yopougon, Marcory, etc.).
 3. **L'Appel à l'action immédiat** : Un lien WhatsApp clair avec un message pré-rempli ("Bonjour, je souhaite commander l'article vu sur votre page").
 
-### 3. Éthique publicitaire et règles de la plateforme GLOBAL-AF
+### 3. Éthique publicitaire et règles de la plateforme AH GLOBAL
 - **Tolérance zéro pour les allégations trompeuses** : Interdiction formelle des montages mensongers, faux témoignages ou promesses de gains sans travail.
 - **Transparence sur les garanties** : Rappel du droit de rétractation légal de 7 jours et de la possibilité de vérifier la conformité du produit lors de la livraison.`,
         keyTakeaways: [
@@ -261,7 +138,7 @@ Une annonce performante contient impérativement 3 éléments visibles dès le p
           questions: [
             {
               id: 'q-cp2-1',
-              question: 'Selon la charte de transparence de GLOBAL-AF, quel type d\'argumentaire commercial est formellement banni ?',
+              question: 'Selon la charte de transparence d\'AH GLOBAL, quel type d\'argumentaire commercial est formellement banni ?',
               options: [
                 'Les démonstrations vidéo montrant le produit réel sous différents angles',
                 'Les fausses allégations de gains miraculeux sans travail et les faux avis montés de toutes pièces',
@@ -269,7 +146,7 @@ Une annonce performante contient impérativement 3 éléments visibles dès le p
                 'Les remises de lancement limitées dans le temps et vérifiables'
               ],
               correctAnswerIndex: 1,
-              explanation: 'La charte de GLOBAL-AF interdit formellement tout argumentaire mensonger, trompeur ou assimilable à une arnaque pyramidale.'
+              explanation: 'La charte d\'AH GLOBAL interdit formellement tout argumentaire mensonger, trompeur ou assimilable à une arnaque pyramidale.'
             },
             {
               id: 'q-cp2-2',
@@ -567,7 +444,7 @@ Utilisez l'IA pour générer des scripts de réponses fluides intégrant le droi
             },
             {
               id: 'q-cp202-3',
-              question: 'Que prescrit la charte éthique de GLOBAL-AF sur l\'automatisation ?',
+              question: 'Que prescrit la charte éthique d\'AH GLOBAL sur l\'automatisation ?',
               options: [
                 'Transparence totale, interdiction du spam et respect absolu de la vie privée',
                 'Spammer des milliers de numéros sans leur consentement',
@@ -796,7 +673,7 @@ Le coût d'acquisition d'un nouveau client sur Meta Ads augmente chaque année. 
 - Offre exclusive réservée aux anciens clients sur les nouveaux arrivages via WhatsApp Status et listes de diffusion consenties.
 
 ### 2. Gestion éthique des retours et conformité
-Appliquer la politique de rétractation de 7 jours de GLOBAL-AF : un client qui sait qu'il peut échanger sans conflit achète avec le double de confiance.`,
+Appliquer la politique de rétractation de 7 jours d'AH GLOBAL : un client qui sait qu'il peut échanger sans conflit achète avec le double de confiance.`,
         keyTakeaways: [
           'La rentabilité à long terme repose sur le réachat des clients satisfaits.',
           'Le droit de rétractation de 7 jours est un puissant argument de vente.',
@@ -811,7 +688,7 @@ Appliquer la politique de rétractation de 7 jours de GLOBAL-AF : un client qui 
           questions: [
             {
               id: 'q-cp303-1',
-              question: 'Quelle est la durée de rétractation et remboursement garantie sur GLOBAL-AF pour protéger les acheteurs ?',
+              question: 'Quelle est la durée de rétractation et remboursement garantie sur AH GLOBAL pour protéger les acheteurs ?',
               options: [
                 '0 jour (aucun remboursement possible)',
                 '7 jours sans condition arbitraire sur les achats éligibles',
@@ -819,7 +696,7 @@ Appliquer la politique de rétractation de 7 jours de GLOBAL-AF : un client qui 
                 'Uniquement si le client paie une pénalité'
               ],
               correctAnswerIndex: 1,
-              explanation: 'La garantie de rétractation de 7 jours est l\'un des piliers cardinaux de la charte éthique de GLOBAL-AF.'
+              explanation: 'La garantie de rétractation de 7 jours est l\'un des piliers cardinaux de la charte éthique d\'AH GLOBAL.'
             },
             {
               id: 'q-cp303-2',

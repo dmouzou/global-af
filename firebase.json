@@ -27,7 +27,7 @@
     "providers": {
       "emailPassword": true,
       "googleSignIn": {
-        "oAuthBrandDisplayName": "GLOBAL-AF",
+        "oAuthBrandDisplayName": "AH GLOBAL",
         "supportEmail": "support@globalaf.com"
       }
     }

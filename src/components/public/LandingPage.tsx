@@ -28,7 +28,7 @@ const CATEGORY_LABEL: Record<string, string> = {
 
 const FAQS = [
   {
-    q: "Comment fonctionne la rémunération sur GLOBAL-AF ?",
+    q: "Comment fonctionne la rémunération sur AH GLOBAL ?",
     a: "Les récompenses de missions et les commissions de parrainage sont fixées et publiées à l'avance ; aucun hasard n'intervient jamais. Les commissions ne portent que sur des ventes réelles (jamais sur l'inscription ni sur l'activation seule). L'ouverture des missions rémunérées est en cours : consultez votre espace pour l'état actuel. Aucun gain n'est garanti.",
   },
   {
@@ -44,7 +44,7 @@ const FAQS = [
     a: "Le Pass d'entrée (Standard) se rétracte pendant 7 jours à compter du paiement, depuis « Paramètres » : le remboursement, sous déduction des frais de transaction (3 %), est traité vers le moyen de paiement utilisé. L'abonnement VIP Premium n'est pas remboursable car l'accès aux fichiers et contacts VCF est immédiat et définitif.",
   },
   {
-    q: "Qu'est-ce que la charte éthique de GLOBAL-AF ?",
+    q: "Qu'est-ce que la charte éthique d'AH GLOBAL ?",
     a: "Cinq engagements : commissions uniquement sur des ventes réelles et sur 2 niveaux maximum ; une offre payante correspond à un contenu décrit avant paiement ; aucune promesse de gain facile, avec des indicateurs réels publiés dès qu'ils existent ; interdiction des jeux de hasard et des tombolas ; protection des membres (18 ans minimum, plafond de dépense mensuel réglable).",
   },
 ];
@@ -434,7 +434,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
         <WaxPattern tone="orange" className="pointer-events-none absolute inset-0 opacity-70" />
         <div className="relative mx-auto grid max-w-7xl items-center gap-6 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_auto] lg:px-8 lg:py-20">
           <div>
-            <h2 className="max-w-2xl text-balance font-display text-4xl font-extrabold leading-[1.05] sm:text-5xl">Prêt à découvrir GLOBAL-AF ?</h2>
+            <h2 className="max-w-2xl text-balance font-display text-4xl font-extrabold leading-[1.05] sm:text-5xl">Prêt à découvrir AH GLOBAL ?</h2>
             <p className="mt-4 max-w-xl text-lg text-white/90">Créez votre compte gratuit en quelques minutes. Vous décidez ensuite, en toute connaissance de cause, de ce que vous activez.</p>
             <button onClick={() => onOpenAuth('signup')} className="mt-8 inline-flex items-center gap-2 rounded-full bg-ink px-8 py-4 text-base font-bold text-white shadow-[0_18px_30px_-14px_rgba(15,42,30,0.9)] transition hover:-translate-y-0.5 hover:bg-ink-soft">
               Créer mon compte gratuit <ArrowRight className="h-5 w-5" />

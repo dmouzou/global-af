@@ -41,7 +41,7 @@ export const PartnerPage: React.FC<PartnerPageProps> = () => {
     }
     setError(null);
     const body = [
-      'Demande de partenariat GLOBAL-AF',
+      'Demande de partenariat AH GLOBAL',
       '',
       `Raison sociale : ${companyName}`,
       `RCCM : ${rccm}`,

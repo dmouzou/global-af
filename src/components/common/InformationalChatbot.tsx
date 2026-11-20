@@ -20,7 +20,7 @@ const KNOWLEDGE_BASE: { keywords: string[]; title: string; answer: string; sugge
   {
     keywords: ['retrait', 'retirer', 'solde', 'seuil', 'virement', 'argent', 'gain', 'gagne'],
     title: 'Retraits',
-    answer: `Voici comment fonctionnent les retraits sur GLOBAL-AF :
+    answer: `Voici comment fonctionnent les retraits sur AH GLOBAL :
 
 • **Où :** depuis la rubrique « Retraits » de votre espace personnel, vers un compte Mobile Money (Wave, Orange Money, MTN MoMo ou Moov Money).
 • **Numéro :** le versement se fait sur le numéro Mobile Money indiqué à votre inscription.
@@ -41,7 +41,7 @@ Aucun gain n'est garanti : le solde dépend uniquement des récompenses et commi
   {
     keywords: ['parrain', 'parrainage', 'affiliation', 'commission', 'filleul', 'bonus', 'inviter'],
     title: 'Parrainage',
-    answer: `Le programme de parrainage de GLOBAL-AF est simple, direct et transparent (1 niveau) :
+    answer: `Le programme de parrainage d’AH GLOBAL est simple, direct et transparent (1 niveau) :
 
 • **10 % sur le Pass Membre :** dès que votre filleul direct active son compte avec le Pass Membre, vous recevez 10 % du prix du Pass sur votre solde.
 • **5 % sur sa 1ère commande :** sur la première vente réelle de votre filleul sur l'application (abonnement VIP, formation payante, consultation ou prestation).
@@ -120,7 +120,7 @@ Les conditions d'accès détaillées de chaque rubrique sont indiquées dans vot
     answer: `Les paiements d'offres se font sur une **page sécurisée de notre partenaire CinetPay** :
 
 • **Mobile Money :** Wave, Orange Money, MTN MoMo, Moov Money ; vous choisissez votre opérateur sur cette page.
-• **Carte bancaire Visa :** les données de votre carte sont saisies uniquement sur la page sécurisée, jamais sur GLOBAL-AF ; une adresse de facturation vous est demandée.
+• **Carte bancaire Visa :** les données de votre carte sont saisies uniquement sur la page sécurisée, jamais sur AH GLOBAL ; une adresse de facturation vous est demandée.
 • **Devise :** Franc CFA (XOF).
 • **Activation :** votre offre est activée après la confirmation du paiement, pas avant.
 
@@ -179,7 +179,7 @@ export const InformationalChatbot: React.FC<InformationalChatbotProps> = ({
     {
       id: 'welcome',
       role: 'bot',
-      text: "Akwaba ! Moi c'est **Babi**, votre assistant officiel sur GLOBAL-AF 🐘.\n\nJe suis là pour vous orienter sur le fonctionnement de la plateforme, les **micro-jobs**, les **retraits Mobile Money**, les **outils IA**, l'**Académie** ou le **parrainage**.\n\nPosez-moi votre question ou cliquez sur une suggestion ci-dessous !",
+      text: "Akwaba ! Moi c'est **Babi**, votre assistant officiel sur AH GLOBAL 🐘.\n\nJe suis là pour vous orienter sur le fonctionnement de la plateforme, les **micro-jobs**, les **retraits Mobile Money**, les **outils IA**, l'**Académie** ou le **parrainage**.\n\nPosez-moi votre question ou cliquez sur une suggestion ci-dessous !",
       time: 'À l\'instant',
       suggestions: [
         "Comment retirer mes gains Mobile Money ?",
@@ -345,7 +345,7 @@ export const InformationalChatbot: React.FC<InformationalChatbotProps> = ({
               </span>
             </div>
             <p className="text-[11px] text-slate-300">
-              Mascotte & Assistant GLOBAL-AF · Informations en direct
+              Mascotte & Assistant AH GLOBAL · Informations en direct
             </p>
           </div>
         </div>

@@ -129,7 +129,7 @@ export const EXAM_QUESTIONS_CRS_001: QuizQuestion[] = [
   },
   {
     id: 'c1-q19',
-    question: 'Que prescrit la charte de transparence de GLOBAL-AF concernant la publicité sur les réseaux sociaux ?',
+    question: 'Que prescrit la charte de transparence d\'AH GLOBAL concernant la publicité sur les réseaux sociaux ?',
     options: ['Zéro promesse trompeuse, affichage exact des conditions de rétractation de 7 jours et traçabilité des opérations', 'Promettre de devenir millionnaire en 48 heures sans travailler', 'Masquer les prix pour forcer le clic', 'Prétendre que le hasard décide des gains'],
     correctAnswerIndex: 0,
     explanation: 'La charte impose l\'honnêteté intégrale : aucun gain fictif ou promesse illusoire n\'est toléré.'
@@ -199,10 +199,10 @@ export const EXAM_QUESTIONS_CRS_001: QuizQuestion[] = [
   },
   {
     id: 'c1-q29',
-    question: 'Quelle est la part moyenne des commissions versées dans le cadre de l\'affiliation éthique sur GLOBAL-AF ?',
+    question: 'Quelle est la part moyenne des commissions versées dans le cadre de l\'affiliation éthique sur AH GLOBAL ?',
     options: ['10% sur le Niveau 1 et 5% sur le Niveau 2 (strictement plafonné à 2 niveaux)', '50% sur 10 niveaux', '100% du prix d\'inscription', 'Zéro pourcent'],
     correctAnswerIndex: 0,
-    explanation: 'GLOBAL-AF applique une règle immuable : 10% sur le niveau direct et 5% sur le niveau indirect, exclusivement sur les ventes réelles.'
+    explanation: 'AH GLOBAL applique une règle immuable : 10% sur le niveau direct et 5% sur le niveau indirect, exclusivement sur les ventes réelles.'
   },
   {
     id: 'c1-q30',
@@ -255,7 +255,7 @@ export const EXAM_QUESTIONS_CRS_001: QuizQuestion[] = [
   },
   {
     id: 'c1-q37',
-    question: 'Que permet l\'outil d\'intelligence artificielle intégré sur la plateforme GLOBAL-AF ?',
+    question: 'Que permet l\'outil d\'intelligence artificielle intégré sur la plateforme AH GLOBAL ?',
     options: ['Générer automatiquement des accroches publicitaires WhatsApp et Facebook adaptées aux codes culturels ivoiriens en quelques secondes', 'Voler les mots de passe des utilisateurs', 'Prédire les numéros de la loterie', 'Remplacer l\'humain pour tout'],
     correctAnswerIndex: 0,
     explanation: 'L\'assistant IA aide les créateurs et commerçants à rédiger des textes percutants adaptés au marché ouest-africain.'
@@ -269,7 +269,7 @@ export const EXAM_QUESTIONS_CRS_001: QuizQuestion[] = [
   },
   {
     id: 'c1-q39',
-    question: 'Que garantit le matricule officiel de membre délivré par GLOBAL-AF lors de la certification ?',
+    question: 'Que garantit le matricule officiel de membre délivré par AH GLOBAL lors de la certification ?',
     options: ['L\'authenticité infalsifiable du certificat de compétences, vérifiable publiquement dans le registre officiel de l\'Académie', 'Un abonnement téléphonique gratuit à vie', 'Une exonération de toutes les taxes', 'Rien de particulier'],
     correctAnswerIndex: 0,
     explanation: 'Le matricule officiel atteste devant les employeurs et clients que le titulaire a réussi l\'examen avec au moins 80% de bonnes réponses.'

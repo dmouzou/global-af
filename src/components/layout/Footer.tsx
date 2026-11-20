@@ -55,7 +55,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateSection }) => {
 
         <div className="mt-12 flex flex-col gap-5 border-t border-white/12 pt-6 text-[13px] text-white/60 md:flex-row md:items-center md:justify-between">
           <div className="space-y-2">
-            <p>© 2026 GLOBAL-AF. Tous droits réservés.</p>
+            <p>© 2026 AH GLOBAL. Tous droits réservés.</p>
             <nav aria-label="Informations légales" className="flex flex-wrap gap-x-5 gap-y-1">
               <button type="button" onClick={() => nav('cgu')} className="hover:text-white">Conditions générales</button>
               <button type="button" onClick={() => nav('confidentialite')} className="hover:text-white">Confidentialité</button>

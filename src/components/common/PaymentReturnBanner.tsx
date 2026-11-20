@@ -61,7 +61,7 @@ export const PaymentReturnBanner: React.FC = () => {
   return (
     <div role="status" className={`mx-auto max-w-5xl mt-4 px-4 py-3 rounded-xl border text-xs flex items-start justify-between gap-3 ${tone}`}>
       <div className="leading-relaxed">
-        <strong>Paiement GLOBAL-AF</strong> — {message}
+        <strong>Paiement AH GLOBAL</strong> — {message}
         <span className="block text-[10px] opacity-70 mt-0.5">Référence : {pid}</span>
       </div>
       <button type="button" onClick={close} className="shrink-0 font-semibold underline">Fermer</button>

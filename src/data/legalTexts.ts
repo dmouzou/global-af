@@ -1,5 +1,5 @@
 /**
- * Textes juridiques de GLOBAL-AF (projet à faire valider par un conseil).
+ * Textes juridiques d'AH GLOBAL (projet à faire valider par un conseil).
  * Syntaxe : {{champ}} = valeur de LEGAL_ENTITY ou de POLICY ; **gras**.
  */
 export interface LegalSection {
@@ -19,12 +19,12 @@ export const LEGAL_DOCS: Record<LegalDoc['id'], LegalDoc> = {
     id: 'cgu',
     title: "Conditions générales d'utilisation",
     intro:
-      "Ces conditions régissent l'utilisation de la plateforme web GLOBAL-AF par toute personne qui y crée un compte. En créant un compte, vous déclarez les avoir lues et acceptées.",
+      "Ces conditions régissent l'utilisation de la plateforme web AH GLOBAL par toute personne qui y crée un compte. En créant un compte, vous déclarez les avoir lues et acceptées.",
     sections: [
       {
         title: '1. Éditeur et objet',
         paragraphs: [
-          "GLOBAL-AF est une plateforme web éditée par **{{name}}** ({{legalForm}}, RCCM {{rccm}}, siège : {{address}}). Elle réunit des formations, des missions numériques, un programme d'affiliation et un portefeuille de récompenses, accessibles depuis un navigateur.",
+          "AH GLOBAL est une plateforme web éditée par **{{name}}** ({{legalForm}}, RCCM {{rccm}}, siège : {{address}}). Elle réunit des formations, des missions numériques, un programme d'affiliation et un portefeuille de récompenses, accessibles depuis un navigateur.",
           "Contact : {{email}}.",
         ],
       },
@@ -63,7 +63,7 @@ export const LEGAL_DOCS: Record<LegalDoc['id'], LegalDoc> = {
       {
         title: '5. Paiement',
         paragraphs: [
-          "Les paiements s'effectuent sur la page sécurisée de notre prestataire de paiement **CinetPay**, par Mobile Money (Wave, Orange Money, MTN MoMo, Moov Money) ou par carte bancaire Visa. Les données de votre carte sont saisies uniquement sur cette page : GLOBAL-AF ne les voit ni ne les conserve.",
+          "Les paiements s'effectuent sur la page sécurisée de notre prestataire de paiement **CinetPay**, par Mobile Money (Wave, Orange Money, MTN MoMo, Moov Money) ou par carte bancaire Visa. Les données de votre carte sont saisies uniquement sur cette page : AH GLOBAL ne les voit ni ne les conserve.",
           "Votre offre est activée **après la confirmation** du paiement par le prestataire. Si vous avez été débité sans activation, écrivez à {{email}} en indiquant la référence de paiement affichée sur la page de retour.",
         ],
       },
@@ -124,14 +124,14 @@ export const LEGAL_DOCS: Record<LegalDoc['id'], LegalDoc> = {
       {
         title: '12. Suspension et clôture',
         paragraphs: [
-          'Vous pouvez demander la clôture de votre compte à tout moment. GLOBAL-AF peut suspendre ou clôturer un compte en cas de manquement à ces conditions ou de fraude, après avoir, lorsque c\'est possible, informé le Membre du motif.',
+          'Vous pouvez demander la clôture de votre compte à tout moment. AH GLOBAL peut suspendre ou clôturer un compte en cas de manquement à ces conditions ou de fraude, après avoir, lorsque c\'est possible, informé le Membre du motif.',
           "À la clôture, les sommes dues au Membre lui sont versées après contrôle, sauf en cas de fraude établie.",
         ],
       },
       {
         title: '13. Responsabilité',
         paragraphs: [
-          "Le service est fourni « en l'état ». GLOBAL-AF ne garantit ni l'absence d'interruption, ni un résultat financier. Les opérateurs de paiement et les prestataires techniques sont des tiers : leurs indisponibilités échappent à notre contrôle.",
+          "Le service est fourni « en l'état ». AH GLOBAL ne garantit ni l'absence d'interruption, ni un résultat financier. Les opérateurs de paiement et les prestataires techniques sont des tiers : leurs indisponibilités échappent à notre contrôle.",
           "Les outils d'aide à la rédaction fournissent des propositions que vous devez relire : vous restez responsable de ce que vous publiez.",
         ],
       },
@@ -166,7 +166,7 @@ export const LEGAL_DOCS: Record<LegalDoc['id'], LegalDoc> = {
     id: 'confidentialite',
     title: 'Politique de confidentialité',
     intro:
-      "Cette politique explique quelles données personnelles GLOBAL-AF traite, pourquoi, avec qui elles sont partagées, combien de temps elles sont conservées et comment exercer vos droits.",
+      "Cette politique explique quelles données personnelles AH GLOBAL traite, pourquoi, avec qui elles sont partagées, combien de temps elles sont conservées et comment exercer vos droits.",
     sections: [
       {
         title: '1. Responsable du traitement',
@@ -272,7 +272,7 @@ export const LEGAL_DOCS: Record<LegalDoc['id'], LegalDoc> = {
         title: '2. Ressources tierces chargées par le site',
         list: [
           "**Polices de caractères** : le site charge des polices depuis Google Fonts et un service de polices tiers. Votre navigateur transmet alors votre adresse IP à ces services.",
-          "**Page de paiement CinetPay** : lorsque vous payez, vous quittez GLOBAL-AF pour une page du prestataire, qui applique sa propre politique en matière de cookies.",
+          "**Page de paiement CinetPay** : lorsque vous payez, vous quittez AH GLOBAL pour une page du prestataire, qui applique sa propre politique en matière de cookies.",
         ],
       },
       {
@@ -293,7 +293,7 @@ export const LEGAL_DOCS: Record<LegalDoc['id'], LegalDoc> = {
   mentions: {
     id: 'mentions',
     title: 'Mentions légales',
-    intro: "Informations légales sur l'éditeur et l'hébergeur de la plateforme GLOBAL-AF.",
+    intro: "Informations légales sur l'éditeur et l'hébergeur de la plateforme AH GLOBAL.",
     sections: [
       {
         title: 'Éditeur',
@@ -315,7 +315,7 @@ export const LEGAL_DOCS: Record<LegalDoc['id'], LegalDoc> = {
       {
         title: 'Paiement',
         paragraphs: [
-          "Les paiements sont traités par CinetPay et les opérateurs ou banques concernés ; GLOBAL-AF ne conserve aucun numéro de carte.",
+          "Les paiements sont traités par CinetPay et les opérateurs ou banques concernés ; AH GLOBAL ne conserve aucun numéro de carte.",
         ],
       },
       {

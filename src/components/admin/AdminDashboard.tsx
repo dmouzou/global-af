@@ -215,7 +215,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <span className="px-2.5 py-0.5 text-[10px] font-bold bg-amber-500 text-slate-950 rounded-full uppercase tracking-wider shadow-sm">
-              {advertiserInfo?.role === 'advertiser' ? 'Portail Annonceur Certifié' : 'Back-Office GLOBAL-AF'}
+              {advertiserInfo?.role === 'advertiser' ? 'Portail Annonceur Certifié' : 'Back-Office AH GLOBAL'}
             </span>
             <span className="text-xs text-slate-300 font-mono">
               Site : <strong className="text-emerald-400">global-af-dev-admin</strong>

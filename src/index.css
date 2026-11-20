@@ -10,7 +10,7 @@
   --font-anton: 'Bricolage Grotesque Variable', ui-sans-serif, system-ui, sans-serif;
   --font-notable: 'Bricolage Grotesque Variable', ui-sans-serif, system-ui, sans-serif;
 
-  /* Identité GLOBAL-AF : tricolore ivoirien + vert forêt profond pour les aplats sombres. */
+  /* Identité AH GLOBAL : tricolore ivoirien + vert forêt profond pour les aplats sombres. */
   --color-wax: #FF7700;
   --color-wax-deep: #E56A00;
   --color-leaf: #009E49;
@@ -149,7 +149,7 @@
 
 
 /* ==========================================================================
-   Refonte GLOBAL-AF — rubans, mascotte et mouvement
+   Refonte AH GLOBAL — rubans, mascotte et mouvement
    ========================================================================== */
 
 /* Le ruban du foulard de Babi : motif structurant du site. */

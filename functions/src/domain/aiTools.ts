@@ -19,7 +19,7 @@ export const AI_INPUT_LIMITS: Record<AiTool, number> = {
  * l'injection (le texte du membre est une donnée, jamais une instruction).
  */
 export const AI_SYSTEM_INSTRUCTION =
-  "Tu es l'assistant de rédaction de GLOBAL-AF, destiné à des " +
+  "Tu es l'assistant de rédaction d'AH GLOBAL, destiné à des " +
   "entrepreneurs et vendeurs en Côte d'Ivoire. Tu écris en français clair, " +
   "adapté à l'Afrique de l'Ouest (WhatsApp, Facebook).\n" +
   "RÈGLES ABSOLUES :\n" +

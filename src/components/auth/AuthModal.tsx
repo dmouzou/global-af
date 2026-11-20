@@ -152,7 +152,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
                 {mode === 'verify' && 'Vérification par E-mail'}
                 {mode === 'onboarding' && `Parcours d'accueil (${onboardingStep}/6)`}
               </h3>
-              <p className="text-[11px] text-slate-500">GLOBAL-AF · Côte d'Ivoire</p>
+              <p className="text-[11px] text-slate-500">AH GLOBAL · Côte d'Ivoire</p>
             </div>
           </div>
           <button 
@@ -345,7 +345,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
                     className="mt-0.5 rounded text-orange-600 focus:ring-orange-500 w-4 h-4"
                   />
                   <span className="text-slate-600 text-[11px] leading-tight">
-                    <strong className="text-slate-900">Vous approuvez sans réserve les CGU</strong> et la Charte Éthique de GLOBAL-AF.{' '}
+                    <strong className="text-slate-900">Vous approuvez sans réserve les CGU</strong> et la Charte Éthique d'AH GLOBAL.{' '}
                     <button 
                       type="button" 
                       onClick={() => setShowCguModal(true)} 
@@ -430,7 +430,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
               {onboardingStep === 1 && (
                 <div className="space-y-2 text-xs text-slate-600">
                   <h4 className="font-bold text-slate-900 text-sm">Votre profil est prêt !</h4>
-                  <p>Votre identifiant GLOBAL-AF est associé à votre numéro Mobile Money pour garantir des transferts et retraits sécurisés.</p>
+                  <p>Votre identifiant AH GLOBAL est associé à votre numéro Mobile Money pour garantir des transferts et retraits sécurisés.</p>
                   <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
                     <div><strong>Pays :</strong> Côte d'Ivoire (XOF - FCFA)</div>
                     <div><strong>Statut initial :</strong> Membre Standard Gratuit</div>
@@ -449,7 +449,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
               {onboardingStep === 3 && (
                 <div className="space-y-2 text-xs text-slate-600">
                   <h4 className="font-bold text-slate-900 text-sm">Comment fonctionne la rémunération ?</h4>
-                  <p>Sur GLOBAL-AF, vous gagnez des récompenses en réalisant des tâches réelles :</p>
+                  <p>Sur AH GLOBAL, vous gagnez des récompenses en réalisant des tâches réelles :</p>
                   <ul className="list-disc pl-4 space-y-1">
                     <li>Sondages et avis d'usage sur les outils digitaux</li>
                     <li>Tests d'applications locales partenaires</li>
@@ -528,7 +528,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
                   <h3 className="text-sm font-bold text-slate-900">
                     Conditions générales d'utilisation
                   </h3>
-                  <p className="text-[11px] text-slate-500">Cadre juridique GLOBAL-AF · République de Côte d'Ivoire & UEMOA</p>
+                  <p className="text-[11px] text-slate-500">Cadre juridique AH GLOBAL · République de Côte d'Ivoire & UEMOA</p>
                 </div>
               </div>
               <button 
@@ -548,7 +548,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
             {/* Modal Footer Actions */}
             <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-3">
               <span className="text-[11px] text-slate-500">
-                Document opposable à tout utilisateur de GLOBAL-AF
+                Document opposable à tout utilisateur d'AH GLOBAL
               </span>
               <div className="flex items-center gap-2">
                 <button

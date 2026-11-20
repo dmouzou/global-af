@@ -13,7 +13,7 @@ const PREDEFINED_FAQS: FAQItem[] = [
   {
     id: 'faq-1',
     category: 'Général',
-    question: "Comment s'inscrire et commencer sur GLOBAL-AF ?",
+    question: "Comment s'inscrire et commencer sur AH GLOBAL ?",
     answer: "L'inscription est rapide et sans engagement. Il vous suffit d'indiquer votre numéro Mobile Money et votre e-mail. Dès l'ouverture de votre Espace Personnel, vous avez un accès direct aux micro-jobs qualifiés, aux modules d'initiation et à votre lien d'affiliation."
   },
   {
@@ -206,7 +206,7 @@ export const FAQGemini: React.FC<{ onNavigateView?: (view: string) => void }> = 
               {/* Contact Channels */}
               <div className="space-y-2.5">
                 <a
-                  href="https://wa.me/2250700000000?text=Bonjour,%20je%20souhaite%20des%20informations%20sur%20GLOBAL-AF"
+                  href="https://wa.me/2250700000000?text=Bonjour,%20je%20souhaite%20des%20informations%20sur%20AH GLOBAL"
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center justify-between p-3.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors text-emerald-950 font-semibold text-xs group"
@@ -222,7 +222,7 @@ export const FAQGemini: React.FC<{ onNavigateView?: (view: string) => void }> = 
                 </a>
 
                 <a
-                  href="mailto:contact@global-af.ci?subject=Demande%20d'assistance%20GLOBAL-AF"
+                  href="mailto:contact@global-af.ci?subject=Demande%20d'assistance%20AH GLOBAL"
                   className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors text-slate-800 font-semibold text-xs group"
                 >
                   <div className="flex items-center gap-3">

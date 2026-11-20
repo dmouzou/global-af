@@ -483,7 +483,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth, on
               <span className="w-1/3 h-full bg-white"></span>
               <span className="w-1/3 h-full bg-[#009E49]"></span>
             </div>
-            <span className="text-[11px] font-bold text-slate-800">GLOBAL-AF Côte d'Ivoire</span>
+            <span className="text-[11px] font-bold text-slate-800">AH GLOBAL Côte d'Ivoire</span>
           </div>
           <div className="text-[10px] text-slate-400 leading-tight">
             Plateforme conforme ARTCI.
@@ -888,7 +888,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth, on
                         <span className="w-1/3 h-full bg-white"></span>
                         <span className="w-1/3 h-full bg-[#009E49]"></span>
                       </div>
-                      <span className="font-display font-extrabold text-sm tracking-wide text-white">GLOBAL-AF</span>
+                      <span className="font-display font-extrabold text-sm tracking-wide text-white">AH GLOBAL</span>
                     </div>
                     <span className="text-[10px] uppercase font-mono tracking-widest text-orange-400 font-bold bg-orange-950/80 px-2 py-0.5 rounded border border-orange-500/40">
                       CARTE OFFICIELLE
@@ -1039,7 +1039,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth, on
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="space-y-1">
                   <div className="text-[10px] uppercase font-mono tracking-widest text-orange-100 font-bold">
-                    CARTE DE MEMBRE GLOBAL-AF
+                    CARTE DE MEMBRE AH GLOBAL
                   </div>
                   <h3 className="text-2xl font-display font-extrabold text-white">
                     {currentUser.firstName} {currentUser.lastName}
@@ -2371,7 +2371,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth, on
                 <BabiMascot variant="waving" size="sm" />
                 <div>
                   <h1 className="text-xl sm:text-2xl font-display font-extrabold text-slate-900">
-                    Communauté Interne GLOBAL-AF
+                    Communauté Interne AH GLOBAL
                   </h1>
                   <p className="text-xs text-slate-500 mt-0.5">
                     Échangez des astuces, partagez vos résultats et découvrez les retours d'expérience.
@@ -2653,7 +2653,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth, on
                 </h3>
               </div>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Pour empêcher toute dépense excessive ou comportement compulsif, vous pouvez fixer un plafond maximal de dépense mensuelle sur GLOBAL-AF. Aucune incitation à l'endettement n'est tolérée sur notre plateforme.
+                Pour empêcher toute dépense excessive ou comportement compulsif, vous pouvez fixer un plafond maximal de dépense mensuelle sur AH GLOBAL. Aucune incitation à l'endettement n'est tolérée sur notre plateforme.
               </p>
 
               <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
@@ -2894,7 +2894,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth, on
               <div className="flex items-center gap-2">
                 <BabiMascot variant="welcome" size="sm" />
                 <h3 className="font-display font-bold text-slate-900 text-sm">
-                  {hasSubscription ? 'Renouveler mon abonnement' : 'Activez votre accès aux services GLOBAL-AF'}
+                  {hasSubscription ? 'Renouveler mon abonnement' : 'Activez votre accès aux services AH GLOBAL'}
                 </h3>
               </div>
               <button 
@@ -2994,7 +2994,7 @@ export const MemberDashboard: React.FC<MemberDashboardProps> = ({ onOpenAuth, on
                 <p className="text-[10px] text-slate-500 mt-1.5">
                   {activationMethod === 'mobile_money'
                     ? "Vous choisirez votre opérateur et confirmerez le paiement sur la page sécurisée CinetPay."
-                    : "Les données de votre carte sont saisies uniquement sur la page sécurisée CinetPay : GLOBAL-AF ne les voit jamais."}
+                    : "Les données de votre carte sont saisies uniquement sur la page sécurisée CinetPay : AH GLOBAL ne les voit jamais."}
                 </p>
               </div>
 

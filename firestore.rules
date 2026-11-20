@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// GLOBAL-AF — règles Firestore (base « global-af-database »).
+// AH GLOBAL — règles Firestore (base « global-af-database »).
 // Principe : le client LIT ses propres données, mais n'ÉCRIT RIEN sur les
 // données sensibles (profil, wallet, ledger, retraits, commissions,
 // paiements, audit). Toute écriture passe par les Cloud Functions (Admin SDK),

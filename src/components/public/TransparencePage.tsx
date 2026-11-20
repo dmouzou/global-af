@@ -109,7 +109,7 @@ export const TransparencePage: React.FC<TransparencePageProps> = ({ onGoToDashbo
           <div className="relative">
             <Eyebrow className="text-white!">L'engagement de Babi</Eyebrow>
             <blockquote className="mt-4 text-balance font-display text-2xl font-extrabold leading-snug sm:text-[1.7rem]">
-              « Sur GLOBAL-AF, personne ne doit payer sans savoir ce qu'il achète, ce qu'il peut retirer et ce qu'il risque. »
+              « Sur AH GLOBAL, personne ne doit payer sans savoir ce qu'il achète, ce qu'il peut retirer et ce qu'il risque. »
             </blockquote>
             <div className="mt-6 flex justify-center sm:justify-start"><BabiVector mood="happy" prop="shield" size={150} /></div>
           </div>

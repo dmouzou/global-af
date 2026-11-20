@@ -65,7 +65,7 @@ if (apiKey) {
   });
 }
 
-const GLOBAL_AF_SYSTEM_INSTRUCTION = `Tu es l'assistant automatique de la plateforme GLOBAL-AF (Côte d'Ivoire). Tu informes de façon exacte, prudente et concise, en français.
+const GLOBAL_AF_SYSTEM_INSTRUCTION = `Tu es l'assistant automatique de la plateforme AH GLOBAL (Côte d'Ivoire). Tu informes de façon exacte, prudente et concise, en français.
 
 CE QUI EXISTE AUJOURD'HUI (n'affirme rien d'autre) :
 - Inscription gratuite (18 ans minimum, e-mail à confirmer). Un Pass actif est NÉCESSAIRE pour les missions rémunérées, les formations et les retraits : le Pass d'entrée (non remboursable, reconnu avant paiement) ou un abonnement (Premium, Business). Contenu, prix et frais sont affichés avant le paiement. Un Pass ne garantit aucun gain.
@@ -102,7 +102,7 @@ app.post('/api/chat', async (req, res) => {
 
     if (!ai) {
       return res.json({
-        answer: "GLOBAL-AF est une plateforme web en Côte d'Ivoire (formations, missions, parrainage sur ventes réelles). Les offres payantes sont optionnelles, leur contenu et leur prix sont affichés avant paiement, et un droit de rétractation de 7 jours s'applique. Les retraits Mobile Money sont contrôlés avant paiement. Aucun gain n'est garanti.",
+        answer: "AH GLOBAL est une plateforme web en Côte d'Ivoire (formations, missions, parrainage sur ventes réelles). Les offres payantes sont optionnelles, leur contenu et leur prix sont affichés avant paiement, et un droit de rétractation de 7 jours s'applique. Les retraits Mobile Money sont contrôlés avant paiement. Aucun gain n'est garanti.",
         source: 'local_fallback',
       });
     }
@@ -213,7 +213,7 @@ Génère une annonce complète, immédiatement copiable et prête à poster sur 
   }
 });
 
-// FAQ Endpoint for GLOBAL-AF (backward compatibility)
+// FAQ Endpoint for AH GLOBAL (backward compatibility)
 app.post('/api/faq', async (req, res) => {
   try {
     const rawQuestion = req.body?.question;
@@ -224,7 +224,7 @@ app.post('/api/faq', async (req, res) => {
 
     if (!ai) {
       return res.json({
-        answer: "GLOBAL-AF est une plateforme web en Côte d'Ivoire (formations, missions, parrainage sur ventes réelles). Offres payantes optionnelles, droit de rétractation de 7 jours, aucun gain garanti.",
+        answer: "AH GLOBAL est une plateforme web en Côte d'Ivoire (formations, missions, parrainage sur ventes réelles). Offres payantes optionnelles, droit de rétractation de 7 jours, aucun gain garanti.",
         source: 'local_fallback',
       });
     }
@@ -266,7 +266,7 @@ async function startServer() {
   }
 
   app.listen(port, () => {
-    console.log(`GLOBAL-AF server running on port ${port}`);
+    console.log(`AH GLOBAL server running on port ${port}`);
   });
 }
 

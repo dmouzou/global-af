@@ -181,7 +181,7 @@ export const initiateOnlinePayment = onCall(
           notifyUrl: `https://europe-west1-${projectId}.cloudfunctions.net/` +
             `${provider}Webhook`,
           returnUrl: `${baseUrl}/?payment=return&pid=${paymentId}`,
-          description: `GLOBAL-AF - ${product.name}`.slice(0, 100),
+          description: `AH GLOBAL - ${product.name}`.slice(0, 100),
           customer: {
             firstName: user.firstName, lastName: user.lastName,
             email: user.email, phone: user.phone, country: user.country,

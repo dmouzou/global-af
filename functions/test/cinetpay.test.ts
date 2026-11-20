@@ -17,7 +17,7 @@ const record = (over: Partial<PaymentRecord> = {}): PaymentRecord => ({
 const ctx = {
   notifyUrl: "https://example.com/cinetpayWebhook",
   returnUrl: "https://example.com/?payment=return",
-  description: "GLOBAL-AF - Pack",
+  description: "AH GLOBAL - Pack",
 };
 
 /** Corps de notification CinetPay (formulaire) + son en-tête x-token. */
@@ -29,7 +29,7 @@ function notification(fields: Record<string, string>, secret = KEYS.secretKey) {
     cel_phone_num: "0700000000", cpm_phone_prefixe: "225",
     cpm_language: "fr", cpm_version: "V4", cpm_payment_config: "SINGLE",
     cpm_page_action: "PAYMENT", cpm_custom: "premium",
-    cpm_designation: "GLOBAL-AF", cpm_error_message: "SUCCES", ...fields,
+    cpm_designation: "AH GLOBAL", cpm_error_message: "SUCCES", ...fields,
   };
   const body = new URLSearchParams(full).toString();
   return {body, headers: {"x-token": cinetpayToken(full, secret)}};

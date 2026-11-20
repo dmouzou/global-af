@@ -31,7 +31,7 @@ export const AffiliationPage: React.FC<AffiliationPageProps> = ({ onGoToDashboar
     <div className="bg-white text-ink">
       <PageHero
         eyebrow="Programme de Parrainage"
-        title="Partagez GLOBAL-AF et touchez des commissions sur chaque filleul actif."
+        title="Partagez AH GLOBAL et touchez des commissions sur chaque filleul actif."
         subtitle="Un système simple et transparent à un niveau : 10 % sur le Pass Membre de vos filleuls, puis 5 % sur leur première commande réelle sur l'application."
         actions={
           <>
@@ -43,7 +43,7 @@ export const AffiliationPage: React.FC<AffiliationPageProps> = ({ onGoToDashboar
             </GhostButton>
           </>
         }
-        illustration={<IlluAffiliation className="w-full" title="Illustration : parrainage direct sur GLOBAL-AF" />}
+        illustration={<IlluAffiliation className="w-full" title="Illustration : parrainage direct sur AH GLOBAL" />}
       />
 
       {/* Règle claire : Les 2 sources de gains */}
@@ -96,7 +96,7 @@ export const AffiliationPage: React.FC<AffiliationPageProps> = ({ onGoToDashboar
                 Estimez vos gains de parrainage.
               </h2>
               <p className="mt-3 text-[15px] leading-relaxed text-ink/65">
-                Calculez vos gains potentiels en fonction du nombre de filleuls que vous invitez à rejoindre GLOBAL-AF.
+                Calculez vos gains potentiels en fonction du nombre de filleuls que vous invitez à rejoindre AH GLOBAL.
               </p>
             </div>
 
