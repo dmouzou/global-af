@@ -227,3 +227,11 @@
 /* Le bouton d'assistant remonte au-dessus de la barre de navigation du bas (mobile, espace personnel). */
 body.has-bottom-nav .chatbot-fab { bottom: calc(5rem + env(safe-area-inset-bottom, 0px)); }
 @media (min-width: 768px) { body.has-bottom-nav .chatbot-fab { bottom: 1.5rem; } }
+
+/* Mobile : 16 px minimum dans les champs (sinon Safari iOS zoome au focus), cibles tactiles, pas de défilement latéral. */
+@media (max-width: 767px) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']), select, textarea { font-size: 16px !important; }
+  body { overflow-x: clip; }
+}
+input[type='range'] { min-height: 2.75rem; }
+button, [role='button'], a { touch-action: manipulation; }

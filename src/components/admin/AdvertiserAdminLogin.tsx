@@ -133,7 +133,7 @@ export const AdvertiserAdminLogin: React.FC<AdvertiserAdminLoginProps> = ({
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@global-af.ci"
+                placeholder="adresse e-mail professionnelle"
                 required
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700/80 text-white placeholder-slate-500 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500 transition-all font-mono"
               />

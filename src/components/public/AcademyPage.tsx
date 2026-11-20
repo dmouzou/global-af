@@ -83,9 +83,9 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({ onGoToDashboard, onOpe
               <p className="text-center text-[15px] text-ink/65 sm:text-left">Aucune formation dans cette catégorie pour le moment.</p>
             </div>
           ) : (
-            <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-8 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
               {list.map(course => (
-                <article key={course.id} className="flex flex-col justify-between rounded-3xl bg-white p-6 ring-1 ring-ink/10">
+                <article key={course.id} className="flex min-w-0 flex-col justify-between rounded-3xl bg-white p-6 ring-1 ring-ink/10">
                   <div>
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="rounded-full bg-mist px-3 py-1 text-xs font-bold text-ink/70">{course.category}</span>
@@ -95,14 +95,14 @@ export const AcademyPage: React.FC<AcademyPageProps> = ({ onGoToDashboard, onOpe
                     </div>
                     <h3 className="mt-4 font-display text-xl font-bold leading-snug">{course.title}</h3>
                     <p className="mt-2 line-clamp-3 text-[15px] leading-relaxed text-ink/65">{course.description}</p>
-                    <div className="mt-4 flex items-center gap-4 text-[13px] font-semibold text-ink/55">
+                    <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] font-semibold text-ink/55">
                       <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" />{Math.round(course.durationHours * 60)} min</span>
                       <span className="flex items-center gap-1.5"><BookOpen className="h-4 w-4" />{course.modules.length} modules</span>
                       <span>{course.level}</span>
                     </div>
                     <ul className="mt-4 space-y-1.5 text-[14px] text-ink/70">
                       {course.modules.slice(0, 3).map((m, i) => (
-                        <li key={m.id || i} className="flex gap-2"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-wax" /><span className="truncate">{m.title.replace(/^Palier \d+ : /, '')}</span></li>
+                        <li key={m.id || i} className="flex min-w-0 gap-2"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-wax" /><span className="min-w-0 truncate">{m.title.replace(/^Palier \d+ : /, '')}</span></li>
                       ))}
                       {course.modules.length > 3 && <li className="pl-3.5 text-ink/50">+ {course.modules.length - 3} autre(s) module(s)</li>}
                     </ul>

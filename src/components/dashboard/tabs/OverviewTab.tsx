@@ -51,7 +51,7 @@ export const OverviewTab: React.FC<Props> = ({ onNavigate, onSelectTask, onWithd
       </div>
 
       {/* Chiffres */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 [&>*]:min-w-0">
         <Stat accent="wax" label="Solde disponible" value={fcfa(wallet.availableBalance, wallet.currency)} hint="Retirable sur Mobile Money" />
         <Stat accent="sun" label="En attente" value={fcfa(wallet.pendingBalance, wallet.currency)} hint="Preuves en cours de vérification" />
         <Stat accent="leaf" label="Commissions" value={fcfa(wallet.commissionBalance, wallet.currency)} hint="Ventes réelles, niveaux 1 et 2" />
@@ -60,7 +60,7 @@ export const OverviewTab: React.FC<Props> = ({ onNavigate, onSelectTask, onWithd
         </Stat>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-12">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 [&>*]:min-w-0">
         {/* Carte de membre */}
         <section className="relative overflow-hidden rounded-[2rem] bg-ink p-6 text-white lg:col-span-5">
           <div className="scarf-ribbon absolute inset-x-0 top-0" aria-hidden="true" />

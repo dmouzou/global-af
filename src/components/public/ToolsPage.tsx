@@ -127,7 +127,7 @@ export const ToolsPage: React.FC<ToolsPageProps> = ({ onGoToDashboard, onOpenAut
                 <div className="mt-1.5 inline-flex rounded-full bg-mist p-1">
                   {(['whatsapp', 'facebook'] as const).map(p => (
                     <button key={p} onClick={() => setPlatform(p)} aria-pressed={platform === p}
-                      className={`rounded-full px-4 py-1.5 text-sm font-bold capitalize transition ${platform === p ? 'bg-ink text-white' : 'text-ink/65'}`}>{p === 'whatsapp' ? 'WhatsApp' : 'Facebook'}</button>
+                      className={`rounded-full px-4 py-2.5 text-sm font-bold capitalize transition ${platform === p ? 'bg-ink text-white' : 'text-ink/65'}`}>{p === 'whatsapp' ? 'WhatsApp' : 'Facebook'}</button>
                   ))}
                 </div>
               </div>
@@ -136,7 +136,7 @@ export const ToolsPage: React.FC<ToolsPageProps> = ({ onGoToDashboard, onOpenAut
                 <div className="mt-1.5 flex flex-wrap gap-2">
                   {TONES.map(t => (
                     <button key={t.id} onClick={() => setTone(t.id)} aria-pressed={tone === t.id}
-                      className={`rounded-full px-4 py-1.5 text-sm font-bold transition ${tone === t.id ? 'bg-wax text-white' : 'bg-mist text-ink/70 hover:text-ink'}`}>{t.label}</button>
+                      className={`rounded-full px-4 py-2.5 text-sm font-bold transition ${tone === t.id ? 'bg-wax text-white' : 'bg-mist text-ink/70 hover:text-ink'}`}>{t.label}</button>
                   ))}
                 </div>
               </div>

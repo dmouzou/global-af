@@ -194,7 +194,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
                 <span className="rounded-full bg-wax/12 px-3 py-1 text-xs font-bold uppercase tracking-wider text-wax-deep">Micro-jobs</span>
                 <h3 className="mt-4 font-display text-3xl font-extrabold leading-tight">Des missions courtes, à récompense fixée à l'avance.</h3>
                 <p className="mt-3 text-[15px] leading-relaxed text-ink/65">Sondages, tests d'applications, quiz, découvertes. Le montant est connu avant de commencer, jamais tiré au sort.</p>
-                <button onClick={() => go('missions')} className="mt-5 inline-flex items-center gap-2 font-bold text-wax-deep hover:gap-3 transition-all">
+                <button onClick={() => go('missions')} className="mt-5 inline-flex min-h-11 items-center gap-2 font-bold text-wax-deep hover:gap-3 transition-all">
                   {tasks.length > 0 ? `${tasks.length} mission${tasks.length > 1 ? 's' : ''} ouverte${tasks.length > 1 ? 's' : ''}` : 'Voir les missions'} <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
@@ -205,21 +205,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
               <IlluAcademy className="mx-auto w-full max-w-[15rem]" />
               <h3 className="mt-3 font-display text-2xl font-extrabold">Digital Academy</h3>
               <p className="mt-2 text-[15px] leading-relaxed text-white/85">Marketing digital, création de contenu, IA, e-commerce. Des modules et des quiz, à votre rythme.</p>
-              <button onClick={() => go('academie')} className="mt-4 inline-flex items-center gap-2 font-bold text-white hover:gap-3 transition-all">Découvrir <ArrowRight className="h-4 w-4" /></button>
+              <button onClick={() => go('academie')} className="mt-4 inline-flex min-h-11 items-center gap-2 font-bold text-white hover:gap-3 transition-all">Découvrir <ArrowRight className="h-4 w-4" /></button>
             </article>
 
             <article className="rounded-[2rem] bg-white p-7 ring-1 ring-ink/8 lg:col-span-2">
               <IlluAffiliation className="mx-auto w-full max-w-[14rem]" />
               <h3 className="mt-3 font-display text-2xl font-extrabold">Affiliation sur ventes réelles</h3>
               <p className="mt-2 text-[15px] leading-relaxed text-ink/65">10 % au niveau 1, 5 % au niveau 2. Le simple recrutement ne rapporte rien : seules les ventes comptent.</p>
-              <button onClick={() => go('affiliation')} className="mt-4 inline-flex items-center gap-2 font-bold text-leaf-deep hover:gap-3 transition-all">Voir les règles <ArrowRight className="h-4 w-4" /></button>
+              <button onClick={() => go('affiliation')} className="mt-4 inline-flex min-h-11 items-center gap-2 font-bold text-leaf-deep hover:gap-3 transition-all">Voir les règles <ArrowRight className="h-4 w-4" /></button>
             </article>
 
             <article className="rounded-[2rem] bg-white p-7 ring-1 ring-ink/8 lg:col-span-2">
               <IlluTools className="mx-auto w-full max-w-[14rem]" />
               <h3 className="mt-3 font-display text-2xl font-extrabold">Outils IA</h3>
               <p className="mt-2 text-[15px] leading-relaxed text-ink/65">Rédaction, idées marketing, résumés, prompts. Des quotas clairs selon votre offre.</p>
-              <button onClick={() => go('outils')} className="mt-4 inline-flex items-center gap-2 font-bold text-leaf-deep hover:gap-3 transition-all">Essayer <ArrowRight className="h-4 w-4" /></button>
+              <button onClick={() => go('outils')} className="mt-4 inline-flex min-h-11 items-center gap-2 font-bold text-leaf-deep hover:gap-3 transition-all">Essayer <ArrowRight className="h-4 w-4" /></button>
             </article>
 
             <article className="rounded-[2rem] bg-ink p-7 text-white lg:col-span-2">

@@ -9,7 +9,7 @@ export const LEGAL_ENTITY: Record<string, string> = {
   capital: '',         // Capital social
   rccm: '',            // N° RCCM
   address: '',         // Adresse postale complète du siège
-  email: 'contact@global-af.ci', // Adresse déjà affichée dans le pied de page
+  email: 'contact@ahglobal.com', // Adresse déjà affichée dans le pied de page
   phone: '',
   director: '',        // Directeur de la publication
   dpoEmail: '',        // Correspondant à la protection des données personnelles

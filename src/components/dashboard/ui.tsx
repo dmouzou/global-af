@@ -64,7 +64,7 @@ export const Btn: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & { kin
     ghost: 'bg-white text-ink ring-1 ring-ink/15 hover:ring-ink/40',
     sun: 'bg-sun text-ink hover:bg-[#FFD459]',
   }[kind];
-  return <button {...p} className={`inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-45 ${k} ${className}`} />;
+  return <button {...p} className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-45 ${k} ${className}`} />;
 };
 
 export const Modal: React.FC<React.PropsWithChildren<{ open: boolean; onClose: () => void; title: string; subtitle?: string; wide?: boolean }>> = ({ open, onClose, title, subtitle, wide, children }) => {

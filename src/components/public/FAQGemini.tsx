@@ -222,14 +222,14 @@ export const FAQGemini: React.FC<{ onNavigateView?: (view: string) => void }> = 
                 </a>
 
                 <a
-                  href="mailto:contact@global-af.ci?subject=Demande%20d'assistance%20AH GLOBAL"
+                  href="mailto:contact@ahglobal.com?subject=Demande%20d'assistance%20AH GLOBAL"
                   className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-colors text-slate-800 font-semibold text-xs group"
                 >
                   <div className="flex items-center gap-3">
                     <Mail className="w-5 h-5 text-orange-600" />
                     <div>
                       <div className="font-bold text-slate-900">Email Officiel Support</div>
-                      <div className="text-[11px] text-slate-500">contact@global-af.ci</div>
+                      <div className="text-[11px] text-slate-500">contact@ahglobal.com</div>
                     </div>
                   </div>
                   <ExternalLink className="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" />

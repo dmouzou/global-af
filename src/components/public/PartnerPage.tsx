@@ -8,7 +8,7 @@ interface PartnerPageProps {
   onOpenAuth: (mode: 'login' | 'signup') => void;
 }
 
-const CONTACT_EMAIL = 'contact@global-af.ci';
+const CONTACT_EMAIL = 'contact@ahglobal.com';
 
 const FORMATS = [
   { t: 'Missions partenaires', d: 'Sondage, test d’application ou quiz : les membres participent et vous recevez des retours réels.' },

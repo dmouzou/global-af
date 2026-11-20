@@ -16,7 +16,7 @@ directeur de la publication, correspondant à la protection des données (e-mail
 **n° de déclaration ou d'autorisation ARTCI**, lieu d'hébergement de la base (région
 Firebase), juridiction compétente, durées de conservation (compte après clôture, pièces
 comptables, journaux). Un champ vide s'affiche « [à renseigner] » en surbrillance.
-Seul l'e-mail `contact@global-af.ci` (déjà dans le pied de page) est prérempli.
+Seul l'e-mail `contact@ahglobal.com` (déjà dans le pied de page) est prérempli.
 
 ## Décisions produit reflétées dans les textes
 - **Pass actif obligatoire** pour les missions rémunérées, les formations et les retraits
