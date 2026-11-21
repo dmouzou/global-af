@@ -25,7 +25,7 @@ Seul l'e-mail `contact@ahglobal.com` (déjà dans le pied de page) est prérempl
   de 3 % de frais de transaction) ; **abonnements non remboursables**, reconnus par case à cocher
   (horodatée sur le paiement) en raison de l'accès immédiat annoncé (VCF, outils IA).
   Abonnements de 30 jours, renouvelables à la main, sans prélèvement automatique.
-- Commissions : uniquement sur ventes réelles, jamais sur le Pass d'entrée ; créditées après
+- Commissions : parrainage direct sur un seul niveau, 10 % sur le Pass Membre du filleul puis 5 % sur sa première commande réelle (décision des propriétaires) ; créditées après
   7 jours (délai de sécurité), à chaque achat éligible y compris chaque renouvellement.
 - Ces choix **s'écartent du cahier des charges** (sections 6 et 39, conditions 2 et 5 : droit
   de rétractation pour toute activation payante, palier gratuit réellement utile). Écart

@@ -755,13 +755,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             
             <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-3 text-xs">
               <h3 className="font-bold text-slate-900 text-sm">
-                Règle 1 : Ventes réelles uniquement (Anti-Ponzi)
+                Règle 1 : Parrainage direct, un seul niveau
               </h3>
               <p className="text-slate-600 leading-relaxed">
-                Le système bloque algorithmiquement toute attribution de commission sur l'adhésion simple d'un membre. Les commissions ne sont déclenchées que par l'achat d'un bien identifiable (Académie ou Pack Partenaire).
+                Les commissions sont calculées par le serveur : 10 % du prix du Pass Membre activé par un filleul direct, puis 5 % sur sa première commande réelle. Aucune commission sur l'inscription seule, l'auto-parrainage ou les comptes artificiels ; commission annulée en cas de remboursement.
               </p>
               <div className="p-3 bg-emerald-50 rounded border border-emerald-200 text-emerald-900 font-semibold">
-                ✓ Statut invariant : Actif (Niveau 1 : 15%, Niveau 2 : 5%, Niveau 3 : Verrouillé désactivé).
+                Taux en vigueur : lus dans la configuration du serveur (niveau 1 : 10 %, première commande : 5 %). Un seul niveau.
               </div>
             </div>
 

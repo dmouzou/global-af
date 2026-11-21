@@ -36,7 +36,7 @@ export const LEGAL_DOCS: Record<LegalDoc['id'], LegalDoc> = {
           "**Pass d'entrée** : paiement unique qui ouvre l'accès aux missions rémunérées, aux formations et aux retraits.",
           '**Abonnement** : offre payante Premium ou Business, décrite avant paiement.',
           '**Mission** : tâche numérique proposée sur la plateforme, avec une récompense indiquée à l\'avance.',
-          '**Commission** : somme due au parrain lorsqu\'un filleul achète réellement un produit ou un service éligible.',
+          '**Commission** : somme due au parrain lorsque son filleul direct active son Pass Membre ou effectue sa première commande réelle d\'un produit ou service éligible.',
           '**Portefeuille** : historique et soldes des récompenses, commissions et opérations du Membre.',
         ],
       },
@@ -87,9 +87,9 @@ export const LEGAL_DOCS: Record<LegalDoc['id'], LegalDoc> = {
       {
         title: '8. Affiliation (parrainage)',
         list: [
-          "Le parrainage compte **deux niveaux au maximum** (filleuls directs, puis filleuls de vos filleuls). Il n'y a pas de troisième niveau.",
-          "Une commission n'existe que lorsqu'un filleul **achète réellement** un produit ou un service éligible. L'inscription d'un filleul, ou l'achat d'un Pass d'entrée seul, ne génère aucune commission.",
-          "Les taux en vigueur sont affichés dans la rubrique « Équipe » de votre espace. Chaque commission est créditée après un délai de sécurité de {{retractionDays}} jours ; elle est calculée à chaque achat éligible, y compris à chaque renouvellement d'abonnement.",
+          "Le parrainage est **direct, sur un seul niveau** : seuls vos filleuls directs comptent. Il n'y a ni deuxième ni troisième niveau.",
+          "Deux commissions existent : **10 % du prix du Pass Membre** activé par votre filleul direct, puis **5 % sur sa première commande réelle** d'un produit ou service éligible (abonnement, formation…). L'inscription seule d'un filleul ne génère aucune commission.",
+          "Les taux en vigueur sont affichés dans la rubrique « Équipe » de votre espace. Chaque commission est créditée après un délai de sécurité de {{retractionDays}} jours ; elle est annulée si le Pass ou la vente concernée est remboursé.",
           "Interdits : auto-parrainage, comptes fictifs, spam, recrutement trompeur, et toute communication promettant des gains (« gagne X par jour », mises en scène d'argent, formulations « jusqu'à » trompeuses). Sanctions : annulation des commissions, suspension ou clôture du compte.",
         ],
       },
@@ -180,7 +180,7 @@ export const LEGAL_DOCS: Record<LegalDoc['id'], LegalDoc> = {
         list: [
           '**Identité et contact** : prénom, nom, date de naissance (contrôle de l\'âge), adresse e-mail, numéro de téléphone Mobile Money, pays, ville et présentation facultatives.',
           '**Compte** : identifiant, mot de passe (géré par le service d\'authentification, jamais lisible par nous), rôle, état de vérification de l\'e-mail.',
-          '**Activité** : missions et quiz, notifications, plafond de dépense, parrain, nombre de filleuls de niveau 1 et 2 (sans leur identité).',
+          '**Activité** : missions et quiz, notifications, plafond de dépense, parrain, nombre de filleuls directs (sans leur identité).',
           '**Opérations financières** : soldes, historique des opérations, références de paiement et de retrait, moyen de paiement utilisé (opérateur Mobile Money ou carte). **Nous ne recevons ni ne conservons aucun numéro de carte.**',
           "**Adresse de facturation** : saisie uniquement pour un paiement par carte, transmise au prestataire de paiement.",
           '**Sécurité** : journaux techniques et d\'audit des actions sensibles, mesures anti-fraude (limitation des requêtes, détection des comptes multiples).',

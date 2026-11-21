@@ -29,7 +29,7 @@ const CATEGORY_LABEL: Record<string, string> = {
 const FAQS = [
   {
     q: "Comment fonctionne la rémunération sur AH GLOBAL ?",
-    a: "Les récompenses de missions et les commissions de parrainage sont fixées et publiées à l'avance ; aucun hasard n'intervient jamais. Les commissions ne portent que sur des ventes réelles (jamais sur l'inscription ni sur l'activation seule). L'ouverture des missions rémunérées est en cours : consultez votre espace pour l'état actuel. Aucun gain n'est garanti.",
+    a: "Les récompenses de missions sont fixées et publiées à l'avance ; aucun hasard n'intervient jamais. Le parrainage est direct, sur un seul niveau : le parrain touche 10 % du prix du Pass Membre activé par son filleul, puis 5 % sur la première commande réelle de ce filleul. L'ouverture des missions rémunérées est en cours : consultez votre espace pour l'état actuel. Aucun gain n'est garanti.",
   },
   {
     q: "Le compte gratuit permet-il vraiment de gagner de l'argent et de retirer ?",
@@ -45,7 +45,7 @@ const FAQS = [
   },
   {
     q: "Qu'est-ce que la charte éthique d'AH GLOBAL ?",
-    a: "Cinq engagements : commissions uniquement sur des ventes réelles et sur 2 niveaux maximum ; une offre payante correspond à un contenu décrit avant paiement ; aucune promesse de gain facile, avec des indicateurs réels publiés dès qu'ils existent ; interdiction des jeux de hasard et des tombolas ; protection des membres (18 ans minimum, plafond de dépense mensuel réglable).",
+    a: "Cinq engagements : un parrainage direct sur un seul niveau, aux règles et aux taux publiés ; une offre payante correspond à un contenu décrit avant paiement ; aucune promesse de gain facile, avec des indicateurs réels publiés dès qu'ils existent ; interdiction des jeux de hasard et des tombolas ; protection des membres (18 ans minimum, plafond de dépense mensuel réglable).",
   },
 ];
 
@@ -98,7 +98,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
             <ul className="mt-9 grid max-w-xl gap-3 text-[15px] font-semibold text-ink/80 sm:grid-cols-3">
               {[
                 { icon: Dices, text: 'Aucun jeu de hasard' },
-                { icon: Scale, text: 'Commissions sur ventes réelles' },
+                { icon: Scale, text: 'Parrainage direct, un seul niveau' },
                 { icon: UserCheck, text: 'Rétractation de 7 jours sur le Pass' },
               ].map(({ icon: Icon, text }) => (
                 <li key={text} className="flex items-start gap-2.5">
@@ -210,8 +210,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
 
             <article className="rounded-[2rem] bg-white p-7 ring-1 ring-ink/8 lg:col-span-2">
               <IlluAffiliation className="mx-auto w-full max-w-[14rem]" />
-              <h3 className="mt-3 font-display text-2xl font-extrabold">Affiliation sur ventes réelles</h3>
-              <p className="mt-2 text-[15px] leading-relaxed text-ink/65">Des commissions de parrainage, détaillées une par une dans votre espace. Les règles et les taux en vigueur sont publiés sur la page Affiliation.</p>
+              <h3 className="mt-3 font-display text-2xl font-extrabold">Parrainage direct, un seul niveau</h3>
+              <p className="mt-2 text-[15px] leading-relaxed text-ink/65">10 % du prix du Pass activé par votre filleul, puis 5 % sur sa première commande réelle. Chaque commission est détaillée dans votre espace.</p>
               <button onClick={() => go('affiliation')} className="mt-4 inline-flex min-h-11 items-center gap-2 font-bold text-leaf-deep hover:gap-3 transition-all">Voir les règles <ArrowRight className="h-4 w-4" /></button>
             </article>
 
@@ -344,7 +344,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
           </div>
           <ul className="grid gap-3 lg:col-span-7">
             {[
-              { icon: Scale, t: 'Commissions sur ventes réelles', d: 'Jamais sur le simple recrutement. Deux niveaux au maximum, plafonnés par rapport au prix du produit.' },
+              { icon: Scale, t: 'Parrainage direct, règles publiées', d: 'Un seul niveau, des taux affichés, aucune commission sur les comptes artificiels ni en cas de remboursement.' },
               { icon: Lock, t: 'Un prix, un contenu, avant paiement', d: 'Une offre payante correspond à un bien identifiable. Rétractation de 7 jours sur le Pass.' },
               { icon: Sparkles, t: 'Aucune promesse de gain facile', d: 'Pas de slogan « gagne X par jour ». Des indicateurs réels sont publiés dès qu’ils existent.' },
               { icon: Dices, t: 'Zéro jeu de hasard', d: 'Ni roue, ni loterie, ni tirage au sort, ni loot box, gratuits ou payants.' },

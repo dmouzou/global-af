@@ -1,7 +1,7 @@
 # Phase 1 — Fondations (suite à l'audit du cahier des charges v1.2)
 
 Décisions du propriétaire : Firebase conservé ; API directes des 4 opérateurs
-Mobile Money ; affiliation 10 % (N1) / 5 % (N2) ; rétractation 7 jours ;
+Mobile Money ; affiliation directe, un niveau : 10 % sur le Pass du filleul, 5 % sur sa première commande réelle ; rétractation 7 jours ;
 âge minimum 18 ans vérifié sur date de naissance ; validation juridique
 repoussée à plus tard.
 

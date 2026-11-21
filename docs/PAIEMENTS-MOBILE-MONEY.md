@@ -50,7 +50,7 @@ aucun secret par défaut (clés absentes = webhook refusé).
 
 - `standard` = **Pass d'entrée** (`kind: activation`), sans limite de durée : **rétractable 7 jours**,
   remboursement du montant payé **moins 3 %** (`refundFeeBps = 300`, à aligner sur les frais
-  CinetPay) ; **aucune commission d'affiliation** (cahier des charges, section 6 et condition 1).
+  CinetPay) ; commission de parrainage de **10 %** pour le parrain (décision des propriétaires, remplace la règle du cahier des charges, section 6 et condition 1 : à amender dans le cahier des charges).
   Si le membre a aussi un abonnement valide, la rétractation du Pass ne le retire pas.
 - `premium` et `business` = **abonnements** (`kind: subscription`) : **non remboursables** (case à
   cocher exigée et horodatée avant paiement), commissions d'affiliation à **chaque paiement**, y

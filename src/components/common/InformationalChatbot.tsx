@@ -83,7 +83,7 @@ Aucun gain n'est garanti.`,
     answer: `Le **droit de rétractation de 7 jours** s'applique au **Pass d'entrée** (Standard) :
 
 • **Demande :** depuis la rubrique « Paramètres » de votre espace. Vos accès aux missions, formations et retraits sont retirés.
-• **Parrainage :** le Pass d'entrée ne génère aucune commission pour le parrain.
+• **Parrainage :** si le Pass est remboursé, la commission du parrain est annulée.
 • **Remboursement :** il est traité par notre équipe vers votre moyen de paiement, **sous déduction des frais de transaction (3 %)**.
 • **Abonnements (VIP Premium) :** non remboursables car l'accès aux fichiers et répertoires VCF téléchargeables est immédiat.`,
     suggestions: [

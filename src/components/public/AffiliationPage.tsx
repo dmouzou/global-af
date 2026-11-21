@@ -39,7 +39,7 @@ export const AffiliationPage: React.FC<AffiliationPageProps> = ({ onGoToDashboar
               {currentUser ? "Accéder à mon lien d'affilié" : 'Créer mon compte gratuit'} <ArrowRight className="h-5 w-5" />
             </PrimaryButton>
             <GhostButton onClick={() => document.getElementById('calcul')?.scrollIntoView({ behavior: 'smooth' })}>
-              Simuler mes gains
+              Voir un exemple de calcul
             </GhostButton>
           </>
         }
@@ -96,7 +96,7 @@ export const AffiliationPage: React.FC<AffiliationPageProps> = ({ onGoToDashboar
                 Estimez vos gains de parrainage.
               </h2>
               <p className="mt-3 text-[15px] leading-relaxed text-ink/65">
-                Calculez vos gains potentiels en fonction du nombre de filleuls que vous invitez à rejoindre AH GLOBAL.
+                Voyez comment une commission se calcule. C'est un exemple, pas une promesse de revenu : tout dépend d'achats réels de vos filleuls.
               </p>
             </div>
 
@@ -148,7 +148,7 @@ export const AffiliationPage: React.FC<AffiliationPageProps> = ({ onGoToDashboar
 
           <div className="lg:col-span-6">
             <div className="rounded-[2.5rem] bg-white p-8 shadow-xl border border-ink/10 space-y-6">
-              <h3 className="font-display text-xl font-bold text-ink">Vos commissions estimées</h3>
+              <h3 className="font-display text-xl font-bold text-ink">Exemple de calcul (non garanti)</h3>
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-4 rounded-2xl bg-wax/10">
@@ -174,8 +174,8 @@ export const AffiliationPage: React.FC<AffiliationPageProps> = ({ onGoToDashboar
 
               <div className="pt-4 border-t border-ink/10 flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-bold text-ink">Total de vos gains</div>
-                  <div className="text-xs text-ink/50">Disponibles pour retrait Mobile Money</div>
+                  <div className="text-sm font-bold text-ink">Total de l'exemple</div>
+                  <div className="text-xs text-ink/50">Illustration : aucun gain n'est garanti</div>
                 </div>
                 <div className="font-display text-3xl sm:text-4xl font-extrabold text-ink">
                   {fmt(totalGains)} <span className="text-sm font-bold text-ink/50">FCFA</span>

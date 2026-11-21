@@ -70,10 +70,10 @@ const GLOBAL_AF_SYSTEM_INSTRUCTION = `Tu es l'assistant automatique de la platef
 CE QUI EXISTE AUJOURD'HUI (n'affirme rien d'autre) :
 - Inscription gratuite (18 ans minimum, e-mail à confirmer). Un Pass actif est NÉCESSAIRE pour les missions rémunérées, les formations et les retraits : le Pass d'entrée (non remboursable, reconnu avant paiement) ou un abonnement (Premium, Business). Contenu, prix et frais sont affichés avant le paiement. Un Pass ne garantit aucun gain.
 - Paiement des offres : page sécurisée du partenaire CinetPay, par Mobile Money (Wave, Orange Money, MTN MoMo, Moov Money) ou carte bancaire Visa. L'offre est activée après la confirmation du paiement.
-- Rétractation de 7 jours pour les ABONNEMENTS uniquement (Premium, Business) : demande depuis « Paramètres », remboursement traité par l'équipe vers le moyen de paiement utilisé, sous déduction des frais de transaction (3 %) ; délai selon l'opérateur ou la banque. Le Pass d'entrée n'est PAS remboursable. Ne promets jamais un remboursement immédiat, intégral ou « en un clic ».
+- Rétractation de 7 jours pour le PASS D'ENTRÉE uniquement : demande depuis « Paramètres », remboursement traité par l'équipe vers le moyen de paiement utilisé, sous déduction des frais de transaction (3 %) ; délai selon l'opérateur ou la banque. Les abonnements (Premium, Business) ne sont PAS remboursables : l'accès aux fichiers et outils est immédiat et définitif. Ne promets jamais un remboursement immédiat, intégral ou « en un clic ».
 - Retraits vers un compte Mobile Money : contrôlés avant paiement, sur le numéro d'inscription ; montant minimum, frais et montant net affichés avant validation ; délai non garanti ; e-mail confirmé et Pass actif requis.
 - Abonnements (Premium, Business) : 30 jours par paiement, renouvelables manuellement, sans prélèvement automatique ; à l'échéance l'accès repasse sur le Pass d'entrée s'il existe, sinon il est suspendu (les soldes sont conservés).
-- Parrainage : 2 niveaux maximum, commissions uniquement sur des ventes réelles (jamais sur l'inscription seule, ni sur l'activation seule), créditées après un délai de sécurité de 7 jours, à chaque achat éligible (y compris chaque renouvellement d'abonnement). Le Pass d'entrée ne génère aucune commission. Les taux en vigueur sont affichés dans l'espace membre.
+- Parrainage : direct, sur un seul niveau. Le parrain touche 10 % du prix du Pass Membre activé par son filleul direct, puis 5 % sur la première commande réelle de ce filleul. Pas d'auto-parrainage ; aucune commission sur les comptes artificiels ; commissions créditées après un délai de sécurité de 7 jours et annulées en cas de remboursement. Les taux en vigueur sont affichés dans l'espace membre. Ne présente jamais cela comme un revenu garanti.
 - Aucun jeu de hasard (ni roue, ni tirage au sort, ni loterie).
 
 CE QUI N'EST PAS ENCORE OUVERT (dis-le clairement si on t'interroge) : l'envoi de preuves et la rémunération des missions, la délivrance de points et de certificats, le téléchargement de fichiers VCF, la communauté et le support par tickets.
@@ -102,7 +102,7 @@ app.post('/api/chat', async (req, res) => {
 
     if (!ai) {
       return res.json({
-        answer: "AH GLOBAL est une plateforme web en Côte d'Ivoire (formations, missions, parrainage sur ventes réelles). Les offres payantes sont optionnelles, leur contenu et leur prix sont affichés avant paiement, et un droit de rétractation de 7 jours s'applique. Les retraits Mobile Money sont contrôlés avant paiement. Aucun gain n'est garanti.",
+        answer: "AH GLOBAL est une plateforme web en Côte d'Ivoire (formations, missions, parrainage direct). Les offres payantes sont optionnelles, leur contenu et leur prix sont affichés avant paiement, et un droit de rétractation de 7 jours s'applique. Les retraits Mobile Money sont contrôlés avant paiement. Aucun gain n'est garanti.",
         source: 'local_fallback',
       });
     }
@@ -224,7 +224,7 @@ app.post('/api/faq', async (req, res) => {
 
     if (!ai) {
       return res.json({
-        answer: "AH GLOBAL est une plateforme web en Côte d'Ivoire (formations, missions, parrainage sur ventes réelles). Offres payantes optionnelles, droit de rétractation de 7 jours, aucun gain garanti.",
+        answer: "AH GLOBAL est une plateforme web en Côte d'Ivoire (formations, missions, parrainage direct). Offres payantes optionnelles, droit de rétractation de 7 jours, aucun gain garanti.",
         source: 'local_fallback',
       });
     }

@@ -101,32 +101,24 @@ export const IlluWallet: React.FC<IlluProps> = (p) => (
   </Svg>
 );
 
-/** Affiliation : arbre à deux niveaux seulement. */
+/** Affiliation : un parrain et ses filleuls directs, un seul niveau. */
 export const IlluAffiliation: React.FC<IlluProps> = (p) => (
   <Svg {...p}>
     <circle cx="160" cy="124" r="96" fill={C.leafSoft} />
-    <path d="M160 70 L100 130 M160 70 L220 130 M100 130 L70 186 M100 130 L130 186 M220 130 L190 186 M220 130 L250 186"
-      stroke={C.leaf} strokeWidth="4" strokeLinecap="round" strokeDasharray="2 9" />
-    <circle cx="160" cy="58" r="26" fill={C.wax} />
-    <circle cx="160" cy="52" r="8" fill="#fff" />
-    <path d="M146 74 q14 -16 28 0" fill="#fff" />
-    {[100, 220].map(x => (
+    <path d="M160 84 L84 160 M160 84 L160 160 M160 84 L236 160" stroke={C.leaf} strokeWidth="4" strokeLinecap="round" strokeDasharray="2 9" />
+    <circle cx="160" cy="62" r="28" fill={C.wax} />
+    <circle cx="160" cy="55" r="9" fill="#fff" />
+    <path d="M145 80 q15 -17 30 0" fill="#fff" />
+    {[84, 160, 236].map(x => (
       <g key={x}>
-        <circle cx={x} cy="130" r="21" fill={C.leaf} />
-        <circle cx={x} cy="125" r="6.5" fill="#fff" />
-        <path d="M89 141 q11 -12 22 0" fill="#fff" />
-      </g>
-    ))}
-    {[70, 130, 190, 250].map(x => (
-      <g key={x}>
-        <circle cx={x} cy="190" r="16" fill="#fff" stroke={C.leaf} strokeWidth="3" />
-        <circle cx={x} cy="186" r="5" fill={C.leaf} />
-        <path d={`M${x - 9} 198 q9 -9 18 0`} fill={C.leaf} />
+        <circle cx={x} cy="168" r="22" fill={C.leaf} />
+        <circle cx={x} cy="163" r="7" fill="#fff" />
+        <path d={`M${x - 12} 180 q12 -13 24 0`} fill="#fff" />
       </g>
     ))}
     <g className="drift-a">
-      <rect x="214" y="40" width="86" height="30" rx="15" fill={C.sun} />
-      <text x="257" y="60" textAnchor="middle" fontSize="14" fontWeight="800" fill={C.ink} fontFamily="'Bricolage Grotesque Variable', sans-serif">2 niveaux</text>
+      <rect x="206" y="30" width="96" height="30" rx="15" fill={C.sun} />
+      <text x="254" y="50" textAnchor="middle" fontSize="14" fontWeight="800" fill={C.ink} fontFamily="'Bricolage Grotesque Variable', sans-serif">1 niveau</text>
     </g>
   </Svg>
 );

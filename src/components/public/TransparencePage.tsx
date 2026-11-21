@@ -12,7 +12,7 @@ interface TransparencePageProps {
 }
 
 const PILLARS = [
-  { icon: Scale, tag: 'Condition 1', t: 'Commissions sur ventes réelles', d: "Le simple recrutement ne rapporte rien. Les commissions viennent d'achats réels d'abonnements, de formations ou de campagnes payées, sur 2 niveaux au maximum et plafonnées par rapport au prix." },
+  { icon: Scale, tag: 'Condition 1', t: 'Parrainage direct, règles publiées', d: "Un seul niveau de parrainage direct, sans niveaux cachés. Le parrain touche 10 % du prix du Pass Membre activé par son filleul, puis 5 % sur la première commande réelle de ce filleul. Pas d'auto-parrainage, aucune commission sur des comptes artificiels, commission annulée si la vente est remboursée." },
   { icon: Lock, tag: 'Condition 2', t: "Un prix, un contenu, avant paiement", d: "Le Pass d'entrée se rétracte pendant 7 jours, remboursé sous déduction des frais de transaction (3 %). Le VIP Premium n'est pas remboursable : l'accès aux fichiers et contacts est immédiat et définitif." },
   { icon: Sparkles, tag: 'Condition 3', t: 'Honnêteté sur les gains', d: "Nous publions des indicateurs réels, même modestes. Pas de slogan « gagne X par jour », pas de mise en scène d'argent, pas de « jusqu'à » trompeur, pour l'équipe, les affiliés et les partenaires." },
   { icon: Dices, tag: 'Condition 4', t: 'Interdiction des jeux de hasard', d: "Ni roue, ni loterie, ni tombola, ni tirage au sort, ni loot box, gratuits ou payants. Chaque récompense est connue à l'avance. Les campagnes partenaires contenant du hasard sont refusées." },

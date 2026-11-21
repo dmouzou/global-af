@@ -22,7 +22,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateSection }) => {
           <div className="space-y-5 lg:col-span-5">
             <BrandLogo size="md" variant="white" />
             <p className="max-w-md text-[15px] leading-relaxed text-white/70">
-              Missions numériques, Académie, outils IA et affiliation sur ventes réelles, avec un portefeuille relié au Mobile Money. Lancement en Côte d'Ivoire.
+              Missions numériques, Académie, outils IA et parrainage direct, avec un portefeuille relié au Mobile Money. Lancement en Côte d'Ivoire.
             </p>
             <ul className="space-y-2 text-white/70">
               <li className="flex items-center gap-2"><MapPin className="h-4 w-4 text-wax" /> Plateau / Cocody, Abidjan, Côte d'Ivoire</li>
@@ -35,7 +35,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateSection }) => {
             <ul className="text-[15px]">
               <li><button onClick={() => nav('missions')} className={link}>Micro-jobs et missions</button></li>
               <li><button onClick={() => nav('academie')} className={link}>Digital Academy</button></li>
-              <li><button onClick={() => nav('affiliation')} className={link}>Affiliation sur ventes réelles</button></li>
+              <li><button onClick={() => nav('affiliation')} className={link}>Parrainage et affiliation</button></li>
               <li><button onClick={() => nav('outils')} className={link}>Outils IA</button></li>
               <li><button onClick={() => nav('partenaire')} className={link}>Espace entreprises</button></li>
               <li><button onClick={() => nav('transparence')} className={link}>Transparence et charte</button></li>

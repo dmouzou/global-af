@@ -199,10 +199,10 @@ export const EXAM_QUESTIONS_CRS_001: QuizQuestion[] = [
   },
   {
     id: 'c1-q29',
-    question: 'Quelle est la part moyenne des commissions versées dans le cadre de l\'affiliation éthique sur AH GLOBAL ?',
-    options: ['10% sur le Niveau 1 et 5% sur le Niveau 2 (strictement plafonné à 2 niveaux)', '50% sur 10 niveaux', '100% du prix d\'inscription', 'Zéro pourcent'],
+    question: 'Comment fonctionne le parrainage sur AH GLOBAL ?',
+    options: ['Un seul niveau direct : 10 % sur le Pass Membre du filleul, puis 5 % sur sa première commande réelle', '50 % sur 10 niveaux', '100 % du prix d\'inscription', 'Un tirage au sort parmi les parrains'],
     correctAnswerIndex: 0,
-    explanation: 'AH GLOBAL applique une règle immuable : 10% sur le niveau direct et 5% sur le niveau indirect, exclusivement sur les ventes réelles.'
+    explanation: 'Le parrainage est direct, sur un seul niveau : 10 % du prix du Pass Membre activé par le filleul, puis 5 % sur sa première commande réelle.'
   },
   {
     id: 'c1-q30',
