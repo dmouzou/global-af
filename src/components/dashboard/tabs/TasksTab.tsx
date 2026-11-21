@@ -50,7 +50,7 @@ export const TasksTab: React.FC<{ onSelectTask: (t: Task) => void; onActivate: (
       <div className="mb-5 flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Catégories">
         {FILTERS.map(f => (
           <button key={f.id} role="tab" aria-selected={filter === f.id} onClick={() => setFilter(f.id)}
-            className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold transition ${filter === f.id ? 'bg-ink text-white' : 'bg-white text-ink/70 ring-1 ring-ink/10 hover:text-ink'}`}>{f.label}</button>
+            className={`min-h-10 shrink-0 rounded-full px-4 py-2 text-sm font-bold transition ${filter === f.id ? 'bg-ink text-white' : 'bg-white text-ink/70 ring-1 ring-ink/10 hover:text-ink'}`}>{f.label}</button>
         ))}
       </div>
 

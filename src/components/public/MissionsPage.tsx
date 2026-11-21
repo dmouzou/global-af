@@ -102,7 +102,7 @@ export const MissionsPage: React.FC<MissionsPageProps> = ({ onGoToDashboard, onO
                 role="tab"
                 aria-selected={category === c.id}
                 onClick={() => setCategory(c.id)}
-                className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold transition ${category === c.id ? 'bg-ink text-white' : 'bg-white text-ink/70 ring-1 ring-ink/10 hover:text-ink'}`}
+                className={`min-h-10 shrink-0 rounded-full px-4 py-2 text-sm font-bold transition ${category === c.id ? 'bg-ink text-white' : 'bg-white text-ink/70 ring-1 ring-ink/10 hover:text-ink'}`}
               >
                 {c.label}
               </button>

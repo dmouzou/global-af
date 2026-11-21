@@ -94,3 +94,16 @@ export const Modal: React.FC<React.PropsWithChildren<{ open: boolean; onClose: (
 };
 
 export const inputCls = 'mt-1.5 w-full rounded-2xl border border-ink/15 bg-white px-4 py-3 text-[15px] outline-none focus:border-wax';
+
+/** Écran verrouillé : même présentation partout (Pass requis, Premium requis…). */
+export const Gate: React.FC<React.PropsWithChildren<{ pill: string; title: string; text: string; prop?: BabiProp; mood?: BabiMood }>> = ({ pill, title, text, prop = 'shield', mood = 'think', children }) => (
+  <Panel className="grid items-center gap-6 sm:grid-cols-[auto_1fr] sm:p-8">
+    <BabiVector mood={mood} prop={prop} size={140} className="mx-auto" />
+    <div>
+      <Pill tone="sun">{pill}</Pill>
+      <h2 className="mt-3 font-display text-2xl font-extrabold">{title}</h2>
+      <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-ink/65">{text}</p>
+      {children && <div className="mt-4 flex flex-wrap gap-2.5">{children}</div>}
+    </div>
+  </Panel>
+);

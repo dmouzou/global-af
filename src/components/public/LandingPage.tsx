@@ -211,7 +211,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
             <article className="rounded-[2rem] bg-white p-7 ring-1 ring-ink/8 lg:col-span-2">
               <IlluAffiliation className="mx-auto w-full max-w-[14rem]" />
               <h3 className="mt-3 font-display text-2xl font-extrabold">Affiliation sur ventes réelles</h3>
-              <p className="mt-2 text-[15px] leading-relaxed text-ink/65">10 % au niveau 1, 5 % au niveau 2. Le simple recrutement ne rapporte rien : seules les ventes comptent.</p>
+              <p className="mt-2 text-[15px] leading-relaxed text-ink/65">Des commissions de parrainage, détaillées une par une dans votre espace. Les règles et les taux en vigueur sont publiés sur la page Affiliation.</p>
               <button onClick={() => go('affiliation')} className="mt-4 inline-flex min-h-11 items-center gap-2 font-bold text-leaf-deep hover:gap-3 transition-all">Voir les règles <ArrowRight className="h-4 w-4" /></button>
             </article>
 
@@ -307,7 +307,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
               <h3 className="font-display text-2xl font-bold">Pass membre</h3>
               <p className="mt-4 font-display text-5xl font-extrabold">3 000 <span className="text-xl font-bold text-ink/50">FCFA</span></p>
               <ul className="mt-6 space-y-3 text-[15px] text-ink/75">
-                {['Participation aux missions rémunérées dès leur ouverture', 'Formations de l’Académie', 'Retraits Mobile Money dès 2 000 FCFA', 'Commissions de parrainage sur ventes réelles (10 % N1, 5 % N2)'].map(x => (
+                {['Participation aux missions rémunérées dès leur ouverture', 'Formations de l’Académie', 'Retraits Mobile Money dès 2 000 FCFA', 'Parrainage : commissions détaillées dans votre espace'].map(x => (
                   <li key={x} className="flex gap-3"><Check className="mt-0.5 h-5 w-5 shrink-0 text-leaf" strokeWidth={3} />{x}</li>
                 ))}
               </ul>

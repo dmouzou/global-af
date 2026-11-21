@@ -80,7 +80,7 @@ export const OverviewTab: React.FC<Props> = ({ onNavigate, onSelectTask, onWithd
             <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/15"><div className="h-full rounded-full bg-sun" style={{ width: `${pct}%` }} /></div>
             <p className="mt-1.5 text-[11px] text-white/45">Les points sont gagnés de façon déterministe : jamais au hasard.</p>
           </div>
-          <button onClick={() => onNavigate('profile')} className="mt-5 inline-flex items-center gap-1.5 text-sm font-bold text-sun hover:gap-2.5 transition-all">Voir mon profil <ArrowRight className="h-4 w-4" /></button>
+          <button onClick={() => onNavigate('profile')} className="mt-3 inline-flex min-h-11 items-center gap-1.5 text-sm font-bold text-sun hover:gap-2.5 transition-all">Voir mon profil <ArrowRight className="h-4 w-4" /></button>
         </section>
 
         {/* Missions du moment */}
@@ -90,7 +90,7 @@ export const OverviewTab: React.FC<Props> = ({ onNavigate, onSelectTask, onWithd
               <h2 className="font-display text-xl font-extrabold">Missions du moment</h2>
               <p className="text-[13px] text-ink/55">La récompense est indiquée à l'avance.</p>
             </div>
-            <button onClick={() => onNavigate('tasks')} className="text-sm font-bold text-wax-deep hover:underline">Toutes ({tasks.length})</button>
+            <button onClick={() => onNavigate('tasks')} className="inline-flex min-h-11 items-center text-sm font-bold text-wax-deep hover:underline">Toutes ({tasks.length})</button>
           </div>
           <div className="mt-4 space-y-3">
             {tasks.length === 0 ? (
@@ -112,7 +112,7 @@ export const OverviewTab: React.FC<Props> = ({ onNavigate, onSelectTask, onWithd
       <Panel>
         <div className="flex items-center justify-between gap-3">
           <h2 className="font-display text-xl font-extrabold">Dernières opérations</h2>
-          <button onClick={() => onNavigate('wallet')} className="text-sm font-bold text-wax-deep hover:underline">Grand livre complet</button>
+          <button onClick={() => onNavigate('wallet')} className="inline-flex min-h-11 items-center text-sm font-bold text-wax-deep hover:underline">Grand livre complet</button>
         </div>
         {mine.length === 0 ? (
           <p className="mt-4 rounded-2xl bg-mist p-5 text-[15px] text-ink/60">Aucune opération pour le moment. Chaque crédit et chaque retrait apparaîtra ici, avec sa référence.</p>
