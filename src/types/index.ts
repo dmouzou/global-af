@@ -333,3 +333,37 @@ export interface AffiliationCommission {
   date: string;
   matureAt: string;
 }
+
+/** Membre vu depuis la console (support, administration). */
+export interface AdminUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  country: string;
+  role: UserRole;
+  status: string;
+  statusReason?: string;
+  memberNumber?: string;
+  isActivated: boolean;
+  plan: string;
+  createdAt: string;
+}
+
+/** Demande de remboursement (rétractation du Pass) à payer par la finance. */
+export interface AdminRefund {
+  id: string;
+  userId: string;
+  paymentId: string;
+  amount: number;
+  fee: number;
+  refundAmount: number;
+  currency: string;
+  method: string;
+  provider: string;
+  status: 'pending' | 'paid' | string;
+  reason: string;
+  createdAt: string;
+  providerReference?: string;
+}

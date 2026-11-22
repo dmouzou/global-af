@@ -14,6 +14,8 @@ import {
   NotificationItem,
   AuditLogItem,
   RiskAlert,
+  AdminUser,
+  AdminRefund,
   AffiliationCommission,
   Wallet,
   CountryCode,
@@ -56,6 +58,9 @@ import {
   getMyAffiliationCallable,
   runAiToolCallable,
   adminSaveMissionCallable,
+  adminSetUserStatusCallable,
+  adminSetUserRoleCallable,
+  adminProcessRefundCallable,
   adminSetMissionStatusCallable,
   submitMissionProofCallable,
   adminReviewSubmissionCallable,
@@ -70,6 +75,8 @@ type ActionResult = { success: boolean; message: string };
 const FINANCE_ROLES: UserRole[] = ['financial_manager', 'admin', 'super_admin'];
 const CONTENT_ROLES: UserRole[] = ['content_manager', 'admin', 'super_admin'];
 const MODERATION_ROLES: UserRole[] = ['moderator', 'content_manager', 'admin', 'super_admin'];
+const SUPPORT_ROLES: UserRole[] = ['support', 'admin', 'super_admin'];
+const ADMIN_ROLES: UserRole[] = ['admin', 'super_admin'];
 
 /** Mission créée depuis le back-office (le code de fin reste côté serveur). */
 export type NewMission = Omit<Task, 'id' | 'quotaCurrent'> & { completionCode?: string };
@@ -169,6 +176,13 @@ interface AppContextType {
   // Audit & Ethics & Risk
   auditLogs: AuditLogItem[];
   riskAlerts: RiskAlert[];
+  /** Membres (support, administration). */
+  adminUsers: AdminUser[];
+  /** Remboursements en attente ou payés (finance). */
+  adminRefunds: AdminRefund[];
+  setUserStatusAdmin: (uid: string, status: 'active' | 'suspended', reason: string) => Promise<ActionResult>;
+  setUserRoleAdmin: (uid: string, role: UserRole) => Promise<ActionResult>;
+  processRefundAdmin: (refundId: string, providerReference: string) => Promise<ActionResult>;
   /** null tant qu'aucun indicateur réel n'est calculé (condition 3). */
   ethicalIndicators: EthicalIndicators | null;
 }
@@ -286,6 +300,63 @@ const mapSubmission = (id: string, d: any): TaskSubmission => ({
   verifiedBy: d.reviewedBy || undefined,
 });
 
+const detailsText = (d: unknown): string =>
+  d && typeof d === 'object'
+    ? Object.entries(d as Record<string, unknown>).map(([k, v]) => `${k} : ${v === null || v === undefined ? '—' : String(v)}`).join(' · ')
+    : '';
+
+const mapAuditLog = (id: string, d: any): AuditLogItem => ({
+  id,
+  timestamp: fmtDate(d.createdAt),
+  actorName: d.actorUid ? `Compte …${String(d.actorUid).slice(-6)}` : (d.actorRole === 'system' ? 'Système' : 'Anonyme'),
+  actorRole: d.actorRole,
+  action: d.action || '',
+  details: `${d.target ? `Cible …${String(d.target).slice(-8)} · ` : ''}${detailsText(d.details)}`,
+  complianceRule: d.rule || undefined,
+});
+
+const mapRiskAlert = (id: string, d: any): RiskAlert => ({
+  id,
+  timestamp: fmtDate(d.createdAt),
+  userId: d.userId || '',
+  type: d.type,
+  severity: d.severity || 'low',
+  details: typeof d.details === 'string' ? d.details : detailsText(d.details),
+  resolved: d.resolved === true,
+});
+
+const mapAdminUser = (id: string, d: any): AdminUser => ({
+  id,
+  firstName: d.firstName || '',
+  lastName: d.lastName || '',
+  email: d.email || '',
+  phone: d.phone || '',
+  country: d.country || '',
+  role: d.role || 'member',
+  status: d.status || 'active',
+  statusReason: d.statusReason || undefined,
+  memberNumber: d.memberNumber || undefined,
+  isActivated: d.isActivated === true,
+  plan: d.subscriptionPlan || (d.entryPass ? 'standard' : 'free'),
+  createdAt: fmtDate(d.createdAt) || String(d.createdAtLabel || ''),
+});
+
+const mapRefund = (id: string, d: any): AdminRefund => ({
+  id,
+  userId: d.userId || '',
+  paymentId: d.paymentId || id,
+  amount: Number(d.amount ?? 0),
+  fee: Number(d.fee ?? 0),
+  refundAmount: Number(d.refundAmount ?? 0),
+  currency: d.currency || 'XOF',
+  method: d.method || '',
+  provider: d.provider || '',
+  status: d.status || 'pending',
+  reason: d.reason || '',
+  createdAt: fmtDate(d.createdAt),
+  providerReference: d.providerReference || undefined,
+});
+
 const mapNotification = (id: string, d: any): NotificationItem => ({
   id,
   userId: d.userId,
@@ -334,8 +405,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Modules sans stockage serveur : aucune donnée n'est inventée ni simulée.
   const posts: CommunityPost[] = [];
   const tickets: SupportTicket[] = [];
-  const auditLogs: AuditLogItem[] = [];
-  const riskAlerts: RiskAlert[] = [];
+  const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
+  const [riskAlerts, setRiskAlerts] = useState<RiskAlert[]>([]);
+  const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
+  const [adminRefunds, setAdminRefunds] = useState<AdminRefund[]>([]);
   const userCertificates: Array<{ courseId: string; courseTitle: string; issueDate: string; score: number }> = [];
   const ethicalIndicators: EthicalIndicators | null = null;
   const [isAILoading, setIsAILoading] = useState<boolean>(false);
@@ -376,6 +449,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setSubmissions([]);
       setAdminSubmissions([]);
       setAdminMissions([]);
+      setAuditLogs([]);
+      setRiskAlerts([]);
+      setAdminUsers([]);
+      setAdminRefunds([]);
       setCourses(INITIAL_COURSES.map(c => ({ ...c, enrolledUserIds: [] })));
     };
 
@@ -554,6 +631,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           },
           (err) => console.warn('Lecture admin des retraits refusée:', err.code)
         ));
+        unsubs.push(onSnapshot(
+          query(collection(db, 'risk_events'), orderBy('createdAt', 'desc'), limit(100)),
+          (snap) => { if (generation === authGeneration.current) setRiskAlerts(snap.docs.map(x => mapRiskAlert(x.id, x.data()))); },
+          (err) => console.warn('Lecture des alertes de risque refusée:', err.code)
+        ));
+        unsubs.push(onSnapshot(
+          query(collection(db, 'refunds'), orderBy('createdAt', 'desc'), limit(100)),
+          (snap) => { if (generation === authGeneration.current) setAdminRefunds(snap.docs.map(x => mapRefund(x.id, x.data()))); },
+          (err) => console.warn('Lecture des remboursements refusée:', err.code)
+        ));
+      }
+
+      if (SUPPORT_ROLES.includes(claimRole)) {
+        unsubs.push(onSnapshot(
+          query(collection(db, 'users'), limit(300)),
+          (snap) => { if (generation === authGeneration.current) setAdminUsers(snap.docs.map(x => mapAdminUser(x.id, x.data()))); },
+          (err) => console.warn('Lecture des membres refusée:', err.code)
+        ));
+      }
+
+      if (ADMIN_ROLES.includes(claimRole)) {
+        unsubs.push(onSnapshot(
+          query(collection(db, 'audit_logs'), orderBy('createdAt', 'desc'), limit(150)),
+          (snap) => { if (generation === authGeneration.current) setAuditLogs(snap.docs.map(x => mapAuditLog(x.id, x.data()))); },
+          (err) => console.warn('Lecture du journal d\'audit refusée:', err.code)
+        ));
       }
     });
 
@@ -571,7 +674,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (err: any) {
       const msg = err.code === 'auth/invalid-credential'
         ? 'Adresse e-mail ou mot de passe incorrect.'
-        : (err.message || 'Échec de connexion.');
+        : err.code === 'auth/user-disabled'
+          ? 'Ce compte est suspendu. Écrivez à contact@ahglobal.com pour en connaître la raison.'
+          : (err.message || 'Échec de connexion.');
       return { success: false, error: msg };
     }
   };
@@ -782,6 +887,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const setUserStatusAdmin: AppContextType['setUserStatusAdmin'] = async (uid, status, reason) => {
+    if (!currentUser || !SUPPORT_ROLES.includes(currentUser.role)) return { success: false, message: 'Action non autorisée.' };
+    try {
+      await adminSetUserStatusCallable({ uid, status, reason });
+      return { success: true, message: status === 'suspended' ? 'Compte suspendu : la connexion est bloquée.' : 'Compte réactivé.' };
+    } catch (err) {
+      return { success: false, message: fnError(err, 'Le changement de statut a échoué.') };
+    }
+  };
+
+  const setUserRoleAdmin: AppContextType['setUserRoleAdmin'] = async (uid, role) => {
+    if (!currentUser || currentUser.role !== 'super_admin') return { success: false, message: 'Réservé au super administrateur.' };
+    try {
+      await adminSetUserRoleCallable({ uid, role });
+      return { success: true, message: 'Rôle mis à jour. Le membre doit se reconnecter pour que ses nouveaux droits s’appliquent.' };
+    } catch (err) {
+      return { success: false, message: fnError(err, 'Le changement de rôle a échoué.') };
+    }
+  };
+
+  const processRefundAdmin: AppContextType['processRefundAdmin'] = async (refundId, providerReference) => {
+    if (!currentUser || !FINANCE_ROLES.includes(currentUser.role)) return { success: false, message: 'Action non autorisée.' };
+    try {
+      await adminProcessRefundCallable({ refundId, providerReference });
+      return { success: true, message: 'Remboursement enregistré comme payé.' };
+    } catch (err) {
+      return { success: false, message: fnError(err, 'Le traitement du remboursement a échoué.') };
+    }
+  };
+
   const reviewSubmissionAdmin: AppContextType['reviewSubmissionAdmin'] = async (submissionId, status, feedback) => {
     if (!currentUser || !MODERATION_ROLES.includes(currentUser.role)) {
       return { success: false, message: 'Action non autorisée.' };
@@ -974,6 +1109,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       markAllNotificationsRead,
       auditLogs,
       riskAlerts,
+      adminUsers,
+      adminRefunds,
+      setUserStatusAdmin,
+      setUserRoleAdmin,
+      processRefundAdmin,
       ethicalIndicators
     }}>
       {children}

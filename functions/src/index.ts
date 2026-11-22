@@ -6,7 +6,7 @@ setGlobalOptions({maxInstances: 10, region: "europe-west1"});
 
 export {registerUser} from "./handlers/register";
 export {requestWithdrawal, adminProcessWithdrawal} from "./handlers/withdrawals";
-export {adminSetUserRole} from "./handlers/admin";
+export {adminSetUserRole, adminSetUserStatus} from "./handlers/admin";
 export {
   initiateOnlinePayment,
   cinetpayWebhook,

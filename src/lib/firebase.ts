@@ -147,6 +147,11 @@ export const setSpendingLimitCallable = httpsCallable<
   { spendingLimitMonthly: number; pendingSpendingLimit: { amount: number; effectiveAtMs: number } | null }
 >(functions, 'setSpendingLimit');
 
+export const adminSetUserStatusCallable = httpsCallable<{ uid: string; status: 'active' | 'suspended'; reason: string }, { uid: string; status: string }>(
+  functions,
+  'adminSetUserStatus'
+);
+
 export const adminProcessRefundCallable = httpsCallable<
   { refundId: string; providerReference: string },
   { refundId: string; status: string }

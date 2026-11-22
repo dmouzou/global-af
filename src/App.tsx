@@ -23,6 +23,7 @@ import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { PaymentReturnBanner } from './components/common/PaymentReturnBanner';
 import { LegalPage } from './components/public/LegalPage';
 import { Task, AppView } from './types';
+import { can } from './lib/staff';
 
 export const isExplicitAdminPortal = (): boolean => {
   if (typeof window === 'undefined') return false;
@@ -41,9 +42,7 @@ function AppContent() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup' | 'onboarding'>('signup');
 
-  const isAdminUser = Boolean(
-    currentUser && (currentUser.role === 'admin' || currentUser.role === 'super_admin' || currentUser.role === 'financial_manager')
-  );
+  const isAdminUser = Boolean(currentUser && can.staff(currentUser.role));
 
   const [advertiserAuth, setAdvertiserAuth] = useState<{
     email: string;
@@ -145,36 +144,11 @@ function AppContent() {
     }
 
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-orange-500 selection:text-white">
-        <header className="bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={handleReturnToPublic}
-              className="text-xs text-slate-400 hover:text-white transition-colors"
-            >
-              ← Revenir au site public
-            </button>
-            <span className="text-slate-600">|</span>
-            <span className="text-xs font-mono text-emerald-400">global-af-dev-admin</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-300 font-mono hidden sm:inline">{advertiserAuth.email}</span>
-            <button
-              onClick={handleAdminLogout}
-              className="text-xs text-red-400 hover:text-red-300 font-semibold px-2 py-1 rounded bg-red-950/40 border border-red-800/40"
-            >
-              Déconnexion
-            </button>
-          </div>
-        </header>
-
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">
-          <AdminDashboard 
-            advertiserInfo={advertiserAuth}
-            onLogout={handleAdminLogout}
-          />
-        </main>
-      </div>
+      <AdminDashboard
+        advertiserInfo={advertiserAuth}
+        onLogout={handleAdminLogout}
+        onReturnToPublic={handleReturnToPublic}
+      />
     );
   }
 
