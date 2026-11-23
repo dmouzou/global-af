@@ -1,5 +1,6 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
+import { fmtPct, PublicRates, usePublicRates } from '../../lib/useRates';
 import { ArrowRight, Dices, HeartHandshake, Landmark, Lock, Scale, Sparkles } from 'lucide-react';
 import { OperatorLogo } from '../common/OperatorLogo';
 import { BabiVector } from '../brand/BabiVector';
@@ -11,9 +12,9 @@ interface TransparencePageProps {
   onOpenAuth: (mode: 'login' | 'signup') => void;
 }
 
-const PILLARS = [
-  { icon: Scale, tag: 'Condition 1', t: 'Parrainage direct, règles publiées', d: "Un seul niveau de parrainage direct, sans niveaux cachés. Le parrain touche 10 % du prix du Pass Membre activé par son filleul, puis 5 % sur la première commande réelle de ce filleul. Pas d'auto-parrainage, aucune commission sur des comptes artificiels, commission annulée si la vente est remboursée." },
-  { icon: Lock, tag: 'Condition 2', t: "Un prix, un contenu, avant paiement", d: "Le Pass d'entrée se rétracte pendant 7 jours, remboursé sous déduction des frais de transaction (3 %). Le VIP Premium n'est pas remboursable : l'accès aux fichiers et contacts est immédiat et définitif." },
+const pillarsFor = (r: PublicRates) => [
+  { icon: Scale, tag: 'Condition 1', t: 'Parrainage direct, règles publiées', d: `Un seul niveau de parrainage direct, sans niveaux cachés. Le parrain touche ${fmtPct(r.passPct)} % du prix du Pass Membre activé par son filleul, puis ${fmtPct(r.firstSalePct)} % sur la première commande réelle de ce filleul. Pas d'auto-parrainage, aucune commission sur des comptes artificiels, commission annulée si la vente est remboursée.` },
+  { icon: Lock, tag: 'Condition 2', t: "Un prix, un contenu, avant paiement", d: `Le Pass d'entrée se rétracte pendant ${r.retractionDays} jours, remboursé sous déduction des frais de transaction (${fmtPct(r.refundFeePct)} %). Le VIP Premium n'est pas remboursable : l'accès aux fichiers et contacts est immédiat et définitif.` },
   { icon: Sparkles, tag: 'Condition 3', t: 'Honnêteté sur les gains', d: "Nous publions des indicateurs réels, même modestes. Pas de slogan « gagne X par jour », pas de mise en scène d'argent, pas de « jusqu'à » trompeur, pour l'équipe, les affiliés et les partenaires." },
   { icon: Dices, tag: 'Condition 4', t: 'Interdiction des jeux de hasard', d: "Ni roue, ni loterie, ni tombola, ni tirage au sort, ni loot box, gratuits ou payants. Chaque récompense est connue à l'avance. Les campagnes partenaires contenant du hasard sont refusées." },
   { icon: HeartHandshake, tag: 'Condition 5', t: 'Protection des membres', d: "18 ans minimum vérifié à l'inscription, plafond de dépense mensuel réglable, aucune incitation à s'endetter. Pause, suspension volontaire ou clôture du compte : demandez-les par e-mail, nous les traitons." },
@@ -22,6 +23,7 @@ const PILLARS = [
 
 export const TransparencePage: React.FC<TransparencePageProps> = ({ onGoToDashboard, onOpenAuth }) => {
   const { ethicalIndicators, currentUser } = useApp();
+  const PILLARS = pillarsFor(usePublicRates());
   const start = () => (currentUser ? onGoToDashboard() : onOpenAuth('signup'));
 
   return (

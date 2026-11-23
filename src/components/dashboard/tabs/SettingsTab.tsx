@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { RotateCcw, ShieldCheck } from 'lucide-react';
 import { useApp } from '../../../context/AppContext';
-import { POLICY } from '../../../lib/policy';
+import { fmtPct, usePublicRates } from '../../../lib/useRates';
 import { Btn, fcfa, inputCls, Modal, PageTitle, Panel } from '../ui';
 
 const formatDay = (d: Date) => d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
 
 export const SettingsTab: React.FC<{ onRenew: () => void }> = ({ onRenew }) => {
   const { currentUser, selectedCountry, updateMonthlySpendingLimit, requestRetractionRefund } = useApp();
+  const POLICY = usePublicRates();
   const [limit, setLimit] = useState<number>(currentUser?.spendingLimitMonthly || 100000);
   const [limitMsg, setLimitMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [reason, setReason] = useState('Je souhaite exercer mon droit de rétractation de 7 jours');
@@ -73,7 +74,7 @@ export const SettingsTab: React.FC<{ onRenew: () => void }> = ({ onRenew }) => {
 
       <Panel>
         <div className="flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-wax/12 text-wax-deep"><RotateCcw className="h-5 w-5" /></span><h2 className="font-display text-xl font-extrabold">Rétractation du Pass d'entrée ({POLICY.retractionDays} jours)</h2></div>
-        <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-ink/70">Vous pouvez vous rétracter pendant {POLICY.retractionDays} jours à compter du paiement du Pass. Le remboursement est versé sur votre moyen de paiement, sous déduction des frais de transaction ({POLICY.refundFeePercent} %).</p>
+        <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-ink/70">Vous pouvez vous rétracter pendant {POLICY.retractionDays} jours à compter du paiement du Pass. Le remboursement est versé sur votre moyen de paiement, sous déduction des frais de transaction ({fmtPct(POLICY.refundFeePct)} %).</p>
         <p className="mt-3 max-w-2xl rounded-2xl bg-sun/20 p-3.5 text-[14px] leading-relaxed"><strong>VIP Premium :</strong> l'abonnement n'est pas remboursable, car l'accès aux fichiers, contacts et outils est immédiat et définitif.</p>
         {currentUser.entryPass ? (
           <div className="mt-4 space-y-3">
@@ -88,7 +89,7 @@ export const SettingsTab: React.FC<{ onRenew: () => void }> = ({ onRenew }) => {
       </Panel>
 
       <Modal open={confirmOpen} onClose={() => setConfirmOpen(false)} title="Confirmer la rétractation ?">
-        <p className="text-[15px] leading-relaxed text-ink/70">La rétractation désactivera vos accès (missions, formations, retraits). Le remboursement sera le montant payé moins {POLICY.refundFeePercent} % de frais de transaction.</p>
+        <p className="text-[15px] leading-relaxed text-ink/70">La rétractation désactivera vos accès (missions, formations, retraits). Le remboursement sera le montant payé moins {fmtPct(POLICY.refundFeePct)} % de frais de transaction.</p>
         <div className="mt-5 flex justify-end gap-2.5"><Btn kind="ghost" onClick={() => setConfirmOpen(false)}>Annuler</Btn><Btn onClick={retract} disabled={busy} className="!bg-rose-600 hover:!bg-rose-700">{busy ? 'Envoi…' : 'Oui, me rétracter'}</Btn></div>
       </Modal>
     </div>

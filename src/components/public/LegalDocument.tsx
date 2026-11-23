@@ -2,6 +2,7 @@ import React from 'react';
 import { LEGAL_DOCS, LegalDoc } from '../../data/legalTexts';
 import { LEGAL_ENTITY, LEGAL_REVIEWED, LEGAL_VERSION_DATE } from '../../data/legalEntity';
 import { POLICY } from '../../lib/policy';
+import { fmtPct, usePublicRates } from '../../lib/useRates';
 
 const FIELD_LABELS: Record<string, string> = {
   name: 'raison sociale', legalForm: 'forme juridique', capital: 'capital', rccm: 'RCCM',
@@ -12,21 +13,15 @@ const FIELD_LABELS: Record<string, string> = {
   retentionLogs: 'durée de conservation',
 };
 
-const POLICY_VALUES: Record<string, string> = {
-  retractionDays: String(POLICY.retractionDays),
-  refundFeePercent: String(POLICY.refundFeePercent),
-  minAge: String(POLICY.minAge),
-  subscriptionDays: String(POLICY.subscriptionDays),
-};
 
 /** Remplace {{champ}} et met **gras** ; un champ non renseigné est signalé. */
-function renderInline(text: string): React.ReactNode[] {
+function renderInline(text: string, values: Record<string, string>): React.ReactNode[] {
   return text.split(/(\*\*[^*]+\*\*|\{\{\w+\}\})/g).filter(Boolean).map((part, i) => {
-    if (part.startsWith('**')) return <strong key={i}>{renderInline(part.slice(2, -2))}</strong>;
+    if (part.startsWith('**')) return <strong key={i}>{renderInline(part.slice(2, -2), values)}</strong>;
     const m = part.match(/^\{\{(\w+)\}\}$/);
     if (!m) return <React.Fragment key={i}>{part}</React.Fragment>;
     const key = m[1];
-    const value = POLICY_VALUES[key] ?? LEGAL_ENTITY[key];
+    const value = values[key] ?? LEGAL_ENTITY[key];
     if (value) return <React.Fragment key={i}>{value}</React.Fragment>;
     return (
       <mark key={i} className="bg-amber-100 text-amber-900 px-1 rounded" title="À renseigner dans src/data/legalEntity.ts">
@@ -44,6 +39,13 @@ interface LegalDocumentProps {
 
 export const LegalDocument: React.FC<LegalDocumentProps> = ({ doc, compact = false }) => {
   const d = LEGAL_DOCS[doc];
+  const rates = usePublicRates();
+  const values: Record<string, string> = {
+    retractionDays: String(rates.retractionDays),
+    refundFeePercent: fmtPct(rates.refundFeePct),
+    minAge: String(POLICY.minAge),
+    subscriptionDays: String(rates.subscriptionDays),
+  };
   return (
     <article className="space-y-5 text-[15px] leading-relaxed text-ink/80">
       {!compact && (
@@ -58,14 +60,14 @@ export const LegalDocument: React.FC<LegalDocumentProps> = ({ doc, compact = fal
           « à renseigner » seront complétées avant sa version définitive.
         </div>
       )}
-      <p>{renderInline(d.intro)}</p>
+      <p>{renderInline(d.intro, values)}</p>
       {d.sections.map((s) => (
         <section key={s.title} className="space-y-2">
           <h2 className="font-display text-xl font-bold text-ink">{s.title}</h2>
-          {s.paragraphs?.map((p, i) => <p key={i}>{renderInline(p)}</p>)}
+          {s.paragraphs?.map((p, i) => <p key={i}>{renderInline(p, values)}</p>)}
           {s.list && (
             <ul className="list-disc pl-5 space-y-1.5">
-              {s.list.map((li, i) => <li key={i}>{renderInline(li)}</li>)}
+              {s.list.map((li, i) => <li key={i}>{renderInline(li, values)}</li>)}
             </ul>
           )}
         </section>

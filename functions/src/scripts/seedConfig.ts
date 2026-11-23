@@ -49,10 +49,11 @@ const countries: CountryConfig[] = [{
   },
 }];
 
-// Offres. `activation` = Pass d'entrée : NON remboursable (décision produit),
-// sans commission d'affiliation (section 6). `subscription` = abonnements :
-// droit de rétractation de 7 jours (remboursement sous déduction des frais
-// de transaction) et commissions d'affiliation sur ventes réelles.
+// Offres. `activation` = Pass d'entrée : droit de rétractation de 7 jours
+// (remboursement sous déduction des frais de transaction) ; commission de
+// parrainage de niveau 1 sur le Pass (décision des propriétaires).
+// `subscription` = abonnements Premium / Business : NON remboursables (accès
+// immédiat et définitif) ; commission sur la première vente réelle du filleul.
 const products = [
   {id: "standard", name: "Pass Membre Standard", priceXOF: 3000,
     kind: "activation"},

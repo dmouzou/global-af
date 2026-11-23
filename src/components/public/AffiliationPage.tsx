@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowRight, Sparkles, Users, Award } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { fmtPct, usePublicRates } from '../../lib/useRates';
 import { IlluAffiliation, ScarfRibbon } from '../brand/Illustrations';
 import { CtaBand, Eyebrow, GhostButton, PageHero, PrimaryButton } from '../ui/kit';
 
@@ -13,6 +14,9 @@ const fmt = (n: number) => Math.round(n).toLocaleString('fr-FR');
 
 export const AffiliationPage: React.FC<AffiliationPageProps> = ({ onGoToDashboard, onOpenAuth }) => {
   const { currentUser } = useApp();
+  const rates = usePublicRates();
+  const P1 = fmtPct(rates.passPct);
+  const P2 = fmtPct(rates.firstSalePct);
   const [referralsCount, setReferralsCount] = useState(5);
   const [passPrice, setPassPrice] = useState(3000);
   const [firstOrderPrice, setFirstOrderPrice] = useState(9900);
@@ -23,8 +27,8 @@ export const AffiliationPage: React.FC<AffiliationPageProps> = ({ onGoToDashboar
   const safePassPrice = Math.max(0, passPrice || 0);
   const safeFirstOrder = Math.max(0, firstOrderPrice || 0);
 
-  const bonusPass = safeCount * (safePassPrice * 0.10);
-  const bonusFirstOrder = safeCount * (safeFirstOrder * 0.05);
+  const bonusPass = safeCount * (safePassPrice * (rates.passPct / 100));
+  const bonusFirstOrder = safeCount * (safeFirstOrder * (rates.firstSalePct / 100));
   const totalGains = bonusPass + bonusFirstOrder;
 
   return (
@@ -32,7 +36,7 @@ export const AffiliationPage: React.FC<AffiliationPageProps> = ({ onGoToDashboar
       <PageHero
         eyebrow="Programme de Parrainage"
         title="Partagez AH GLOBAL et touchez des commissions sur chaque filleul actif."
-        subtitle="Un système simple et transparent à un niveau : 10 % sur le Pass Membre de vos filleuls, puis 5 % sur leur première commande réelle sur l'application."
+        subtitle={`Un système simple et transparent à un niveau : ${P1} % sur le Pass Membre de vos filleuls, puis ${P2} % sur leur première commande réelle sur l'application.`}
         actions={
           <>
             <PrimaryButton onClick={start}>
@@ -58,10 +62,10 @@ export const AffiliationPage: React.FC<AffiliationPageProps> = ({ onGoToDashboar
               <span className="text-xs font-bold uppercase tracking-wider text-white/80">Étape 1 · Activation</span>
               <Award className="h-6 w-6 text-white/80" />
             </div>
-            <p className="mt-4 font-display text-6xl font-extrabold">10 %</p>
+            <p className="mt-4 font-display text-6xl font-extrabold">{P1} %</p>
             <h3 className="mt-2 text-xl font-bold">Sur le Pass Membre</h3>
             <p className="mt-3 text-[15px] leading-relaxed text-white/90">
-              Dès que votre filleul direct active son Pass Membre, vous recevez automatiquement 10 % du montant du Pass sur votre solde.
+              Dès que votre filleul direct active son Pass Membre, vous recevez automatiquement {P1} % du montant du Pass sur votre solde.
             </p>
           </div>
 
@@ -70,7 +74,7 @@ export const AffiliationPage: React.FC<AffiliationPageProps> = ({ onGoToDashboar
               <span className="text-xs font-bold uppercase tracking-wider text-white/80">Étape 2 · Première vente</span>
               <Sparkles className="h-6 w-6 text-white/80" />
             </div>
-            <p className="mt-4 font-display text-6xl font-extrabold">5 %</p>
+            <p className="mt-4 font-display text-6xl font-extrabold">{P2} %</p>
             <h3 className="mt-2 text-xl font-bold">Sur sa 1ère commande</h3>
             <p className="mt-3 text-[15px] leading-relaxed text-white/90">
               Sur le premier achat de votre filleul sur la plateforme : abonnement VIP, formation certifiante, consultation ou prestation.
@@ -153,8 +157,8 @@ export const AffiliationPage: React.FC<AffiliationPageProps> = ({ onGoToDashboar
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-4 rounded-2xl bg-wax/10">
                   <div>
-                    <div className="text-xs font-bold uppercase tracking-wider text-wax-deep">10 % sur le Pass Membre</div>
-                    <div className="text-xs text-ink/60 mt-0.5">{safeCount} filleul(s) × {fmt(safePassPrice * 0.10)} FCFA</div>
+                    <div className="text-xs font-bold uppercase tracking-wider text-wax-deep">{P1} % sur le Pass Membre</div>
+                    <div className="text-xs text-ink/60 mt-0.5">{safeCount} filleul(s) × {fmt(safePassPrice * (rates.passPct / 100))} FCFA</div>
                   </div>
                   <div className="font-display text-2xl font-black text-wax-deep">
                     {fmt(bonusPass)} <span className="text-xs text-ink/60 font-normal">FCFA</span>
@@ -163,8 +167,8 @@ export const AffiliationPage: React.FC<AffiliationPageProps> = ({ onGoToDashboar
 
                 <div className="flex items-center justify-between p-4 rounded-2xl bg-leaf/10">
                   <div>
-                    <div className="text-xs font-bold uppercase tracking-wider text-leaf-deep">5 % sur la 1ère commande</div>
-                    <div className="text-xs text-ink/60 mt-0.5">{safeCount} commande(s) × {fmt(safeFirstOrder * 0.05)} FCFA</div>
+                    <div className="text-xs font-bold uppercase tracking-wider text-leaf-deep">{P2} % sur la 1ère commande</div>
+                    <div className="text-xs text-ink/60 mt-0.5">{safeCount} commande(s) × {fmt(safeFirstOrder * (rates.firstSalePct / 100))} FCFA</div>
                   </div>
                   <div className="font-display text-2xl font-black text-leaf-deep">
                     {fmt(bonusFirstOrder)} <span className="text-xs text-ink/60 font-normal">FCFA</span>

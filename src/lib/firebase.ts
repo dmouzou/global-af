@@ -147,6 +147,16 @@ export const setSpendingLimitCallable = httpsCallable<
   { spendingLimitMonthly: number; pendingSpendingLimit: { amount: number; effectiveAtMs: number } | null }
 >(functions, 'setSpendingLimit');
 
+export const adminUpdatePlatformConfigCallable = httpsCallable<{ patch: Record<string, unknown>; reason: string }, { changes: { field: string; from: unknown; to: unknown }[] }>(
+  functions,
+  'adminUpdatePlatformConfig'
+);
+
+export const adminUpdateCountryConfigCallable = httpsCallable<{ code: string; patch: Record<string, unknown>; reason: string }, { changes: { field: string; from: unknown; to: unknown }[] }>(
+  functions,
+  'adminUpdateCountryConfig'
+);
+
 export const adminSetUserStatusCallable = httpsCallable<{ uid: string; status: 'active' | 'suspended'; reason: string }, { uid: string; status: string }>(
   functions,
   'adminSetUserStatus'

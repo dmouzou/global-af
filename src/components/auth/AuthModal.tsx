@@ -4,6 +4,7 @@ import { LegalDocument } from '../public/LegalDocument';
 import { X, CheckCircle, ShieldCheck, ArrowRight, ArrowLeft } from 'lucide-react';
 import { CountryCode } from '../../types';
 import { BrandLogo } from '../common/BrandLogo';
+import { fmtPct, usePublicRates } from '../../lib/useRates';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface AuthModalProps {
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'signup', onComplete }) => {
   const { login, signup, resendEmailVerification, refreshEmailVerification } = useApp();
+  const rates = usePublicRates();
   const [mode, setMode] = useState<'login' | 'signup' | 'verify' | 'onboarding'>(initialMode);
   
   // Form states
@@ -486,7 +488,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMo
                   <h4 className="font-bold text-slate-900 text-sm">Système d'Affiliation Éthique</h4>
                   <p>Vous disposez d'un code de parrainage exclusif. Règle absolue de notre charte éthique :</p>
                   <div className="p-2.5 bg-emerald-50 rounded border border-emerald-200 text-emerald-900 text-[11px]">
-                    Parrainage direct, <strong>un seul niveau</strong> : 10 % du prix du Pass Membre activé par votre filleul, puis 5 % sur sa première commande réelle. Pas d'auto-parrainage, aucune commission sur des comptes artificiels. Aucun gain n'est garanti.
+                    Parrainage direct, <strong>un seul niveau</strong> : {fmtPct(rates.passPct)} % du prix du Pass Membre activé par votre filleul, puis {fmtPct(rates.firstSalePct)} % sur sa première commande réelle. Pas d'auto-parrainage, aucune commission sur des comptes artificiels. Aucun gain n'est garanti.
                   </div>
                 </div>
               )}

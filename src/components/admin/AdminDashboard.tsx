@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Briefcase, ClipboardCheck, FileText, History, LayoutDashboard, Megaphone, RotateCcw, ScrollText, ShieldAlert, Smartphone, Users } from 'lucide-react';
+import { Briefcase, ClipboardCheck, FileText, History, LayoutDashboard, Megaphone, SlidersHorizontal, RotateCcw, ScrollText, ShieldAlert, Smartphone, Users } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { can, ROLE_LABEL } from '../../lib/staff';
 import { AdminShell, AdminNavItem } from './AdminShell';
@@ -13,6 +13,7 @@ import { AdminUsers } from './tabs/AdminUsers';
 import { AdminAudit } from './tabs/AdminAudit';
 import { AdminRules } from './tabs/AdminRules';
 import { AdminPartners } from './tabs/AdminPartners';
+import { AdminSettings } from './tabs/AdminSettings';
 
 interface AdminDashboardProps {
   advertiserInfo: { email: string; companyName: string; role: 'admin' | 'advertiser' };
@@ -40,6 +41,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ advertiserInfo, 
       { id: 'partners', label: 'Entreprises', icon: Megaphone },
       { id: 'audit', label: "Journal d'audit", icon: History },
     ] : []),
+    ...(can.superAdmin(role) ? [{ id: 'settings', label: 'Paramètres', icon: SlidersHorizontal }] : []),
     { id: 'rules', label: 'Règles', icon: ScrollText },
   ].map(i => ({ ...i, badge: i.badge || undefined }));
 
@@ -62,6 +64,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ advertiserInfo, 
       {active === 'users' && can.support(role) && <AdminUsers />}
       {active === 'partners' && can.admin(role) && <AdminPartners />}
       {active === 'audit' && can.admin(role) && <AdminAudit />}
+      {active === 'settings' && can.superAdmin(role) && <AdminSettings />}
       {active === 'rules' && <AdminRules />}
     </AdminShell>
   );

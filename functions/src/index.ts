@@ -21,6 +21,10 @@ export {updateMyProfile, setSpendingLimit, getMyAffiliation} from "./handlers/ac
 export {processSubscriptions} from "./handlers/subscriptions";
 export {runAiTool} from "./handlers/ai";
 export {
+  adminUpdatePlatformConfig,
+  adminUpdateCountryConfig,
+} from "./handlers/config";
+export {
   adminSaveMission,
   adminSetMissionStatus,
   submitMissionProof,

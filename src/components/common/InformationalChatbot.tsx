@@ -1,3 +1,4 @@
+import { fmtPct, usePublicRates } from '../../lib/useRates';
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Send, Sparkles, RotateCcw, Copy, Check, ThumbsUp, ThumbsDown, 
@@ -43,8 +44,8 @@ Aucun gain n'est garanti : le solde dépend uniquement des récompenses et commi
     title: 'Parrainage',
     answer: `Le programme de parrainage d’AH GLOBAL est simple, direct et transparent (1 niveau) :
 
-• **10 % sur le Pass Membre :** dès que votre filleul direct active son compte avec le Pass Membre, vous recevez 10 % du prix du Pass sur votre solde.
-• **5 % sur sa 1ère commande :** sur la première vente réelle de votre filleul sur l'application (abonnement VIP, formation payante, consultation ou prestation).
+• **{{passPct}} % sur le Pass Membre :** dès que votre filleul direct active son compte avec le Pass Membre, vous recevez {{passPct}} % du prix du Pass sur votre solde.
+• **{{firstSalePct}} % sur sa 1ère commande :** sur la première vente réelle de votre filleul sur l'application (abonnement VIP, formation payante, consultation ou prestation).
 • **1 seul niveau :** les commissions sont calculées uniquement sur vos filleuls directs.
 • **Suivi :** votre lien d'affiliation et l'historique de vos commissions sont disponibles en temps réel dans votre espace personnel.
 • **Retraits :** vos gains validés sont retirables directement vers votre compte Wave, Orange Money, MTN MoMo ou Moov Money dès le seuil atteint.
@@ -175,6 +176,7 @@ export const InformationalChatbot: React.FC<InformationalChatbotProps> = ({
   onNavigateView,
   onCloseFloating
 }) => {
+  const rates = usePublicRates();
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome',
@@ -232,7 +234,9 @@ export const InformationalChatbot: React.FC<InformationalChatbotProps> = ({
     const qNorm = query.toLowerCase();
     for (const item of KNOWLEDGE_BASE) {
       if (item.keywords.some(k => qNorm.includes(k))) {
-        return item;
+        // Les taux viennent de la configuration en direct, pas d'un texte figé.
+        const fill = (t: string) => t.replace(/\{\{(passPct|firstSalePct)\}\}/g, (_m, k: 'passPct' | 'firstSalePct') => fmtPct(rates[k]));
+        return { ...item, answer: fill(item.answer) };
       }
     }
     return null;

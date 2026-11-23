@@ -1,8 +1,7 @@
 /**
- * Règles commerciales annoncées au public. Elles reflètent la configuration
- * serveur (functions/src/scripts/seedConfig.ts : retractionDays, refundFeeBps) :
- * en cas de changement, modifier les deux (le serveur reste l'autorité pour
- * les montants réellement remboursés).
+ * Valeurs de REPLI des règles commerciales. L'affichage lit la configuration
+ * serveur en direct (lib/useRates.ts) ; ces constantes ne servent que tant que
+ * cette lecture n'a pas abouti. Le serveur reste l'autorité pour les montants.
  */
 export const POLICY = {
   /** Délai de rétractation du PASS D'ENTRÉE (jours). */

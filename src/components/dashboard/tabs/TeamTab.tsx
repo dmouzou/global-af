@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Check, Copy, RefreshCw, Share2, ShieldCheck, Users } from 'lucide-react';
 import { useApp } from '../../../context/AppContext';
+import { fmtPct, usePublicRates } from '../../../lib/useRates';
 import { Btn, EmptyState, fcfa, PageTitle, Panel, Pill, Stat } from '../ui';
 
 const STATUS = {
@@ -12,6 +13,7 @@ const STATUS = {
 export const TeamTab: React.FC = () => {
   const { currentUser, affiliation, refreshAffiliation, selectedCountry } = useApp();
   const [copied, setCopied] = useState<'code' | 'link' | null>(null);
+  const rates = usePublicRates();
 
   useEffect(() => {
     if (currentUser) refreshAffiliation();
@@ -41,7 +43,7 @@ export const TeamTab: React.FC = () => {
       <Panel className="!bg-leaf/10 ring-leaf/25">
         <p className="flex gap-3 text-[14px] leading-relaxed text-leaf-deep">
           <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0" />
-          <span><strong>Règles en vigueur :</strong> 10 % sur le Pass Membre activé par vos filleuls directs, puis 5 % sur leur première commande réelle (abonnement, formation…). Pas d'auto-parrainage, pas de commission sur des comptes artificiels. Aucun gain n'est garanti.</span>
+          <span><strong>Règles en vigueur :</strong> {fmtPct(rates.passPct)} % sur le Pass Membre activé par vos filleuls directs, puis {fmtPct(rates.firstSalePct)} % sur leur première commande réelle (abonnement, formation…). Pas d'auto-parrainage, pas de commission sur des comptes artificiels. Aucun gain n'est garanti.</span>
         </p>
       </Panel>
 

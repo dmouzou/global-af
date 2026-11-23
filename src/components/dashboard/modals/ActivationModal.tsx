@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Check, Info } from 'lucide-react';
 import { useApp } from '../../../context/AppContext';
-import { POLICY } from '../../../lib/policy';
+import { fmtPct, usePublicRates } from '../../../lib/useRates';
 import { Btn, inputCls, Modal } from '../ui';
 
 export type ActivationPlan = 'standard' | 'premium';
@@ -15,6 +15,7 @@ interface Props {
 
 export const ActivationModal: React.FC<Props> = ({ open, plan, onPlanChange, onClose }) => {
   const { currentUser, startActivationPayment } = useApp();
+  const POLICY = usePublicRates();
   const [method, setMethod] = useState<'mobile_money' | 'card'>('mobile_money');
   const [address, setAddress] = useState('');
   const [city, setCity] = useState(currentUser?.city || '');
@@ -104,7 +105,7 @@ export const ActivationModal: React.FC<Props> = ({ open, plan, onPlanChange, onC
         {plan === 'standard' ? (
           <p className="flex gap-2 rounded-2xl bg-leaf/10 p-3.5 text-[13px] leading-relaxed text-leaf-deep">
             <Info className="mt-0.5 h-4 w-4 shrink-0" />
-            <span><strong>Droit de rétractation de {POLICY.retractionDays} jours</strong> depuis « Paramètres ». Remboursement sur votre moyen de paiement, sous déduction des frais de transaction ({POLICY.refundFeePercent} %).</span>
+            <span><strong>Droit de rétractation de {POLICY.retractionDays} jours</strong> depuis « Paramètres ». Remboursement sur votre moyen de paiement, sous déduction des frais de transaction ({fmtPct(POLICY.refundFeePct)} %).</span>
           </p>
         ) : (
           <label className="flex items-start gap-3 rounded-2xl bg-sun/20 p-3.5 text-[13px] leading-relaxed">

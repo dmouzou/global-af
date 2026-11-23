@@ -2,6 +2,7 @@ import React from 'react';
 import { AlertCircle, CalendarClock, Zap } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { POLICY } from '../../lib/policy';
+import { usePublicRates } from '../../lib/useRates';
 import { BabiVector } from '../brand/BabiVector';
 import { Btn } from './ui';
 
@@ -10,6 +11,7 @@ const formatDay = (d: Date) => d.toLocaleDateString('fr-FR', { day: '2-digit', m
 /** Rappels en tête de l'espace : e-mail à confirmer, échéance d'abonnement, Pass à activer. */
 export const Banners: React.FC<{ onActivate: () => void; onRenew: () => void; showActivation?: boolean }> = ({ onActivate, onRenew, showActivation = true }) => {
   const { currentUser, refreshEmailVerification, resendEmailVerification } = useApp();
+  const rates = usePublicRates();
   if (!currentUser) return null;
 
   const subExpiry = currentUser.subscriptionExpiresAt ? new Date(currentUser.subscriptionExpiresAt) : null;
@@ -49,7 +51,7 @@ export const Banners: React.FC<{ onActivate: () => void; onRenew: () => void; sh
               <span className="inline-flex rounded-full bg-sun px-2.5 py-1 text-xs font-bold text-ink">Activation requise</span>
               <h2 className="mt-2 font-display text-xl font-extrabold">Votre compte découverte est gratuit.</h2>
               <p className="mt-1 max-w-2xl text-[14px] leading-relaxed text-white/75">
-                Le Pass (3 000 FCFA, rétractation de {POLICY.retractionDays} jours) débloque la participation aux missions rémunérées, les formations et les retraits. Aucun gain n'est garanti.
+                Le Pass (3 000 FCFA, rétractation de {rates.retractionDays} jours) débloque la participation aux missions rémunérées, les formations et les retraits. Aucun gain n'est garanti.
               </p>
             </div>
             <Btn onClick={onActivate} className="justify-self-start sm:justify-self-end"><Zap className="h-4 w-4" />Activer mon Pass</Btn>

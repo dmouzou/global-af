@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { fmtPct, PublicRates, usePublicRates } from '../../lib/useRates';
 import { ArrowRight, BookOpen, Check, ChevronDown, Dices, Lock, Scale, ShieldCheck, Sparkles, UserCheck } from 'lucide-react';
 import { Task } from '../../types';
 import { OperatorLogo } from '../common/OperatorLogo';
@@ -26,22 +27,22 @@ const CATEGORY_LABEL: Record<string, string> = {
   quiz_challenge: 'Quiz',
 };
 
-const FAQS = [
+const faqsFor = (r: PublicRates) => [
   {
     q: "Comment fonctionne la rémunération sur AH GLOBAL ?",
-    a: "Les récompenses de missions sont fixées et publiées à l'avance ; aucun hasard n'intervient jamais. Le parrainage est direct, sur un seul niveau : le parrain touche 10 % du prix du Pass Membre activé par son filleul, puis 5 % sur la première commande réelle de ce filleul. L'ouverture des missions rémunérées est en cours : consultez votre espace pour l'état actuel. Aucun gain n'est garanti.",
+    a: `Les récompenses de missions sont fixées et publiées à l'avance ; aucun hasard n'intervient jamais. Le parrainage est direct, sur un seul niveau : le parrain touche ${fmtPct(r.passPct)} % du prix du Pass Membre activé par son filleul, puis ${fmtPct(r.firstSalePct)} % sur la première commande réelle de ce filleul. L'ouverture des missions rémunérées est en cours : consultez votre espace pour l'état actuel. Aucun gain n'est garanti.`,
   },
   {
     q: "Le compte gratuit permet-il vraiment de gagner de l'argent et de retirer ?",
-    a: "L'inscription est gratuite. Pour participer aux missions rémunérées, suivre les formations et demander un retrait, un Pass actif est nécessaire : le Pass d'entrée (rétractation de 7 jours) ou un abonnement VIP Premium. Le prix et le contenu sont affichés avant tout paiement. Aucun gain n'est garanti : ne payez jamais dans l'espoir d'un revenu, ni en vous endettant.",
+    a: "L'inscription est gratuite. Pour participer aux missions rémunérées, suivre les formations et demander un retrait, un Pass actif est nécessaire : le Pass d'entrée (rétractation possible) ou un abonnement VIP Premium. Le prix et le contenu sont affichés avant tout paiement. Aucun gain n'est garanti : ne payez jamais dans l'espoir d'un revenu, ni en vous endettant.",
   },
   {
     q: "Quels opérateurs Mobile Money sont acceptés en Côte d'Ivoire ?",
     a: "Les paiements d'offres se font sur une page sécurisée (CinetPay) par Mobile Money (Wave, Orange Money, MTN MoMo, Moov Money) ou par carte bancaire Visa. Les retraits de gains se font vers un compte Mobile Money ; le montant minimum et les frais sont affichés avant validation.",
   },
   {
-    q: "Comment s'applique le droit de rétractation de 7 jours ?",
-    a: "Le Pass d'entrée (Standard) se rétracte pendant 7 jours à compter du paiement, depuis « Paramètres » : le remboursement, sous déduction des frais de transaction (3 %), est traité vers le moyen de paiement utilisé. L'abonnement VIP Premium n'est pas remboursable car l'accès aux fichiers et contacts VCF est immédiat et définitif.",
+    q: `Comment s'applique le droit de rétractation de ${r.retractionDays} jours ?`,
+    a: `Le Pass d'entrée (Standard) se rétracte pendant ${r.retractionDays} jours à compter du paiement, depuis « Paramètres » : le remboursement, sous déduction des frais de transaction (${fmtPct(r.refundFeePct)} %), est traité vers le moyen de paiement utilisé. L'abonnement VIP Premium n'est pas remboursable car l'accès aux fichiers et contacts VCF est immédiat et définitif.`,
   },
   {
     q: "Qu'est-ce que la charte éthique d'AH GLOBAL ?",
@@ -58,6 +59,8 @@ const Eyebrow: React.FC<{ children: React.ReactNode; dark?: boolean }> = ({ chil
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpenAuth, onSelectTask, onNavigatePage }) => {
   const { tasks, ethicalIndicators } = useApp();
+  const rates = usePublicRates();
+  const FAQS = faqsFor(rates);
   const [faqOpen, setFaqOpen] = useState<number | null>(0);
   const go = (page: string) => (onNavigatePage ? onNavigatePage(page) : onGoToDashboard());
   const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -99,7 +102,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
               {[
                 { icon: Dices, text: 'Aucun jeu de hasard' },
                 { icon: Scale, text: 'Parrainage direct, un seul niveau' },
-                { icon: UserCheck, text: 'Rétractation de 7 jours sur le Pass' },
+                { icon: UserCheck, text: `Rétractation de ${rates.retractionDays} jours sur le Pass` },
               ].map(({ icon: Icon, text }) => (
                 <li key={text} className="flex items-start gap-2.5">
                   <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-leaf/10 text-leaf"><Icon className="h-4 w-4" /></span>
@@ -166,7 +169,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
         <ol className="relative mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
           {[
             { t: 'Créez votre compte', d: 'Gratuit. Une adresse e-mail, votre numéro Mobile Money, 18 ans minimum.', c: 'bg-wax' },
-            { t: 'Activez votre Pass', d: '3 000 FCFA, contenu décrit avant paiement. Rétractation possible pendant 7 jours.', c: 'bg-leaf' },
+            { t: 'Activez votre Pass', d: `3 000 FCFA, contenu décrit avant paiement. Rétractation possible pendant ${rates.retractionDays} jours.`, c: 'bg-leaf' },
             { t: 'Participez et apprenez', d: 'Missions à récompense fixée à l’avance, Académie et outils IA à votre rythme.', c: 'bg-ink' },
             { t: 'Retirez sur Mobile Money', d: 'Dès 2 000 FCFA. Chaque demande est contrôlée avant paiement.', c: 'bg-sun !text-ink' },
           ].map((s, i) => (
@@ -211,7 +214,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
             <article className="rounded-[2rem] bg-white p-7 ring-1 ring-ink/8 lg:col-span-2">
               <IlluAffiliation className="mx-auto w-full max-w-[14rem]" />
               <h3 className="mt-3 font-display text-2xl font-extrabold">Parrainage direct, un seul niveau</h3>
-              <p className="mt-2 text-[15px] leading-relaxed text-ink/65">10 % du prix du Pass activé par votre filleul, puis 5 % sur sa première commande réelle. Chaque commission est détaillée dans votre espace.</p>
+              <p className="mt-2 text-[15px] leading-relaxed text-ink/65">{fmtPct(rates.passPct)} % du prix du Pass activé par votre filleul, puis {fmtPct(rates.firstSalePct)} % sur sa première commande réelle. Chaque commission est détaillée dans votre espace.</p>
               <button onClick={() => go('affiliation')} className="mt-4 inline-flex min-h-11 items-center gap-2 font-bold text-leaf-deep hover:gap-3 transition-all">Voir les règles <ArrowRight className="h-4 w-4" /></button>
             </article>
 
@@ -311,7 +314,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
                   <li key={x} className="flex gap-3"><Check className="mt-0.5 h-5 w-5 shrink-0 text-leaf" strokeWidth={3} />{x}</li>
                 ))}
               </ul>
-              <p className="mt-5 rounded-2xl bg-leaf/10 p-3.5 text-[13px] leading-relaxed text-leaf-deep">Rétractation de 7 jours, remboursement déduction faite des frais de transaction (3 %).</p>
+              <p className="mt-5 rounded-2xl bg-leaf/10 p-3.5 text-[13px] leading-relaxed text-leaf-deep">Rétractation de {rates.retractionDays} jours, remboursement déduction faite des frais de transaction ({fmtPct(rates.refundFeePct)} %).</p>
               <button onClick={() => onOpenAuth('signup')} className="mt-6 rounded-full bg-wax py-3.5 font-bold text-white shadow-[0_14px_26px_-12px_rgba(255,119,0,0.85)] hover:bg-wax-deep">Activer mon Pass</button>
             </div>
 
@@ -345,7 +348,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGoToDashboard, onOpe
           <ul className="grid gap-3 lg:col-span-7">
             {[
               { icon: Scale, t: 'Parrainage direct, règles publiées', d: 'Un seul niveau, des taux affichés, aucune commission sur les comptes artificiels ni en cas de remboursement.' },
-              { icon: Lock, t: 'Un prix, un contenu, avant paiement', d: 'Une offre payante correspond à un bien identifiable. Rétractation de 7 jours sur le Pass.' },
+              { icon: Lock, t: 'Un prix, un contenu, avant paiement', d: `Une offre payante correspond à un bien identifiable. Rétractation de ${rates.retractionDays} jours sur le Pass.` },
               { icon: Sparkles, t: 'Aucune promesse de gain facile', d: 'Pas de slogan « gagne X par jour ». Des indicateurs réels sont publiés dès qu’ils existent.' },
               { icon: Dices, t: 'Zéro jeu de hasard', d: 'Ni roue, ni loterie, ni tirage au sort, ni loot box, gratuits ou payants.' },
               { icon: ShieldCheck, t: 'Protection des membres', d: '18 ans minimum, plafond de dépense mensuel réglable, aide pour une pause ou la clôture du compte.' },

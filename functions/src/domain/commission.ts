@@ -39,15 +39,15 @@ export function computeCommissions(
   const drafts: CommissionDraft[] = [];
 
   if (sale.kind === "activation") {
-    // 10 % sur le Pass Membre (indépendamment du prix du Pass)
-    const rateBps = config.level1Bps || 1000;
+    // Taux lu dans la configuration : 0 désactive vraiment la commission.
+    const rateBps = config.level1Bps;
     const amount = percentOfBps(sale.amount, rateBps);
     if (amount > 0) {
       drafts.push({level: 1, beneficiaryUid: chain.level1Uid, amount, rateBps});
     }
   } else if (sale.isFirstSale) {
     // 5 % sur la première vente de l'utilisateur parrainé
-    const rateBps = config.level2Bps || 500;
+    const rateBps = config.level2Bps;
     const amount = percentOfBps(sale.amount, rateBps);
     if (amount > 0) {
       drafts.push({level: 1, beneficiaryUid: chain.level1Uid, amount, rateBps});
