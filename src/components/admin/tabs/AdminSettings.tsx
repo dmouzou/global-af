@@ -48,12 +48,24 @@ export const AdminSettings: React.FC = () => {
       const pd = p.data() as Platform; const cd = c.data() as Country;
       setPlatform(pd); setCountry(cd); setEnabled(cd.enabled);
       setF({
-        l1: String(pct(pd.affiliation.level1Bps)), l2: String(pct(pd.affiliation.level2Bps)), cap: String(pct(pd.affiliation.maxTotalBps)), refund: String(pct(pd.refundFeeBps)),
-        retr: String(pd.retractionDays), sub: String(pd.subscriptionDays), qs: String(pd.aiDailyQuota.standard), qp: String(pd.aiDailyQuota.premium), qb: String(pd.aiDailyQuota.business),
-        wmin: String(cd.withdrawal.minAmount), wmax: cd.withdrawal.maxAmount === null ? '' : String(cd.withdrawal.maxAmount), wfee: String(pct(cd.withdrawal.feeBps)),
+        l1: String(pct(pd.affiliation?.level1Bps ?? 1000)),
+        l2: String(pct(pd.affiliation?.level2Bps ?? 500)),
+        cap: String(pct(pd.affiliation?.maxTotalBps ?? 1500)),
+        refund: String(pct(pd.refundFeeBps ?? 300)),
+        retr: String(pd.retractionDays ?? 7),
+        sub: String(pd.subscriptionDays ?? 30),
+        qs: String(pd.aiDailyQuota?.standard ?? 3),
+        qp: String(pd.aiDailyQuota?.premium ?? 30),
+        qb: String(pd.aiDailyQuota?.business ?? 30),
+        wmin: String(cd.withdrawal?.minAmount ?? 2000),
+        wmax: cd.withdrawal?.maxAmount == null ? '' : String(cd.withdrawal.maxAmount),
+        wfee: String(pct(cd.withdrawal?.feeBps ?? 150)),
       });
       setLoadError(null);
-    } catch { setLoadError('Lecture de la configuration impossible.'); }
+    } catch (err) {
+      console.error('AdminSettings load error:', err);
+      setLoadError('Lecture de la configuration impossible.');
+    }
   }, []);
   useEffect(() => { load(); }, [load]);
   useEffect(() => onSnapshot(query(collection(db, 'configHistory'), orderBy('createdAt', 'desc'), limit(20)), snap =>

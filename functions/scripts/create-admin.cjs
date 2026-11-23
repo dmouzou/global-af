@@ -68,7 +68,11 @@ async function main() {
 
   const uid = userRecord.uid;
 
-  // 1. Mise à jour de users/{uid} dans "global-af-database"
+  // 1. Définition du Custom Claim signé dans Firebase Auth (requis par firestore.rules et la console admin)
+  await auth.setCustomUserClaims(uid, { role });
+  console.log(`🔐 Custom claim signé posé sur le token : { role: "${role}" }`);
+
+  // 2. Mise à jour de users/{uid} dans "global-af-database"
   await db.collection('users').doc(uid).set({
     id: uid,
     email: email,
@@ -86,7 +90,7 @@ async function main() {
     createdAt: new Date().toISOString()
   }, { merge: true });
 
-  // 2. Création ou mise à jour du wallet
+  // 3. Création ou mise à jour du wallet
   await db.collection('wallets').doc(uid).set({
     userId: uid,
     availableBalance: 0,
