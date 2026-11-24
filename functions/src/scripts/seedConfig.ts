@@ -11,29 +11,13 @@
  * restent À CONFIRMER : frais et minimum de retrait, plafond mensuel par
  * défaut, prix et type des packs.
  */
+import {DEFAULT_PLATFORM} from "../domain/defaults";
 import {FieldValue} from "firebase-admin/firestore";
 import {db} from "../lib/db";
 import {PlatformConfig, CountryConfig} from "../domain/types";
 import {assertAffiliationConfig} from "../domain/commission";
 
-const platform: PlatformConfig = {
-  minAge: 18,
-  retractionDays: 7,
-  subscriptionDays: 30, // période d'abonnement ; renouvellement manuel
-  // Plafonds quotidiens d'appels IA : 3 pour Standard, 30 pour Premium.
-  aiDailyQuota: {standard: 3, premium: 30, business: 30},
-  refundFeeBps: 300, // 3 % retenus au remboursement : à confirmer avec les frais CinetPay
-  retractionMaxConsumption: null, // critère « contenu consommé » : à définir
-  defaultMonthlyLimit: 50000, // prototype : à confirmer
-  rapidPayment: null, // seuil des paiements rapprochés : à définir
-  affiliation: {
-    level1Bps: 1000, // 10 % sur le Pass Membre
-    level2Bps: 500, // 5 % sur la 1ère vente réelle du filleul
-    maxLevels: 1, // 1 seul niveau de parrainage
-    maxTotalBps: 1000,
-    commissionableKinds: ["activation", "subscription", "course", "partner_campaign"],
-  },
-};
+const platform: PlatformConfig = DEFAULT_PLATFORM;
 
 const countries: CountryConfig[] = [{
   code: "CI",

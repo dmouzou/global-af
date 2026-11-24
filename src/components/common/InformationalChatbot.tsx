@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BabiVector } from '../brand/BabiVector';
+import { ScarfRibbon, WaxPattern } from '../brand/Illustrations';
 
 export interface ChatMessage {
   id: string;
@@ -327,84 +328,50 @@ export const InformationalChatbot: React.FC<InformationalChatbotProps> = ({
   };
 
   return (
-    <div className={`flex flex-col bg-slate-900 border border-slate-800 text-white rounded-3xl shadow-2xl overflow-hidden ${mode === 'floating' ? 'h-[620px] w-full max-w-lg' : 'w-full'}`}>
-      
-      {/* Chatbot Header */}
-      <div className="px-5 py-4 bg-gradient-to-r from-slate-950 via-slate-900 to-orange-950/80 border-b border-slate-800 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-orange-500/20 to-amber-400/20 border border-orange-500/30 flex items-center justify-center shadow-md shadow-orange-500/10">
-              <BabiVector mood="wave" size={32} />
-            </div>
-            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-slate-900 animate-pulse" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-bold text-sm sm:text-base text-white tracking-tight">
-                Babi
-              </h3>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold hidden sm:inline-flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                Assistant officiel
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-300">
-              Mascotte & Assistant AH GLOBAL · Informations en direct
-            </p>
-          </div>
-        </div>
+    <div className={`flex flex-col overflow-hidden bg-white ${mode === 'floating' ? 'h-full w-full' : 'mx-auto h-[640px] w-full max-w-3xl rounded-[2rem] shadow-[0_30px_60px_-30px_rgba(15,42,30,0.45)] ring-1 ring-ink/10'}`}>
+      <ScarfRibbon thin />
 
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={handleResetChat}
-            title="Effacer la conversation"
-            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors text-xs flex items-center gap-1"
-          >
-            <RotateCcw className="w-4 h-4" />
-          </button>
-          {mode === 'floating' && onCloseFloating && (
-            <button
-              onClick={onCloseFloating}
-              title="Fermer le chatbot"
-              className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
+      {/* En-tête */}
+      <div className="relative shrink-0 overflow-hidden bg-ink px-4 py-3.5 text-white sm:px-5" style={{ paddingTop: mode === 'floating' ? 'max(0.875rem, env(safe-area-inset-top, 0px))' : undefined }}>
+        <WaxPattern tone="dark" className="pointer-events-none absolute inset-0 opacity-30" />
+        <div className="relative flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="relative grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white">
+              <BabiVector mood={isLoading ? 'think' : 'wave'} size={38} />
+              <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-leaf ring-2 ring-ink" aria-hidden="true" />
+            </span>
+            <div className="min-w-0">
+              <h2 className="font-display text-lg font-extrabold leading-tight">Babi</h2>
+              <p className="truncate text-[13px] text-white/65">Assistant d’information</p>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center">
+            <button onClick={handleResetChat} aria-label="Effacer la conversation" title="Effacer la conversation" className="grid h-11 w-11 place-items-center rounded-full text-white/70 hover:bg-white/10 hover:text-white"><RotateCcw className="h-[18px] w-[18px]" /></button>
+            {mode === 'floating' && onCloseFloating && (
+              <button onClick={onCloseFloating} aria-label="Fermer l’assistant" title="Fermer" className="grid h-11 w-11 place-items-center rounded-full text-white/70 hover:bg-white/10 hover:text-white"><X className="h-5 w-5" /></button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Message Stream */}
-      <div className="flex-1 p-4 sm:p-5 overflow-y-auto space-y-4 max-h-[460px] sm:max-h-[500px] text-xs sm:text-sm bg-gradient-to-b from-slate-900/60 to-slate-950/80">
+      {/* Conversation */}
+      <div role="log" aria-live="polite" aria-label="Conversation avec Babi" className="min-h-0 flex-1 space-y-5 overflow-y-auto bg-mist px-3.5 py-5 sm:px-5">
         {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
+          <div key={msg.id} className={`flex gap-2.5 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             {msg.role === 'bot' && (
-              <div className="w-7 h-7 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
-                <BabiVector mood="happy" size={22} />
-              </div>
+              <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white ring-1 ring-ink/10"><BabiVector mood="happy" size={28} /></span>
             )}
-
-            <div className={`max-w-[85%] sm:max-w-[78%] space-y-2`}>
-              <div
-                className={`p-4 rounded-2xl leading-relaxed whitespace-pre-wrap ${
-                  msg.role === 'user'
-                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white font-medium rounded-tr-xs shadow-md'
-                    : 'bg-slate-800/90 text-slate-100 border border-slate-700/80 rounded-tl-xs shadow-xs'
-                }`}
-              >
-                {/* Format basic bold and bullets */}
-                <div className="space-y-1.5">
+            <div className="min-w-0 max-w-[88%] space-y-2 sm:max-w-[80%]">
+              <div className={`rounded-2xl px-4 py-3 text-[15px] leading-relaxed ${msg.role === 'user' ? 'rounded-tr-md bg-wax font-medium text-white' : 'rounded-tl-md bg-white text-ink ring-1 ring-ink/10'}`}>
+                <div className="space-y-2">
                   {msg.text.split('\n\n').map((paragraph, pIdx) => (
                     <p key={pIdx}>
                       {paragraph.split('\n').map((line, lIdx) => (
                         <span key={lIdx} className="block">
                           {line.startsWith('• ') ? (
-                            <span className="flex items-start gap-1.5 pl-1">
-                              <span className="text-orange-400 font-bold shrink-0">•</span>
-                              <span>{renderFormattedText(line.slice(2))}</span>
+                            <span className="flex items-start gap-2 pl-0.5">
+                              <span className={`mt-[9px] h-1.5 w-1.5 shrink-0 rounded-full ${msg.role === 'user' ? 'bg-white' : 'bg-wax'}`} aria-hidden="true" />
+                              <span className="min-w-0">{renderFormattedText(line.slice(2))}</span>
                             </span>
                           ) : (
                             renderFormattedText(line)
@@ -415,75 +382,33 @@ export const InformationalChatbot: React.FC<InformationalChatbotProps> = ({
                   ))}
                 </div>
 
-                {/* Optional clickable links */}
                 {msg.links && msg.links.length > 0 && onNavigateView && (
-                  <div className="pt-2 border-t border-slate-700/60 flex flex-wrap gap-2">
-                    {msg.links.map((link, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => onNavigateView(link.view)}
-                        className="px-2.5 py-1 rounded-md bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 text-[11px] font-semibold flex items-center gap-1 border border-orange-500/30 transition-colors"
-                      >
-                        <span>{link.label}</span>
-                        <ArrowRight className="w-3 h-3" />
+                  <div className="mt-3 flex flex-wrap gap-2 border-t border-ink/10 pt-3">
+                    {msg.links.map((link, lIdx) => (
+                      <button key={lIdx} type="button" onClick={() => onNavigateView(link.view)} className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-ink px-4 text-[13px] font-bold text-white hover:bg-ink-soft">
+                        {link.label}<ArrowRight className="h-3.5 w-3.5" />
                       </button>
                     ))}
                   </div>
                 )}
               </div>
 
-              {/* Bot Message Meta (Timestamp, copy, feedback) */}
               {msg.role === 'bot' && (
-                <div className="flex items-center gap-3 px-1 text-[10px] text-slate-400">
-                  <span>{msg.time}</span>
-                  <span>·</span>
-                  <button
-                    onClick={() => handleCopy(msg.id, msg.text)}
-                    className="hover:text-slate-200 flex items-center gap-1 transition-colors"
-                  >
-                    {copiedId === msg.id ? (
-                      <>
-                        <Check className="w-3 h-3 text-emerald-400" />
-                        <span className="text-emerald-400">Copié</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3 h-3" />
-                        <span>Copier</span>
-                      </>
-                    )}
+                <div className="flex items-center gap-1 px-1 text-[12px] text-ink/45">
+                  <span className="mr-1">{msg.time}</span>
+                  <button onClick={() => handleCopy(msg.id, msg.text)} aria-label="Copier la réponse" className="inline-flex min-h-9 items-center gap-1 rounded-full px-2.5 hover:bg-white hover:text-ink">
+                    {copiedId === msg.id ? <><Check className="h-3.5 w-3.5 text-leaf" /><span className="font-semibold text-leaf-deep">Copié</span></> : <><Copy className="h-3.5 w-3.5" /><span>Copier</span></>}
                   </button>
-                  <span>·</span>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => handleFeedback(msg.id, true)}
-                      className={`hover:text-emerald-400 transition-colors ${likedMap[msg.id] === true ? 'text-emerald-400' : ''}`}
-                      title="Utile"
-                    >
-                      <ThumbsUp className="w-3 h-3" />
-                    </button>
-                    <button
-                      onClick={() => handleFeedback(msg.id, false)}
-                      className={`hover:text-rose-400 transition-colors ${likedMap[msg.id] === false ? 'text-rose-400' : ''}`}
-                      title="Non pertinent"
-                    >
-                      <ThumbsDown className="w-3 h-3" />
-                    </button>
-                  </div>
+                  <button onClick={() => handleFeedback(msg.id, true)} aria-label="Réponse utile" aria-pressed={likedMap[msg.id] === true} className={`grid h-9 w-9 place-items-center rounded-full hover:bg-white ${likedMap[msg.id] === true ? 'text-leaf' : 'hover:text-ink'}`}><ThumbsUp className="h-3.5 w-3.5" /></button>
+                  <button onClick={() => handleFeedback(msg.id, false)} aria-label="Réponse non pertinente" aria-pressed={likedMap[msg.id] === false} className={`grid h-9 w-9 place-items-center rounded-full hover:bg-white ${likedMap[msg.id] === false ? 'text-rose-600' : 'hover:text-ink'}`}><ThumbsDown className="h-3.5 w-3.5" /></button>
                 </div>
               )}
 
-              {/* Suggestions chips below bot message */}
               {msg.suggestions && msg.suggestions.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 pt-1">
+                <div className="flex flex-wrap gap-2 pt-1">
                   {msg.suggestions.map((sug, sIdx) => (
-                    <button
-                      key={sIdx}
-                      type="button"
-                      onClick={() => handleSendMessage(sug)}
-                      className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 hover:border-orange-500/50 text-slate-300 hover:text-white rounded-lg border border-slate-700/80 text-[11px] transition-all text-left shadow-2xs active:scale-95"
-                    >
-                      💬 {sug}
+                    <button key={sIdx} type="button" onClick={() => handleSendMessage(sug)} disabled={isLoading} className="min-h-10 rounded-full bg-white px-4 py-2 text-left text-[13px] font-semibold text-ink ring-1 ring-ink/15 transition hover:bg-wax/8 hover:ring-wax disabled:opacity-50">
+                      {sug}
                     </button>
                   ))}
                 </div>
@@ -492,120 +417,94 @@ export const InformationalChatbot: React.FC<InformationalChatbotProps> = ({
           </div>
         ))}
 
-        {/* Loading typing indicator */}
         {isLoading && (
-          <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shrink-0">
-              <BabiVector mood="think" size={22} />
-            </div>
-            <div className="p-3.5 bg-slate-800/80 border border-slate-700 rounded-2xl rounded-tl-xs flex items-center gap-1.5 text-slate-400 text-xs">
-              <span className="w-2 h-2 rounded-full bg-orange-400 animate-ping" />
-              <span className="text-[11px] text-slate-300">Babi prépare votre réponse...</span>
+          <div className="flex items-center gap-2.5" role="status">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white ring-1 ring-ink/10"><BabiVector mood="think" size={28} /></span>
+            <div className="flex items-center gap-2 rounded-2xl rounded-tl-md bg-white px-4 py-3 text-[13px] text-ink/60 ring-1 ring-ink/10">
+              <span className="flex gap-1" aria-hidden="true">{[0, 150, 300].map(d => <span key={d} className="h-2 w-2 animate-bounce rounded-full bg-wax" style={{ animationDelay: `${d}ms` }} />)}</span>
+              Babi prépare votre réponse…
             </div>
           </div>
         )}
-
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input bar */}
-      <div className="p-3.5 sm:p-4 bg-slate-950 border-t border-slate-800">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSendMessage();
-          }}
-          className="flex gap-2"
-        >
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Posez votre question (ex. Retrait Wave, parrainage, 7j de rétractation...)"
-            className="flex-1 px-4 py-3 bg-slate-900 border border-slate-700 rounded-xl text-xs sm:text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-          />
-          <button
-            type="submit"
-            disabled={!input.trim() || isLoading}
-            className="px-4 sm:px-5 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 shrink-0 shadow-md active:scale-95 text-xs sm:text-sm"
-          >
-            <span>Envoyer</span>
-            <Send className="w-3.5 h-3.5" />
-          </button>
+      {/* Saisie */}
+      <div className="shrink-0 border-t border-ink/10 bg-white px-3.5 pt-3 sm:px-5" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))' }}>
+        <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }} className="flex items-center gap-2">
+          <label className="min-w-0 flex-1"><span className="sr-only">Votre question</span>
+            <input type="text" value={input} onChange={(e) => setInput(e.target.value)} placeholder="Posez votre question…" enterKeyHint="send" autoComplete="off"
+              className="w-full rounded-full border border-ink/15 bg-mist px-5 py-3 text-base text-ink outline-none placeholder:text-ink/40 focus:border-wax focus:bg-white" />
+          </label>
+          <button type="submit" disabled={!input.trim() || isLoading} aria-label="Envoyer" className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-wax text-white shadow-[0_10px_20px_-10px_rgba(255,119,0,0.8)] transition hover:bg-wax-deep disabled:cursor-not-allowed disabled:opacity-40"><Send className="h-5 w-5" /></button>
         </form>
-
-        <div className="flex items-center justify-between text-[10px] text-slate-400 mt-2 px-1">
-          <div className="flex items-center gap-1.5">
-            <ShieldCheck className="w-3 h-3 text-emerald-400" />
-            <span>Informations générales : vérifiez les conditions avant tout paiement</span>
-          </div>
-        </div>
+        <p className="mt-2 flex items-center gap-1.5 px-1 text-[12px] leading-snug text-ink/50"><ShieldCheck className="h-3.5 w-3.5 shrink-0 text-leaf" />Informations générales : vérifiez les conditions avant tout paiement.</p>
       </div>
-
     </div>
   );
 };
 
-// Helper to highlight **bold** text in responses
+// Met en gras les passages **ainsi** dans les réponses.
 function renderFormattedText(text: string) {
   const parts = text.split(/(\*\*.*?\*\*)/g);
   return (
     <>
-      {parts.map((part, index) => {
-        if (part.startsWith('**') && part.endsWith('**')) {
-          return (
-            <strong key={index} className="text-white font-bold">
-              {part.slice(2, -2)}
-            </strong>
-          );
-        }
-        return part;
-      })}
+      {parts.map((part, index) => (part.startsWith('**') && part.endsWith('**')
+        ? <strong key={index} className="font-bold">{part.slice(2, -2)}</strong>
+        : part))}
     </>
   );
 }
 
-// Floating Chatbot Trigger Button & Drawer Widget
+// Bouton flottant + fenêtre : plein écran sur téléphone, fenêtre ancrée en bas à droite sur ordinateur.
 export const FloatingChatbotWidget: React.FC<{
   onNavigateView?: (view: string) => void;
 }> = ({ onNavigateView }) => {
   const [isOpen, setIsOpen] = useState(false);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setIsOpen(false);
+    document.addEventListener('keydown', onKey);
+    const mobile = window.matchMedia('(max-width: 639px)').matches;
+    const prev = document.body.style.overflow;
+    if (mobile) document.body.style.overflow = 'hidden';
+    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = prev; };
+  }, [isOpen]);
+
   return (
     <>
-      {/* Floating Toggle Button */}
       <div className="chatbot-fab fixed bottom-4 right-4 z-50 sm:bottom-6 sm:right-6">
         <motion.button
           aria-label="Discuter avec Babi"
-          onClick={() => setIsOpen(!isOpen)}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="flex items-center gap-2.5 px-4 py-2.5 bg-ink hover:bg-ink-soft text-white rounded-full shadow-2xl border-2 border-white/20 font-bold text-xs sm:text-sm"
+          aria-expanded={isOpen}
+          onClick={() => setIsOpen(o => !o)}
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.96 }}
+          className="flex items-center gap-2.5 rounded-full border-2 border-white/25 bg-ink py-2 pl-2 pr-2 text-sm font-bold text-white shadow-[0_18px_40px_-14px_rgba(15,42,30,0.7)] hover:bg-ink-soft sm:pr-5"
         >
-          <div className="relative shrink-0">
-            <BabiVector mood="wave" size={26} />
-            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-ink animate-pulse" />
-          </div>
+          <span className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white">
+            <BabiVector mood="wave" size={32} />
+            <span className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full bg-leaf ring-2 ring-ink" aria-hidden="true" />
+          </span>
           <span className="hidden sm:inline">Discuter avec Babi</span>
         </motion.button>
       </div>
 
-      {/* Floating Modal Window */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            initial={{ opacity: 0, y: 24, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 30, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className="fixed bottom-22 right-4 sm:right-6 z-50 w-[94vw] sm:w-[440px] max-w-[480px] shadow-2xl"
+            exit={{ opacity: 0, y: 24, scale: 0.97 }}
+            transition={{ duration: 0.18 }}
+            role="dialog"
+            aria-label="Assistant Babi"
+            className="fixed inset-0 z-[60] overflow-hidden bg-white shadow-2xl sm:inset-auto sm:bottom-24 sm:right-6 sm:h-[min(680px,calc(100dvh-8rem))] sm:w-[420px] sm:rounded-[2rem] sm:ring-1 sm:ring-ink/10"
           >
             <InformationalChatbot
               mode="floating"
-              onNavigateView={(view) => {
-                if (onNavigateView) onNavigateView(view);
-                setIsOpen(false);
-              }}
+              onNavigateView={(view) => { if (onNavigateView) onNavigateView(view); setIsOpen(false); }}
               onCloseFloating={() => setIsOpen(false)}
             />
           </motion.div>

@@ -5,10 +5,32 @@ import {writeAudit} from "../lib/audit";
 import {guard} from "../lib/errors";
 import {asObject, reqString} from "../lib/validate";
 import {DomainError} from "../domain/errors";
-import {CountryConfig, PlatformConfig, Role} from "../domain/types";
+import {CountryConfig, Role} from "../domain/types";
 import {
-  applyCountryPatch, applyPlatformPatch, assertConfigReason,
+  applyCountryPatch, applyPlatformPatch, assertConfigReason, FieldChange,
 } from "../domain/configEdit";
+import {completeCountry, completePlatform} from "../domain/defaults";
+
+/**
+ * Applique un patch ; si le seul effet est de compléter des champs absents,
+ * c'est accepté et tracé (de « absent » vers la valeur par défaut).
+ */
+function applyWithCompletion<T>(
+  apply: () => {next: T; changes: FieldChange[]}, base: T,
+  filled: string[]): {next: T; changes: FieldChange[]} {
+  const completion: FieldChange[] =
+    filled.map((field) => ({field, from: null, to: "valeur par défaut du seed"}));
+  try {
+    const r = apply();
+    return {next: r.next, changes: [...completion, ...r.changes]};
+  } catch (e) {
+    if (e instanceof DomainError && e.code === "no_change" &&
+      filled.length > 0) {
+      return {next: base, changes: completion};
+    }
+    throw e;
+  }
+}
 
 function requireSuperAdmin(request: CallableRequest): string {
   if (!request.auth) {
@@ -39,8 +61,10 @@ export const adminUpdatePlatformConfig = onCall(
           throw new DomainError("config_missing",
             "Configuration plateforme absente (lancer le script de seed).");
         }
-        const {next, changes} =
-          applyPlatformPatch(snap.data() as PlatformConfig, data.patch);
+        // Un document ancien est complété avec les valeurs du seed, et l'historique le dit.
+        const {config: base, filled} = completePlatform(snap.data());
+        const {next, changes} = applyWithCompletion(
+          () => applyPlatformPatch(base, data.patch), base, filled);
         tx.set(ref, next);
         tx.create(db.collection("configHistory").doc(), {
           scope: "platform", changes, reason, actorUid,
@@ -73,8 +97,10 @@ export const adminUpdateCountryConfig = onCall(
         if (!snap.exists) {
           throw new DomainError("not_found", "Pays introuvable.");
         }
-        const {next, changes} =
-          applyCountryPatch(snap.data() as CountryConfig, data.patch);
+        const {config: base, filled} =
+          completeCountry(snap.data() as CountryConfig);
+        const {next, changes} = applyWithCompletion(
+          () => applyCountryPatch(base, data.patch), base, filled);
         tx.set(ref, next);
         tx.create(db.collection("configHistory").doc(), {
           scope: `country:${code}`, changes, reason, actorUid,

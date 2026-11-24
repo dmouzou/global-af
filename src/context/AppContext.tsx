@@ -28,6 +28,7 @@ import {
 } from '../data/initialData';
 import {
   signInWithEmailAndPassword,
+  sendPasswordResetEmail,
   signOut,
   sendEmailVerification,
   onAuthStateChanged,
@@ -86,6 +87,8 @@ interface AppContextType {
   isLoadingAuth: boolean;
   login: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
   signup: (input: RegisterUserInput) => Promise<{ success: boolean; error?: string }>;
+  /** Envoie le lien de réinitialisation. La réponse est neutre : on ne révèle pas si le compte existe. */
+  requestPasswordReset: (email: string) => Promise<{ success: boolean; message: string }>;
   logout: () => Promise<void>;
   resendEmailVerification: () => Promise<ActionResult>;
   /** Recharge l'état de vérification (après clic sur le lien reçu par e-mail). */
@@ -681,6 +684,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const requestPasswordReset = async (email: string): Promise<{ success: boolean; message: string }> => {
+    const neutral = "Si un compte existe avec cette adresse, un e-mail de réinitialisation vient d'être envoyé. Pensez à vérifier vos courriers indésirables.";
+    const clean = email.trim();
+    if (!/^\S+@\S+\.\S+$/.test(clean)) return { success: false, message: 'Saisissez une adresse e-mail valide.' };
+    try {
+      await sendPasswordResetEmail(auth, clean);
+    } catch (err: any) {
+      if (err?.code === 'auth/too-many-requests') return { success: false, message: 'Trop de demandes. Réessayez dans quelques minutes.' };
+      if (err?.code === 'auth/invalid-email') return { success: false, message: 'Saisissez une adresse e-mail valide.' };
+      // user-not-found et autres : même réponse neutre.
+    }
+    return { success: true, message: neutral };
+  };
+
   const signup = async (input: RegisterUserInput): Promise<{ success: boolean; error?: string }> => {
     try {
       await registerUserCallable(input);
@@ -1063,6 +1080,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       isLoadingAuth,
       login,
       signup,
+      requestPasswordReset,
       logout,
       resendEmailVerification,
       refreshEmailVerification,
